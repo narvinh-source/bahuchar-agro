@@ -145,6 +145,9 @@
           <i class="fa-solid fa-upload"></i><span>રીસ્ટોર</span>
         </button>
         <input id="agroRestoreFile" type="file" accept="application/json,.json" class="hidden" onchange="importAgroBackup(event)">
+        <button id="companySettingsBtn" onclick="openCompanySettings()" class="bg-blue-700 hover:bg-blue-800 text-white px-3 py-1 rounded-lg text-xs font-bold">🏢 કંપની વિગતો</button>
+        <button id="staffAccountBtn" onclick="openStaffPanel()" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow">👤 સ્ટાફ</button>
+        <button id="staffLogoutBtn" onclick="staffLogout()" class="bg-slate-700 hover:bg-slate-800 text-white px-3 py-1 rounded-lg text-xs font-bold">લૉગઆઉટ</button>
         <button onclick="switchTab('newBillTab')" class="bg-agro-600 hover:bg-agro-700 text-white px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow">
           <i class="fa-solid fa-file-invoice"></i>
           <span>નવું બિલ</span>
@@ -957,10 +960,10 @@
             <p class="font-bold text-sm border border-slate-400 inline-block px-3 py-1 mt-1">BILL OF SUPPLY — COMPOSITION TAXABLE PERSON</p>
             <p class="text-[10px] font-semibold text-slate-700">Composition taxable person, not eligible to collect tax on supplies</p>
             <p class="text-xs font-medium text-slate-700">બિયારણ, ખાતર અને ઉત્કૃષ્ટ જંતુનાશક દવાઓના વિક્રેતા</p>
-            <p class="text-xs text-slate-600">મુ. સુંદરી ભવાની, તા. હળવદ, જિ. મોરબી | મો. ૮૦૦૦૫૧૮૮૪૩ / 8000518843</p>
+            <p id="invoiceCompanyContact" class="text-xs text-slate-600">મુ. સુંદરી ભવાની, તા. હળવદ, જિ. મોરબી | મો. ૮૦૦૦૫૧૮૮૪૩ / 8000518843</p>
             <div class="flex justify-between items-center text-[10px] text-slate-500 mt-1 pt-1 border-t border-dashed">
-              <span>GSTIN: <strong class="text-slate-700">તમારો સાચો GSTIN સેટ કરો</strong></span>
-              <span>એગ્રો લાયસન્સ નં: <strong>તમારો લાઇસન્સ નંબર ચકાસો</strong></span>
+              <span>GSTIN: <strong id="invoiceCompanyGST" class="text-slate-700">તમારો સાચો GSTIN સેટ કરો</strong></span>
+              <span>એગ્રો લાયસન્સ નં: <strong id="invoiceCompanyLicense">તમારો લાઇસન્સ નંબર ચકાસો</strong></span>
             </div>
           </div>
 
@@ -2051,15 +2054,70 @@
       }
     }
 
+    function parseAgroDate(value) {
+      if (!value) return null;
+      const s = String(value).trim();
+      let m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+      if (m) return new Date(Number(m[1]), Number(m[2])-1, Number(m[3]), 12, 0, 0, 0);
+      m = s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})$/);
+      if (m) return new Date(Number(m[3]), Number(m[2])-1, Number(m[1]), 12, 0, 0, 0);
+      const d = new Date(s);
+      return Number.isNaN(d.getTime()) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12, 0, 0, 0);
+    }
+
     function calculatePartyInterest(farmerName, asOfDate = new Date()) {
-      const partyInvoices = invoices.filter(inv => inv.farmerName === farmerName && inv.billType === 'ઉધાર' && inv.interestEnabled && inv.dueDate && Number(inv.interestRate) > 0 && new Date(inv.dueDate+'T23:59:59') < asOfDate);
-      if (!partyInvoices.length) return {amount:0,days:0,rate:0,principal:0,asOf:asOfDate.toISOString().slice(0,10)};
-      const firstDue = partyInvoices.map(inv=>new Date(inv.dueDate+'T00:00:00')).sort((a,b)=>a-b)[0];
-      const days = Math.max(0, Math.floor((asOfDate.getTime()-firstDue.getTime())/86400000));
-      const rate = Math.max(...partyInvoices.map(inv=>Number(inv.interestRate)||0));
-      const principal = Math.max(0, Number((farmers.find(f=>f.name===farmerName)||{}).balance||0));
-      const amount = Math.round(principal * rate / 100 * days / 365 * 100) / 100;
-      return {amount,days,rate,principal,asOf:asOfDate.toISOString().slice(0,10)};
+      // Simple interest is calculated bill-by-bill. Payments are allocated FIFO
+      // to the oldest unpaid credit bill; interest is not capitalized or added to principal.
+      const asOf = new Date(asOfDate.getFullYear(), asOfDate.getMonth(), asOfDate.getDate(), 12, 0, 0, 0);
+      const eligible = invoices
+        .filter(inv => inv.farmerName === farmerName && inv.billType === 'ઉધાર' && Number(inv.grandTotal) > 0)
+        .map((inv, index) => {
+          const billDate = parseAgroDate(inv.date) || (inv.timestamp ? new Date(inv.timestamp) : null);
+          const dueDate = parseAgroDate(inv.dueDate);
+          return { inv, index, billDate, dueDate, original: Number(inv.grandTotal) || 0,
+            outstanding: Number(inv.grandTotal) || 0, interest: 0,
+            rate: Number(inv.interestRate) || 0, enabled: !!inv.interestEnabled,
+            cursor: dueDate && dueDate < asOf ? new Date(Math.max(dueDate.getTime(), billDate ? billDate.getTime() : dueDate.getTime())) : null };
+        })
+        .filter(x => x.billDate && x.billDate <= asOf)
+        .sort((a,b) => a.billDate - b.billDate || a.index - b.index);
+
+      const payments = khataLedger
+        .filter(t => t.farmerName === farmerName && Number(t.credit) > 0)
+        .map(t => ({ date: parseAgroDate(t.date), amount: Number(t.credit) || 0 }))
+        .filter(t => t.date && t.date <= asOf && t.amount > 0)
+        .sort((a,b) => a.date - b.date);
+
+      const accrueUntil = (bill, endDate) => {
+        if (!bill.enabled || bill.rate <= 0 || !bill.dueDate || !bill.cursor || bill.outstanding <= 0) return;
+        const from = bill.cursor > bill.dueDate ? bill.cursor : bill.dueDate;
+        if (endDate > from) {
+          const days = Math.floor((endDate.getTime() - from.getTime()) / 86400000);
+          if (days > 0) bill.interest += bill.outstanding * bill.rate / 100 * days / 365;
+        }
+        if (endDate > bill.cursor) bill.cursor = endDate;
+      };
+
+      payments.forEach(payment => {
+        // Accrue each invoice up to the payment date before applying the payment.
+        eligible.forEach(bill => accrueUntil(bill, payment.date));
+        let remaining = payment.amount;
+        for (const bill of eligible) {
+          if (remaining <= 0) break;
+          const applied = Math.min(bill.outstanding, remaining);
+          bill.outstanding -= applied;
+          remaining -= applied;
+        }
+      });
+      eligible.forEach(bill => accrueUntil(bill, asOf));
+
+      const amount = Math.round(eligible.reduce((sum,b)=>sum+b.interest,0)*100)/100;
+      const principal = Math.round(eligible.reduce((sum,b)=>sum+b.outstanding,0)*100)/100;
+      const details = eligible.filter(b=>b.enabled && b.rate>0 && b.interest>0).map(b=>({
+        billNo: b.inv.billNo || '-', dueDate: b.inv.dueDate || '-', rate: b.rate,
+        outstanding: Math.round(b.outstanding*100)/100, amount: Math.round(b.interest*100)/100
+      }));
+      return { amount, days: 0, rate: 0, principal, asOf: asOf.toISOString().slice(0,10), details };
     }
 
     function shareFarmerLedgerPDF() {
@@ -2677,12 +2735,12 @@ function renderPartyManager(){
  const q=(document.getElementById('partySearch')?.value||'').trim().toLowerCase();
  const list=document.getElementById('partyManagerList'); if(!list)return;
  const rows=(farmers||[]).filter(f=>[f.name,f.phone,f.village,f.address,f.type].some(v=>String(v||'').toLowerCase().includes(q)));
- list.innerHTML=rows.length?rows.map(f=>`<div class="border rounded-xl p-3 flex flex-col gap-2"><div class="font-bold">${escParty(f.name)} <span class="text-xs font-normal text-slate-500">${escParty(f.type||'ખેડૂત')}</span></div><div class="text-sm text-slate-600">${escParty(f.village||'')} ${f.phone?' • '+escParty(f.phone):''}</div><div class="flex gap-2 flex-wrap"><button class="bg-green-700 text-white rounded-lg px-3 py-1.5 text-sm" onclick="partyCall('${f.id}')">📞 ફોન</button><button class="bg-emerald-600 text-white rounded-lg px-3 py-1.5 text-sm" onclick="partyWhatsApp('${f.id}')">WhatsApp</button><button class="border rounded-lg px-3 py-1.5 text-sm" onclick="editParty('${f.id}')">એડિટ</button><button class="border rounded-lg px-3 py-1.5 text-sm" onclick="prepareFollowup('${f.id}')">Follow-up</button></div></div>`).join(''):'<p class="text-sm text-slate-500">પાર્ટી મળી નથી.</p>';
+ list.innerHTML=rows.length?rows.map(f=>`<div class="border rounded-xl p-3 flex flex-col gap-2"><div class="font-bold">${escParty(f.name)} <span class="text-xs font-normal text-slate-500">${escParty(f.type||'ખેડૂત')}</span></div><div class="text-sm text-slate-600">${escParty(f.village||'')} ${f.phone?' • '+escParty(f.phone):''}</div><div class="flex gap-2 flex-wrap"><button class="bg-green-700 text-white rounded-lg px-3 py-1.5 text-sm" onclick="partyCall('${f.id}')">📞 ફોન</button><button class="bg-emerald-600 text-white rounded-lg px-3 py-1.5 text-sm" onclick="partyWhatsApp('${f.id}')">WhatsApp</button><button class="border rounded-lg px-3 py-1.5 text-sm" onclick="editParty('${f.id}')">એડિટ</button><button class="border rounded-lg px-3 py-1.5 text-sm" onclick="prepareFollowup('${f.id}')">Follow-up</button><button class="border border-red-300 text-red-700 rounded-lg px-3 py-1.5 text-sm" onclick="deletePartyRecord(this.dataset.pid)" data-pid="${f.id}">પાર્ટી કાઢો</button></div></div>`).join(''):'<p class="text-sm text-slate-500">પાર્ટી મળી નથી.</p>';
  const sel=document.getElementById('followParty'); if(sel){const old=sel.value;sel.innerHTML='<option value="">પાર્ટી પસંદ કરો</option>'+(farmers||[]).map(f=>`<option value="${escParty(f.id)}">${escParty(f.name)}</option>`).join('');if((farmers||[]).some(f=>String(f.id)===old))sel.value=old;}
  renderFollowups();
 }
 function partyCall(id){const f=farmers.find(x=>String(x.id)===String(id));if(!f?.phone){alert('આ પાર્ટીનો મોબાઇલ નંબર દાખલ કરો.');return;}location.href='tel:'+String(f.phone).replace(/[^\d+]/g,'');}
-function partyWhatsApp(id){const f=farmers.find(x=>String(x.id)===String(id));if(!f?.phone){alert('આ પાર્ટીનો મોબાઇલ નંબર દાખલ કરો.');return;}const n=String(f.phone).replace(/\D/g,'');const intl=n.length===10?'91'+n:n;window.open('https://wa.me/'+intl,'_blank');}
+function partyWhatsApp(id){const f=farmers.find(x=>String(x.id)===String(id));if(!f?.phone){alert('આ પાર્ટીનો મોબાઇલ નંબર દાખલ કરો.');return;}const n=String(f.phone).replace(/\D/g,'');const intl=n.length===10?'91'+n:n;const msg=`નમસ્તે ${f.name||''}, શ્રી બહુચર એગ્રો તરફથી યાદ અપાવીએ છીએ કે આપની હાલની બાકી રકમ ₹${Number(f.balance||0).toFixed(2)} છે. કૃપા કરીને ચુકવણી કરવા સહકાર આપશો. આભાર.`;window.open('https://wa.me/'+intl+'?text='+encodeURIComponent(msg),'_blank');}
 function editParty(id){const f=farmers.find(x=>String(x.id)===String(id));if(!f)return;document.getElementById('partyEditId').value=f.id;document.getElementById('partyName').value=f.name||'';document.getElementById('partyPhone').value=f.phone||'';document.getElementById('partyVillage').value=f.village||'';document.getElementById('partyType').value=f.type||'ખેડૂત';document.getElementById('partyAddress').value=f.address||'';document.getElementById('partyName').focus();window.scrollTo({top:0,behavior:'smooth'});}
 function prepareFollowup(id){document.getElementById('followParty').value=String(id);const d=new Date(Date.now()+86400000);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());document.getElementById('followWhen').value=d.toISOString().slice(0,16);document.getElementById('followNote').focus();document.getElementById('followForm').scrollIntoView({behavior:'smooth',block:'center'});}
 document.getElementById('partyForm').addEventListener('submit',e=>{e.preventDefault();const id=document.getElementById('partyEditId').value;const name=document.getElementById('partyName').value.trim();const phone=document.getElementById('partyPhone').value.trim();const village=document.getElementById('partyVillage').value.trim();const type=document.getElementById('partyType').value;const address=document.getElementById('partyAddress').value.trim();if(!name)return;const duplicate=farmers.find(f=>f.name.trim().toLowerCase()===name.toLowerCase()&&String(f.id)!==String(id));if(duplicate&&!confirm('આ નામની પાર્ટી પહેલેથી છે. તેમ છતાં સેવ કરવું છે?'))return;if(id){const f=farmers.find(x=>String(x.id)===String(id));if(f)Object.assign(f,{name,phone,village,type,address});}else farmers.push({id:'f_'+Date.now(),name,phone,village,type,address,balance:0});syncLocalStorage();resetPartyForm();renderPartyManager();renderFarmerSuggestions?.();renderFarmerKhataList?.();alert('પાર્ટીની માહિતી સેવ થઈ.');});
@@ -2738,6 +2796,213 @@ async function importExcelRows(){
  }catch(e){status.textContent='ઇમ્પોર્ટ નિષ્ફળ: '+e.message;}
 }
 function parseCSVImport(text){const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(x=>x.trim());if(lines.length<2)return [];function parse(line){const a=[];let v='',q=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'&&line[i+1]==='"'&&q){v+='"';i++;}else if(c==='"')q=!q;else if(c===','&&!q){a.push(v.trim());v='';}else v+=c;}a.push(v.trim());return a;}const headers=parse(lines[0]);return lines.slice(1).map(l=>{const vals=parse(l),o={};headers.forEach((h,i)=>o[h]=vals[i]||'');return o;});}
+</script>
+
+
+<!-- Staff access control: local-device convenience gate, not server-side security -->
+<style>
+#staffLoginGate,#staffAdminPanel{position:fixed;inset:0;z-index:100000;background:#0f172acc;display:flex;align-items:center;justify-content:center;padding:16px}
+#staffLoginGate.hidden,#staffAdminPanel.hidden{display:none}
+.staff-card{background:#fff;color:#0f172a;width:min(440px,100%);border-radius:18px;padding:20px;box-shadow:0 20px 60px #0004;max-height:90vh;overflow:auto}
+.staff-card input,.staff-card select{width:100%;border:1px solid #cbd5e1;border-radius:9px;padding:11px;margin:5px 0 12px;box-sizing:border-box}
+.staff-card button{border-radius:9px;padding:10px 12px;font-weight:700}
+</style>
+<div id="staffLoginGate">
+ <div class="staff-card">
+  <div class="text-2xl font-bold mb-1">🔐 શ્રી બહુચર એગ્રો</div>
+  <p id="staffGateHelp" class="text-sm text-slate-600 mb-4">માલિકનો PIN બનાવો. આ PIN આ બ્રાઉઝરમાં જ રહેશે.</p>
+  <div id="staffSetupFields" class="hidden">
+   <label class="text-sm font-semibold">માલિકનું નામ</label><input id="staffOwnerName" autocomplete="username" placeholder="માલિકનું નામ">
+   <label class="text-sm font-semibold">નવો માલિક PIN (4 થી 8 અંક)</label><input id="staffOwnerPin" inputmode="numeric" type="password" maxlength="8" placeholder="PIN બનાવો">
+   <label class="text-sm font-semibold">PIN ફરી લખો</label><input id="staffOwnerPin2" inputmode="numeric" type="password" maxlength="8" placeholder="PIN ફરી લખો">
+   <button class="w-full bg-green-700 text-white" onclick="createStaffOwner()">માલિક એકાઉન્ટ બનાવો</button>
+  </div>
+  <div id="staffLoginFields">
+   <label class="text-sm font-semibold">યુઝર પસંદ કરો</label><select id="staffLoginUser"></select>
+   <label class="text-sm font-semibold">PIN</label><input id="staffLoginPin" inputmode="numeric" type="password" maxlength="8" placeholder="તમારો PIN દાખલ કરો">
+   <button class="w-full bg-green-700 text-white" onclick="staffLogin()">લૉગિન</button>
+  </div>
+  <p id="staffLoginMessage" class="text-sm text-red-700 mt-3"></p>
+  <p class="text-xs text-slate-500 mt-4">નોંધ: આ ડિવાઇસ પરનું લોક છે. ટેકનિકલ જાણકારી ધરાવતી વ્યક્તિ HTML/બ્રાઉઝર ડેટા બદલી શકે છે; ક્લાઉડ ડેટા માટે આ સર્વર-સ્તરની સુરક્ષા નથી.</p>
+ </div>
+</div>
+<div id="staffAdminPanel" class="hidden">
+ <div class="staff-card">
+  <div class="flex justify-between items-center gap-2 mb-3"><h2 class="text-xl font-bold">સ્ટાફ અને અધિકાર</h2><button class="bg-slate-200" onclick="closeStaffPanel()">બંધ</button></div>
+  <p class="text-sm text-slate-600 mb-3">માલિક જ નવા સ્ટાફ બનાવી શકે છે. PIN 4 થી 8 અંકનો રાખો.</p>
+  <label class="text-sm font-semibold">સ્ટાફનું નામ</label><input id="staffNewName" placeholder="કર્મચારીનું નામ">
+  <label class="text-sm font-semibold">PIN</label><input id="staffNewPin" inputmode="numeric" type="password" maxlength="8" placeholder="4 થી 8 અંક">
+  <label class="text-sm font-semibold">અધિકાર</label>
+  <select id="staffNewRole"><option value="cashier">બિલિંગ કર્મચારી — બિલિંગ/ખાતાવહી</option><option value="stock">સ્ટોક કર્મચારી — સ્ટોક/ખરીદી</option><option value="viewer">માત્ર જોવાનું — રિપોર્ટ/ખાતાવહી</option></select>
+  <button class="w-full bg-purple-700 text-white" onclick="addStaffUser()">સ્ટાફ ઉમેરો</button>
+  <div id="staffUserList" class="mt-4 space-y-2"></div>
+  <p class="text-xs text-slate-500 mt-3">અધિકાર આધારિત ટેબ છુપાવવામાં આવે છે; આ સર્વર-સ્તરનું પ્રતિબંધન નથી.</p>
+ </div>
+</div>
+<script>
+(function(){
+ const KEY='bahuchar_staff_users';
+ let activeStaff=null;
+ const $=id=>document.getElementById(id);
+ function users(){try{return JSON.parse(localStorage.getItem(KEY)||'[]')}catch(e){return []}}
+ function saveUsers(a){localStorage.setItem(KEY,JSON.stringify(a))}
+ function pinHash(pin){let h=2166136261;for(let i=0;i<pin.length;i++){h^=pin.charCodeAt(i);h=Math.imul(h,16777619)}return (h>>>0).toString(16)}
+ function validPin(p){return /^\d{4,8}$/.test(String(p||''))}
+ function initGate(){
+  const a=users();
+  $('staffSetupFields').classList.toggle('hidden',a.length>0);
+  $('staffLoginFields').classList.toggle('hidden',a.length===0);
+  $('staffGateHelp').textContent=a.length?'તમારું એકાઉન્ટ પસંદ કરીને PIN દાખલ કરો.':'પ્રથમ વખત માલિકનું એકાઉન્ટ બનાવો.';
+  $('staffLoginUser').innerHTML=a.map(u=>`<option value="${u.id}">${safe(u.name)} (${u.role==='owner'?'માલિક':u.role==='cashier'?'બિલિંગ':u.role==='stock'?'સ્ટોક':'માત્ર જોવાનું'})</option>`).join('');
+  $('staffLoginGate').classList.remove('hidden');
+  applyAccess(null);
+ }
+ function safe(s){return String(s||'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+ window.createStaffOwner=function(){
+  const name=$('staffOwnerName').value.trim(),p=$('staffOwnerPin').value,p2=$('staffOwnerPin2').value;
+  if(!name){$('staffLoginMessage').textContent='માલિકનું નામ લખો.';return}
+  if(!validPin(p)){$('staffLoginMessage').textContent='PIN 4 થી 8 અંકનો હોવો જોઈએ.';return}
+  if(p!==p2){$('staffLoginMessage').textContent='બંને PIN સરખા નથી.';return}
+  saveUsers([{id:'owner',name,role:'owner',pinHash:pinHash(p),createdAt:new Date().toISOString()}]);
+  $('staffOwnerPin').value=$('staffOwnerPin2').value='';
+  initGate();$('staffLoginUser').value='owner';$('staffLoginPin').focus();
+ };
+ window.staffLogin=function(){
+  const u=users().find(x=>x.id===$('staffLoginUser').value),pin=$('staffLoginPin').value;
+  if(!u||u.pinHash!==pinHash(pin)){$('staffLoginMessage').textContent='PIN ખોટો છે. ફરી પ્રયાસ કરો.';$('staffLoginPin').value='';return}
+  activeStaff={id:u.id,name:u.name,role:u.role};$('staffLoginPin').value='';$('staffLoginGate').classList.add('hidden');
+  $('staffAccountBtn').textContent='👤 '+u.name;
+  $('staffAccountBtn').classList.toggle('hidden',u.role!=='owner');
+  $('staffLogoutBtn').classList.remove('hidden');
+  applyAccess(u.role);
+  if(u.role==='stock')switchTab('inventoryTab');else switchTab('newBillTab');
+ };
+ function applyAccess(role){
+  const perms={
+   owner:['newBillTab','inventoryTab','supplierTab','khataTab','partyTab','reportTab','historyTab'],
+   cashier:['newBillTab','khataTab','partyTab','historyTab'],
+   stock:['inventoryTab','supplierTab'],
+   viewer:['khataTab','reportTab','historyTab']
+  };
+  document.querySelectorAll('.tab-btn').forEach(b=>{
+   const id=b.id.replace('tabBtn-','');b.classList.toggle('hidden',!!role&&!((perms[role]||[]).includes(id)));
+  });
+  const owner=role==='owner';
+  ['agroRestoreFile'].forEach(id=>{const el=$(id);if(el)el.disabled=!!role&&!owner});
+  document.querySelectorAll('button[onclick="exportAgroBackup()"],button[onclick*="agroRestoreFile"]').forEach(b=>b.classList.toggle('hidden',!!role&&!owner));
+  const cloud=$('bahucharCloudPanel');if(cloud)cloud.classList.toggle('hidden',!!role&&!owner);
+  if($('staffLogoutBtn'))$('staffLogoutBtn').classList.toggle('hidden',!role);
+ }
+ window.staffLogout=function(){activeStaff=null;initGate();$('staffAccountBtn').classList.remove('hidden');};
+ window.openStaffPanel=function(){if(!activeStaff||activeStaff.role!=='owner'){alert('આ સુવિધા માત્ર માલિક માટે છે.');return}renderUsers();$('staffAdminPanel').classList.remove('hidden')};
+ window.closeStaffPanel=function(){$('staffAdminPanel').classList.add('hidden')};
+ window.addStaffUser=function(){
+  if(!activeStaff||activeStaff.role!=='owner')return;
+  const name=$('staffNewName').value.trim(),pin=$('staffNewPin').value,role=$('staffNewRole').value;
+  if(!name){alert('સ્ટાફનું નામ લખો.');return}if(!validPin(pin)){alert('PIN 4 થી 8 અંકનો હોવો જોઈએ.');return}
+  const a=users();if(a.some(u=>u.name.toLowerCase()===name.toLowerCase())){alert('આ નામ પહેલેથી છે.');return}
+  a.push({id:'staff_'+Date.now(),name,role,pinHash:pinHash(pin),createdAt:new Date().toISOString()});saveUsers(a);
+  $('staffNewName').value='';$('staffNewPin').value='';renderUsers();alert('સ્ટાફ એકાઉન્ટ બનાવાયું.');
+ };
+ function renderUsers(){
+  $('staffUserList').innerHTML=users().map(u=>`<div class="border rounded-lg p-3 flex items-center justify-between gap-2"><div><b>${safe(u.name)}</b><div class="text-xs text-slate-500">${u.role==='owner'?'માલિક':u.role==='cashier'?'બિલિંગ':u.role==='stock'?'સ્ટોક':'માત્ર જોવાનું'}</div></div>${u.role==='owner'?'<span class="text-xs">માલિક</span>':`<button class="bg-red-100 text-red-800" onclick="removeStaffUser('${u.id}')">કાઢો</button>`}</div>`).join('');
+ }
+ window.removeStaffUser=function(id){if(!activeStaff||activeStaff.role!=='owner')return;if(!confirm('આ સ્ટાફ એકાઉન્ટ કાઢી નાખવું છે?'))return;saveUsers(users().filter(u=>u.id!==id));renderUsers()};
+ window.addEventListener('DOMContentLoaded',initGate);
+})();
+</script>
+
+
+<style>
+#companySettingsModal{position:fixed;inset:0;z-index:100010;background:#0f172acc;display:none;align-items:center;justify-content:center;padding:14px}
+#companySettingsModal.open{display:flex}
+.company-settings-card{background:#fff;color:#0f172a;width:min(500px,100%);max-height:92vh;overflow:auto;border-radius:16px;padding:18px}
+.company-settings-card input,.company-settings-card textarea{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:10px;margin:5px 0 12px;box-sizing:border-box}
+</style>
+<div id="companySettingsModal">
+ <div class="company-settings-card">
+  <div class="flex items-center justify-between mb-3"><h2 class="text-xl font-bold">🏢 કંપનીની વિગતો</h2><button class="bg-slate-200 rounded-lg px-3 py-2" onclick="closeCompanySettings()">બંધ</button></div>
+  <p class="text-sm text-slate-600 mb-3">અહીં ફેરફાર કરીને સેવ કરો. આ વિગતો બિલના હેડરમાં દેખાશે.</p>
+  <label class="text-sm font-semibold">કંપની / દુકાનનું નામ</label><input id="coName" placeholder="શ્રી બહુચર એગ્રો">
+  <label class="text-sm font-semibold">GST નંબર (GSTIN)</label><input id="coGST" maxlength="15" placeholder="તમારો GSTIN">
+  <label class="text-sm font-semibold">એગ્રો લાયસન્સ નંબર</label><input id="coLicense" placeholder="લાયસન્સ નંબર">
+  <label class="text-sm font-semibold">મોબાઇલ / સંપર્ક નંબર</label><input id="coPhone" inputmode="tel" placeholder="મોબાઇલ નંબર">
+  <label class="text-sm font-semibold">દુકાનનું સરનામું</label><textarea id="coAddress" rows="2" placeholder="ગામ, તાલુકો, જિલ્લો"></textarea>
+  <div class="flex gap-2"><button onclick="saveCompanySettings()" class="flex-1 bg-green-700 text-white">સેવ કરો</button><button onclick="resetCompanySettings()" class="bg-amber-100 text-amber-900">ડિફોલ્ટ</button></div>
+  <p class="text-xs text-slate-500 mt-3">આ વિગતો આ બ્રાઉઝરમાં સેવ થશે અને બિલ હેડરમાં લાગુ થશે. જૂનો ડેટા ડિલીટ નહીં થાય.</p>
+ </div>
+</div>
+<script>
+(function(){
+ const KEY='bahuchar_company_details_v1';
+ const defaults={name:'શ્રી બહુચર એગ્રો',gst:'',license:'',phone:'8000518843',address:'મુ. સુંદરી ભવાની, તા. હળવદ, જિ. મોરબી'};
+ const $=id=>document.getElementById(id);
+ function get(){try{return {...defaults,...JSON.parse(localStorage.getItem(KEY)||'{}')}}catch(e){return {...defaults}}}
+ function apply(){
+  const d=get();
+  if($('invoiceCompanyName'))$('invoiceCompanyName').textContent=d.name||defaults.name;
+  if($('invoiceCompanyContact'))$('invoiceCompanyContact').textContent=[d.address,d.phone?'મો. '+d.phone:''].filter(Boolean).join(' | ');
+  if($('invoiceCompanyGST'))$('invoiceCompanyGST').textContent=d.gst||'GSTIN દાખલ કરો';
+  if($('invoiceCompanyLicense'))$('invoiceCompanyLicense').textContent=d.license||'લાયસન્સ નંબર દાખલ કરો';
+  document.title=(d.name||defaults.name)+' - સ્માર્ટ બિલિંગ';
+ }
+ window.openCompanySettings=function(){
+  const d=get();$('coName').value=d.name;$('coGST').value=d.gst;$('coLicense').value=d.license;$('coPhone').value=d.phone;$('coAddress').value=d.address;
+  $('companySettingsModal').classList.add('open');
+ };
+ window.closeCompanySettings=function(){$('companySettingsModal').classList.remove('open')};
+ window.saveCompanySettings=function(){
+  const d={name:$('coName').value.trim(),gst:$('coGST').value.trim().toUpperCase(),license:$('coLicense').value.trim(),phone:$('coPhone').value.trim(),address:$('coAddress').value.trim()};
+  if(!d.name){alert('કંપનીનું નામ લખો.');return}
+  if(d.gst && !/^[0-9A-Z]{15}$/.test(d.gst)){if(!confirm('GSTIN સામાન્ય રીતે 15 અક્ષરનો હોય છે. તેમ છતાં સેવ કરવું છે?'))return}
+  localStorage.setItem(KEY,JSON.stringify(d));apply();closeCompanySettings();alert('કંપનીની વિગતો સેવ થઈ ગઈ.');
+ };
+ window.resetCompanySettings=function(){if(!confirm('કંપનીની વિગતો ડિફોલ્ટ પર કરવી છે?'))return;localStorage.removeItem(KEY);apply();openCompanySettings()};
+ window.addEventListener('DOMContentLoaded',apply);
+})();
+</script>
+
+
+<style>
+#financeDesk{position:fixed;inset:0;z-index:99990;background:#0f172acc;display:none;align-items:flex-start;justify-content:center;padding:12px;overflow:auto}
+#financeDesk .fd-card{background:white;color:#0f172a;width:min(900px,100%);border-radius:16px;padding:16px;margin:auto;max-height:95vh;overflow:auto}
+#financeDesk input,#financeDesk select{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px;margin:4px 0 10px;box-sizing:border-box}
+#financeDesk button{border-radius:8px;padding:9px 12px;font-weight:700}
+.fd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
+</style>
+<button onclick="openFinanceDesk()" style="position:fixed;right:12px;bottom:18px;z-index:9000;background:#7c3aed;color:white;border-radius:999px;padding:12px 16px;font-weight:800;box-shadow:0 4px 15px #0003">₹ પેમેન્ટ / C-N-D-N</button>
+<div id="financeDesk"><div class="fd-card">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="font-size:20px;font-weight:800">પેમેન્ટ અને નાણાકીય નોંધ</h2><button style="background:#e2e8f0" onclick="closeFinanceDesk()">બંધ ✕</button></div>
+<div class="fd-grid">
+<section style="border:1px solid #ddd;border-radius:12px;padding:12px"><h3 style="font-weight:800">જમા / Payment In</h3><label>પાર્ટી</label><select id="fdInParty"></select><label>કયા બિલનું પેમેન્ટ?</label><select id="fdInInvoice"></select><label>રકમ (₹)</label><input id="fdInAmount" type="number" min="0.01" step="0.01"><label>માધ્યમ</label><select id="fdInMode"><option>રોકડ</option><option>બેંક</option><option>UPI</option><option>ચેક</option></select><label>તારીખ</label><input id="fdInDate" type="date"><label>નોંધ</label><input id="fdInNote" placeholder="પેમેન્ટની વિગત"><button style="background:#15803d;color:white;width:100%" onclick="fdSaveIn()">જમા નોંધો</button></section>
+<section style="border:1px solid #ddd;border-radius:12px;padding:12px"><h3 style="font-weight:800">ચૂકવણી / Payment Out</h3><label>સપ્લાયર</label><select id="fdOutParty"></select><label>રકમ (₹)</label><input id="fdOutAmount" type="number" min="0.01" step="0.01"><label>માધ્યમ</label><select id="fdOutMode"><option>રોકડ</option><option>બેંક</option><option>UPI</option><option>ચેક</option></select><label>તારીખ</label><input id="fdOutDate" type="date"><label>નોંધ</label><input id="fdOutNote" placeholder="સપ્લાયર બિલ/ચૂકવણી વિગત"><button style="background:#b91c1c;color:white;width:100%" onclick="fdSaveOut()">ચૂકવણી નોંધો</button></section>
+<section style="border:1px solid #ddd;border-radius:12px;padding:12px"><h3 style="font-weight:800">Credit Note / Debit Note</h3><label>પાર્ટી</label><select id="fdNoteParty"></select><label>પ્રકાર</label><select id="fdNoteType"><option value="CN">Credit Note (પાર્ટીની બાકી ઘટાડે)</option><option value="DN">Debit Note (પાર્ટીની બાકી વધારે)</option></select><label>રકમ (₹)</label><input id="fdNoteAmount" type="number" min="0.01" step="0.01"><label>તારીખ</label><input id="fdNoteDate" type="date"><label>કારણ / નોંધ</label><input id="fdNoteReason" placeholder="વળતર, ભાવફેર વગેરે"><button style="background:#6d28d9;color:white;width:100%" onclick="fdSaveNote()">CN / DN નોંધો</button></section>
+</div>
+<section style="border:1px solid #ddd;border-radius:12px;padding:12px;margin-top:12px"><h3 style="font-weight:800">પેમેન્ટ અને CN/DN રિપોર્ટ</h3><div class="fd-grid"><div><label>શરૂઆતની તારીખ</label><input id="fdFrom" type="date"></div><div><label>અંતિમ તારીખ</label><input id="fdTo" type="date"></div><div><label>રિપોર્ટ</label><select id="fdReportType"><option value="all">બધા વ્યવહાર</option><option value="in">Payment In</option><option value="out">Payment Out</option><option value="CN">Credit Note</option><option value="DN">Debit Note</option></select></div></div><button style="background:#334155;color:white" onclick="fdRenderReport()">રિપોર્ટ બતાવો</button> <button style="background:#0f766e;color:white" onclick="fdExportReport()">CSV ડાઉનલોડ</button><div id="fdReportSummary" style="margin:10px 0;font-weight:800"></div><div id="fdReportRows" style="overflow:auto"></div></section>
+<p style="font-size:12px;color:#64748b;margin-top:12px">બિલ પસંદગી પેમેન્ટની નોંધ સાથે જોડાય છે. જૂના બિલની ચુકવણી ફાળવણી પાછળથી આપમેળે બનતી નથી.</p>
+</div></div>
+<script>
+(function(){
+const $=id=>document.getElementById(id), K='bahuchar_finance_entries';
+const today=()=>{let d=new Date();return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,10)};
+const entries=()=>{try{return JSON.parse(localStorage.getItem(K)||'[]')}catch(e){return []}};
+const save=a=>{localStorage.setItem(K,JSON.stringify(a));if(typeof syncLocalStorage==='function')syncLocalStorage()};
+const money=n=>'₹'+(Number(n)||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+window.openFinanceDesk=function(){if(typeof activeStaff!=='undefined'&&activeStaff&&activeStaff.role!=='owner'){alert('આ સુવિધા માત્ર માલિક માટે છે.');return}$('financeDesk').style.display='flex';fdInit()};
+window.closeFinanceDesk=()=>$('financeDesk').style.display='none';
+function fill(id,items){$(id).innerHTML='<option value="">પસંદ કરો</option>'+items.map(x=>`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join('')}
+function fdInit(){const d=today();['fdInDate','fdOutDate','fdNoteDate','fdFrom','fdTo'].forEach(id=>{if(!$(id).value)$(id).value=d});fill('fdInParty',(farmers||[]).map(f=>({value:f.id,label:f.name+' — બાકી '+money(f.balance)})));fill('fdOutParty',(suppliers||[]).map(f=>({value:f.id,label:f.name+' — બાકી '+money(f.balance)})));fill('fdNoteParty',(farmers||[]).map(f=>({value:f.id,label:f.name+' — બાકી '+money(f.balance)})));fdInvoices();fdRenderReport()}
+function fdInvoices(){const f=(farmers||[]).find(x=>String(x.id)===$('fdInParty').value);const inv=(invoices||[]).filter(x=>x.farmerName===(f&&f.name)&&x.billType==='ઉધાર');fill('fdInInvoice',inv.map(x=>({value:x.billNo,label:(x.billNo||'બિલ')+' • '+(x.date||'')+' • '+money(x.grandTotal)})))}
+$('fdInParty').addEventListener('change',fdInvoices);
+function fdInvoiceOutstanding(inv){const paid=entries().filter(e=>e.kind==='in'&&String(e.billNo||'')===String(inv.billNo||'')&&String(e.partyName||'')===String(inv.farmerName||'')).reduce((s,e)=>s+(Number(e.amount)||0),0);return Math.max(0,(Number(inv.grandTotal)||0)-paid)}
+window.fdSaveIn=function(){const f=(farmers||[]).find(x=>String(x.id)===$('fdInParty').value),amt=Number($('fdInAmount').value),bill=$('fdInInvoice').value;if(!f||!(amt>0)){alert('પાર્ટી અને શૂન્યથી વધુ માન્ય રકમ દાખલ કરો.');return}if(amt>Number(f.balance||0)){alert('પેમેન્ટ પાર્ટીની હાલની બાકી રકમ કરતાં વધુ છે. બાકી રકમ તપાસો.');return}let inv=null;if(bill){inv=(invoices||[]).find(x=>String(x.billNo)===String(bill)&&x.farmerName===f.name);if(!inv){alert('પસંદ કરેલું બિલ મળ્યું નથી.');return}const due=fdInvoiceOutstanding(inv);if(amt>due+0.009){alert('આ બિલની બાકી રકમ માત્ર ₹'+due.toFixed(2)+' છે. કૃપા કરીને ઓછી અથવા યોગ્ય રકમ દાખલ કરો.');return}}const date=$('fdInDate').value||today(),mode=$('fdInMode').value,note=$('fdInNote').value.trim();f.balance=Number(f.balance||0)-amt;const e={id:'fin_'+Date.now(),kind:'in',type:'Payment In',partyId:f.id,partyName:f.name,amount:amt,mode,date,billNo:bill,note};const a=entries();a.push(e);save(a);khataLedger.push({id:'l_'+Date.now(),farmerName:f.name,date,type:'જમા પાવતી (Payment In)',debit:0,credit:amt,balance:f.balance,note:`${mode}${bill?' • બિલ '+bill:''}${note?' • '+note:''}`,paymentMode:mode,billNo:bill||''});syncLocalStorage();$('fdInAmount').value='';$('fdInNote').value='';fdInit();renderFarmerKhataList();updateDashboardStats();alert('જમા પેમેન્ટ નોંધાયું. '+(bill?'આ પેમેન્ટ બિલ '+bill+' સાથે જોડાયું.':''))};
+window.fdSaveOut=function(){const s=(suppliers||[]).find(x=>String(x.id)===$('fdOutParty').value),amt=Number($('fdOutAmount').value);if(!s||!(amt>0)){alert('સપ્લાયર અને શૂન્યથી વધુ માન્ય રકમ પસંદ કરો.');return}if(amt>Number(s.balance||0)){alert('ચૂકવણી સપ્લાયરની હાલની બાકી રકમ કરતાં વધુ છે.');return}const e={id:'fin_'+Date.now(),kind:'out',type:'Payment Out',partyId:s.id,partyName:s.name,amount:amt,mode:$('fdOutMode').value,date:$('fdOutDate').value||today(),note:$('fdOutNote').value.trim()};s.balance=Number(s.balance||0)-amt;const a=entries();a.push(e);save(a);supplierLedger.push({id:'sl_'+Date.now(),supplierName:s.name,date:e.date,billNo:'PAYMENT OUT',purchase:0,payment:amt,balance:s.balance,note:e.mode+(e.note?' • '+e.note:'')});syncLocalStorage();$('fdOutAmount').value='';$('fdOutNote').value='';fdInit();renderSuppliersList();updateDashboardStats();alert('ચૂકવણી નોંધાઈ.')};
+window.fdSaveNote=function(){const f=(farmers||[]).find(x=>String(x.id)===$('fdNoteParty').value),amt=Number($('fdNoteAmount').value),type=$('fdNoteType').value;if(!f||!(amt>0)){alert('પાર્ટી અને માન્ય રકમ પસંદ કરો.');return}if(type==='CN'&&amt>Number(f.balance||0)){alert('Credit Note બાકી રકમ કરતાં વધારે છે.');return}f.balance=Number(f.balance||0)+(type==='DN'?amt:-amt);const e={id:'fin_'+Date.now(),kind:type,type:type==='CN'?'Credit Note':'Debit Note',partyId:f.id,partyName:f.name,amount:amt,mode:'',date:$('fdNoteDate').value||today(),note:$('fdNoteReason').value.trim()};const a=entries();a.push(e);save(a);khataLedger.push({id:'l_'+Date.now(),farmerName:f.name,date:e.date,type:e.type,debit:type==='DN'?amt:0,credit:type==='CN'?amt:0,balance:f.balance,note:e.note||e.type});syncLocalStorage();$('fdNoteAmount').value='';$('fdNoteReason').value='';fdInit();renderFarmerKhataList();updateDashboardStats();alert(e.type+' નોંધાયું.')};
+window.fdRenderReport=function(){const from=$('fdFrom').value,to=$('fdTo').value,type=$('fdReportType').value;const rows=entries().filter(e=>(!from||e.date>=from)&&(!to||e.date<=to)&&(type==='all'||e.kind===type));const ins=rows.filter(e=>e.kind==='in').reduce((s,e)=>s+e.amount,0),outs=rows.filter(e=>e.kind==='out').reduce((s,e)=>s+e.amount,0);const modeSum=m=>rows.filter(e=>e.mode===m&&(e.kind==='in'||e.kind==='out')).reduce((s,e)=>s+(e.kind==='in'?1:-1)*(Number(e.amount)||0),0);$('fdReportSummary').textContent=`જમા: ${money(ins)} | ચૂકવણી: ${money(outs)} | નેટ: ${money(ins-outs)} | રોકડ નેટ: ${money(modeSum('રોકડ'))} | બેંક નેટ: ${money(modeSum('બેંક'))} | UPI નેટ: ${money(modeSum('UPI'))} | ચેક નેટ: ${money(modeSum('ચેક'))} | નોંધો: ${rows.length}`;$('fdReportRows').innerHTML=rows.length?'<table style="width:100%;border-collapse:collapse;font-size:13px"><tr><th>તારીખ</th><th>પ્રકાર</th><th>પાર્ટી</th><th>બિલ/નોંધ</th><th>માધ્યમ</th><th>રકમ</th></tr>'+rows.map(e=>`<tr><td style="border-bottom:1px solid #ddd;padding:6px">${esc(e.date)}</td><td style="border-bottom:1px solid #ddd;padding:6px">${esc(e.type)}</td><td style="border-bottom:1px solid #ddd;padding:6px">${esc(e.partyName)}</td><td style="border-bottom:1px solid #ddd;padding:6px">${esc(e.billNo||e.note||'')}</td><td style="border-bottom:1px solid #ddd;padding:6px">${esc(e.mode||'-')}</td><td style="border-bottom:1px solid #ddd;padding:6px;text-align:right">${money(e.amount)}</td></tr>`).join('')+'</table>':'કોઈ વ્યવહાર નથી.'};
+window.fdExportReport=function(){const from=$('fdFrom').value,to=$('fdTo').value,type=$('fdReportType').value;const rows=[['Date','Type','Party','Bill/Note','Mode','Amount'],...entries().filter(e=>(!from||e.date>=from)&&(!to||e.date<=to)&&(type==='all'||e.kind===type)).map(e=>[e.date,e.type,e.partyName,e.billNo||e.note||'',e.mode||'',e.amount])];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download='Bahuchar_Agro_Payment_Report.csv';a.click();URL.revokeObjectURL(a.href)};
+window.deletePartyRecord=function(id){const f=(farmers||[]).find(x=>String(x.id)===String(id));if(!f)return;const hasLedger=(khataLedger||[]).some(x=>x.farmerName===f.name)||(invoices||[]).some(x=>x.farmerName===f.name);if(Number(f.balance||0)!==0||hasLedger){alert('આ પાર્ટીની બાકી રકમ અથવા જૂના બિલ/ખાતાવહી છે. હિસાબની સુરક્ષા માટે ડિલીટ ન કરી શકાય.');return}if(!confirm(f.name+' પાર્ટી કાઢી નાખવી છે? પહેલાં બેકઅપ રાખો.'))return;farmers=farmers.filter(x=>String(x.id)!==String(id));syncLocalStorage();renderPartyManager();renderFarmerSuggestions();renderFarmerKhataList();alert('પાર્ટી કાઢી નાખી.')};
+})();
 </script>
 
 </body>
