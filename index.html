@@ -52,7 +52,10 @@
       -webkit-tap-highlight-color: transparent;
     }
     
+    body.thermal-58 #printArea { width: 58mm !important; max-width: 58mm !important; padding: 2mm !important; font-size: 9px !important; }
+    body.thermal-80 #printArea { width: 80mm !important; max-width: 80mm !important; padding: 3mm !important; font-size: 10px !important; }
     @media print {
+      @page { margin: 2mm; }
       body * {
         visibility: hidden;
       }
@@ -164,6 +167,9 @@
         <button onclick="switchTab('khataTab')" id="tabBtn-khataTab" class="tab-btn px-3 py-2 font-medium rounded-t-lg transition border-b-2 border-transparent text-green-200 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-book-bookmark"></i> ખેડૂત ખાતાવહી
         </button>
+        <button onclick="switchTab('partyTab')" id="tabBtn-partyTab" class="tab-btn px-3 py-2 font-medium rounded-t-lg transition border-b-2 border-transparent text-green-200 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-users"></i> પાર્ટી / Follow-up
+        </button>
         <button onclick="switchTab('reportTab')" id="tabBtn-reportTab" class="tab-btn px-3 py-2 font-medium rounded-t-lg transition border-b-2 border-transparent text-green-200 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-chart-pie"></i> રિપોર્ટ્સ (Reports)
         </button>
@@ -263,6 +269,15 @@
                 <label class="block text-xs font-semibold text-slate-600 mb-1">મોબાઇલ નંબર</label>
                 <input type="tel" id="custPhone" placeholder="દા.ત. 98XXXXXXXX" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-agro-600 focus:outline-none">
               </div>
+            </div>
+
+            <div id="creditTermsBox" class="hidden mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
+              <div class="grid grid-cols-2 gap-3">
+                <div><label class="block text-xs font-semibold mb-1">ઉધારની મુદત</label><select id="creditDueDays" class="w-full px-2 py-2 border rounded text-sm"><option value="15">15 દિવસ</option><option value="30" selected>30 દિવસ</option><option value="45">45 દિવસ</option><option value="60">60 દિવસ</option></select></div>
+                <div><label class="block text-xs font-semibold mb-1">મુદત પછી વ્યાજ</label><select id="interestEnabled" class="w-full px-2 py-2 border rounded text-sm"><option value="no" selected>વ્યાજ નહીં</option><option value="yes">વ્યાજ લાગુ કરવું</option></select></div>
+              </div>
+              <div id="interestRateBox" class="hidden"><label class="block text-xs font-semibold mb-1">વ્યાજ દર (% વાર્ષિક)</label><input id="interestRate" type="number" min="0" step="0.1" value="18" class="w-full px-2 py-2 border rounded text-sm" /></div>
+              <p class="text-[11px] text-blue-800">બિલની તારીખથી પસંદ કરેલા દિવસો પછી બાકી રકમ પર જ વ્યાજ ગણાશે. દર તમે નક્કી કરો.</p>
             </div>
 
             <div id="farmerOldBalanceBanner" class="hidden mt-3 p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs flex justify-between items-center text-amber-800">
@@ -547,6 +562,7 @@
           <h3 class="font-bold text-slate-800 text-xs md:text-sm mb-3 flex items-center gap-2">
             <i class="fa-solid fa-users text-agro-700"></i> ખેડૂત ખાતાઓની યાદી
           </h3>
+          <button onclick="shareOverdueWhatsAppList()" class="w-full mb-3 bg-emerald-600 text-white rounded-lg px-3 py-2 text-xs font-bold"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp બાકી યાદી મોકલો</button>
           <div class="relative mb-3">
             <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
             <input type="text" id="khataFarmerSearch" placeholder="ખેડૂત અથવા ગામ શોધો..." class="w-full pl-8 pr-3 py-1.5 border rounded-lg text-xs focus:outline-none" oninput="renderFarmerKhataList()">
@@ -667,6 +683,35 @@
             </tbody>
           </table>
         </div>
+      </div>
+    </div>
+
+    <div id="partyTab" class="tab-content hidden space-y-4">
+      <div class="bg-white rounded-xl border p-4 shadow-sm">
+        <h2 class="font-bold text-lg text-green-800 mb-3"><i class="fa-solid fa-user-plus mr-2"></i>પાર્ટી બનાવો / એડિટ કરો</h2>
+        <form id="partyForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <input type="hidden" id="partyEditId">
+          <label class="text-sm">પાર્ટીનું નામ *<input id="partyName" required class="block w-full border rounded-lg p-2 mt-1" placeholder="પાર્ટી / ખેડૂતનું નામ"></label>
+          <label class="text-sm">મોબાઇલ નંબર<input id="partyPhone" inputmode="tel" class="block w-full border rounded-lg p-2 mt-1" placeholder="મોબાઇલ નંબર"></label>
+          <label class="text-sm">ગામ<input id="partyVillage" class="block w-full border rounded-lg p-2 mt-1" placeholder="ગામનું નામ"></label>
+          <label class="text-sm">પ્રકાર<select id="partyType" class="block w-full border rounded-lg p-2 mt-1"><option>ખેડૂત</option><option>ડીલર</option><option>રિટેલર</option><option>અન્ય</option></select></label>
+          <label class="text-sm sm:col-span-2">સરનામું / નોંધ<input id="partyAddress" class="block w-full border rounded-lg p-2 mt-1" placeholder="સરનામું અથવા ખાસ નોંધ"></label>
+          <div class="sm:col-span-2 flex gap-2 flex-wrap"><button class="bg-green-700 text-white rounded-lg px-4 py-2 font-bold" type="submit">પાર્ટી સેવ કરો</button><button type="button" onclick="resetPartyForm()" class="border rounded-lg px-4 py-2">ફોર્મ સાફ કરો</button></div>
+        </form>
+      </div>
+      <div class="bg-white rounded-xl border p-4 shadow-sm">
+        <h2 class="font-bold text-lg text-green-800 mb-2"><i class="fa-solid fa-calendar-check mr-2"></i>Follow-up / રિમાઇન્ડર</h2>
+        <form id="followForm" class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-4">
+          <label class="text-sm">પાર્ટી પસંદ કરો *<select id="followParty" required class="block w-full border rounded-lg p-2 mt-1"></select></label>
+          <label class="text-sm">આગળની તારીખ અને સમય *<input id="followWhen" required type="datetime-local" class="block w-full border rounded-lg p-2 mt-1"></label>
+          <label class="text-sm sm:col-span-2">વાતચીત / ફરી ફોન કરવાનું કારણ<input id="followNote" required class="block w-full border rounded-lg p-2 mt-1" placeholder="ઉદા. પેમેન્ટ માટે ફરી ફોન કરવો"></label>
+          <div class="sm:col-span-2"><button class="bg-amber-500 text-slate-900 rounded-lg px-4 py-2 font-bold" type="submit">રિમાઇન્ડર સેવ કરો</button></div>
+        </form>
+        <div id="followSummary" class="text-sm mb-2"></div><div id="followList" class="space-y-2"></div>
+      </div>
+      <div class="bg-white rounded-xl border p-4 shadow-sm">
+        <div class="flex gap-2 items-center mb-3"><h2 class="font-bold text-lg text-green-800 flex-1">પાર્ટી યાદી</h2><input id="partySearch" oninput="renderPartyManager()" class="border rounded-lg p-2 text-sm w-40" placeholder="નામ / ગામ શોધો"></div>
+        <div id="partyManagerList" class="space-y-2"></div>
       </div>
     </div>
 
@@ -889,6 +934,8 @@
           <span id="previewBillTag" class="text-xs bg-agro-700 px-2 py-0.5 rounded font-semibold">રોકડ બિલ</span>
         </div>
         <div class="flex items-center gap-2">
+          <button onclick="printThermalBill(58)" class="bg-slate-600 text-white px-2 py-1.5 rounded-lg text-xs font-semibold">58mm પ્રિન્ટ</button>
+          <button onclick="printThermalBill(80)" class="bg-slate-700 text-white px-2 py-1.5 rounded-lg text-xs font-semibold">80mm પ્રિન્ટ</button>
           <button onclick="shareInvoiceWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
             <i class="fa-brands fa-whatsapp"></i> વોટ્સએપ
           </button>
@@ -1332,6 +1379,10 @@
       });
     }
 
+    document.querySelectorAll('input[name="billType"]').forEach(el => el.addEventListener('change', () => { document.getElementById('creditTermsBox').classList.toggle('hidden', document.querySelector('input[name="billType"]:checked').value !== 'ઉધાર'); }));
+    document.getElementById('interestEnabled')?.addEventListener('change', e => document.getElementById('interestRateBox').classList.toggle('hidden', e.target.value !== 'yes'));
+    function addDaysISO(days) { const d=new Date(); d.setDate(d.getDate()+Number(days)); return d.toISOString().slice(0,10); }
+    function categoryForItem(item) { const p=products.find(x=>x.id===item.productId)||{}; const raw=String(item.category||p.category||p.type||p.name||item.name||'').toLowerCase(); if(raw.includes('fert')||raw.includes('ખાતર')||raw.includes('urea')||raw.includes('dap')) return 'ખાતર'; if(raw.includes('seed')||raw.includes('બીજ')) return 'બિયારણ'; return 'દવા/પેસ્ટિસાઇડ'; }
     function saveAndPreviewBill() {
       const custName = document.getElementById('custName').value.trim();
       const village = document.getElementById('custVillage').value.trim();
@@ -1363,8 +1414,14 @@
         }
       }
 
+      const dueDays = Number(document.getElementById('creditDueDays')?.value || 30);
+      const interestEnabled = billType === 'ઉધાર' && document.getElementById('interestEnabled')?.value === 'yes';
+      const interestRate = interestEnabled ? Number(document.getElementById('interestRate')?.value || 0) : 0;
+      if (interestEnabled && (!Number.isFinite(interestRate) || interestRate <= 0)) { showToast('યોગ્ય વાર્ષિક વ્યાજ દર દાખલ કરો.', 'error'); return; }
       const billNo = generateNextBillNumber();
+      const todayISO = new Date().toISOString().slice(0,10);
       const today = new Date().toLocaleDateString('gu-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      const dueDateISO = billType === 'ઉધાર' ? addDaysISO(dueDays) : '';
       
       let grandTotal = 0;
       let totalCost = 0;
@@ -1372,6 +1429,22 @@
         grandTotal += i.total;
         totalCost += (i.qty * i.costPrice);
       });
+
+      // Credit limit guard: default ₹20,000; owner must explicitly approve any excess.
+      let existingParty = farmers.find(f => f.name.toLowerCase() === custName.toLowerCase());
+      let creditLimit = Number(existingParty?.creditLimit || 0);
+      const oldBalance = Number(existingParty?.balance || 0);
+      if (billType === 'ઉધાર' && !(creditLimit > 0)) {
+        const limitInput = window.prompt(`પાર્ટી ${custName} માટે ક્રેડિટ લિમિટ કેટલી રાખવી? (₹ માં)`, '20000');
+        if (limitInput === null) { showToast('ક્રેડિટ લિમિટ નક્કી ન થતાં બિલ રોક્યું.', 'error'); return; }
+        creditLimit = Number(limitInput);
+        if (!Number.isFinite(creditLimit) || creditLimit <= 0) { showToast('યોગ્ય ક્રેડિટ લિમિટ દાખલ કરો.', 'error'); return; }
+      }
+      if (billType === 'ઉધાર' && oldBalance + grandTotal > creditLimit) {
+        const excess = oldBalance + grandTotal - creditLimit;
+        const approved = window.confirm(`ક્રેડિટ લિમિટ ચેતવણી!\nપાર્ટી: ${custName}\nહાલની બાકી: ₹${oldBalance.toFixed(2)}\nનવું બિલ: ₹${grandTotal.toFixed(2)}\nલિમિટ: ₹${creditLimit.toFixed(2)}\nલિમિટથી વધુ: ₹${excess.toFixed(2)}\n\nમાલિક તરીકે તમે મંજૂરી આપો છો? OK = મંજૂરી, Cancel = બિલ રોકો.`);
+        if (!approved) { showToast('માલિકની મંજૂરી ન મળતાં બિલ બનાવ્યું નથી.', 'error'); return; }
+      }
 
       // Deduct Stock
       currentBillItems.forEach(item => {
@@ -1389,12 +1462,14 @@
           name: custName,
           village: village,
           phone: phone,
-          balance: 0
+          balance: 0,
+          creditLimit: (billType === 'ઉધાર' ? creditLimit : 0)
         };
         farmers.push(farmerObj);
       } else {
         farmerObj.village = village;
         if (phone !== 'N/A') farmerObj.phone = phone;
+        if (billType === 'ઉધાર' && creditLimit > 0) farmerObj.creditLimit = creditLimit;
       }
 
       if (billType === 'ઉધાર') {
@@ -1407,7 +1482,8 @@
           debit: grandTotal,
           credit: 0,
           balance: farmerObj.balance,
-          note: `બિલ નં: ${billNo}`
+          note: `બિલ નં: ${billNo}; મુદત: ${dueDays} દિવસ; છેલ્લી તારીખ: ${dueDateISO}; વસ્તુઓ: ${currentBillItems.map(i => `${i.name} (${categoryForItem(i)} x${i.qty})`).join(', ')}`,
+          dueDate: dueDateISO, interestEnabled: interestEnabled, interestRate: interestRate, items: currentBillItems.map(i=>({name:i.name,qty:i.qty,unit:i.unit,total:i.total,category:categoryForItem(i)}))
         });
       }
 
@@ -1422,7 +1498,12 @@
         items: [...currentBillItems],
         grandTotal: grandTotal,
         totalCost: totalCost,
-        profit: grandTotal - totalCost
+        profit: grandTotal - totalCost,
+        dueDays: billType === 'ઉધાર' ? dueDays : 0,
+        dueDate: dueDateISO,
+        interestEnabled: interestEnabled,
+        interestRate: interestRate,
+        items: currentBillItems.map(i=>({...i, category: categoryForItem(i)}))
       };
 
       invoices.unshift(invoiceData);
@@ -1446,7 +1527,7 @@
       document.getElementById('pCustPhone').innerText = inv.phone;
       document.getElementById('pBillNo').innerText = inv.billNo;
       document.getElementById('pBillDate').innerText = inv.date;
-      document.getElementById('pBillType').innerText = inv.billType;
+      document.getElementById('pBillType').innerText = inv.billType + (inv.billType === 'ઉધાર' ? ` | મુદત ${inv.dueDays || 30} દિવસ | છેલ્લી તારીખ ${inv.dueDate || '-'}` + (inv.interestEnabled ? ` | વ્યાજ ${inv.interestRate}% વાર્ષિક` : '') : '');
       document.getElementById('previewBillTag').innerText = `${inv.billType} બિલ`;
 
       const tbody = document.getElementById('pItemsBody');
@@ -1480,6 +1561,25 @@
 
     function closeInvoiceModal() {
       document.getElementById('invoiceModal').classList.add('hidden');
+    }
+
+    function printThermalBill(width) {
+      document.body.classList.remove('thermal-58', 'thermal-80');
+      document.body.classList.add(width === 58 ? 'thermal-58' : 'thermal-80');
+      // Keep the invoice preview open; Android print dialog lets user select a compatible printer.
+      window.print();
+      setTimeout(() => document.body.classList.remove('thermal-58', 'thermal-80'), 1200);
+    }
+
+    function shareOverdueWhatsAppList() {
+      const overdue = (farmers || []).filter(f => Number(f.balance || 0) > 0)
+        .sort((a,b) => Number(b.balance || 0) - Number(a.balance || 0));
+      if (!overdue.length) { showToast('હાલ કોઈ પાર્ટીનું બાકી ઉધાર નથી.', 'error'); return; }
+      const total = overdue.reduce((sum, f) => sum + Number(f.balance || 0), 0);
+      let msg = `*શ્રી બહુચર એગ્રો સેન્ટર - હળવદ*\n*બાકી ઉઘરાણી યાદી*\nતારીખ: ${new Date().toLocaleDateString('gu-IN')}\n------------------------------\n`;
+      overdue.forEach((f, i) => { msg += `${i+1}. ${f.name} (${f.village || 'ગામ નોંધાયેલ નથી'})\n   બાકી: ₹${Number(f.balance || 0).toFixed(2)}${f.phone && f.phone !== 'N/A' ? ` | મો. ${f.phone}` : ''}\n`; });
+      msg += `------------------------------\n*કુલ પાર્ટીઓ: ${overdue.length}*\n*કુલ બાકી: ₹${total.toFixed(2)}*\nકૃપા કરીને બાકી રકમની ચુકવણી કરશો. આભાર 🙏`;
+      window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(msg)}`, '_blank');
     }
 
     function shareInvoiceWhatsApp() {
@@ -1720,7 +1820,8 @@
           <td class="p-2">${t.date}</td>
           <td class="p-2">
             <span class="font-bold text-slate-800">${t.billNo || 'ચૂકવણી'}</span>
-            <span class="block text-[10px] text-slate-400">${t.note || ''}</span>
+            <span class="block text-[10px] text-slate-500">${t.note || ''}</span>
+            ${t.dueDate ? `<span class="block text-[10px] text-red-600">ચુકવણી છેલ્લી તારીખ: ${t.dueDate}${t.interestEnabled ? ` | વ્યાજ ${t.interestRate}% વાર્ષિક` : ''}</span>` : ''}
           </td>
           <td class="p-2 text-right font-semibold text-rose-600">${t.purchase > 0 ? '₹ ' + t.purchase.toFixed(2) : '-'}</td>
           <td class="p-2 text-right font-semibold text-green-700">${t.payment > 0 ? '₹ ' + t.payment.toFixed(2) : '-'}</td>
@@ -1909,6 +2010,7 @@
       document.getElementById('khataActionForm').classList.remove('hidden');
 
       renderFarmerLedgerHistory(farmer.name);
+      renderCategorySummary(farmer.name);
       renderFarmerKhataList();
     }
 
@@ -1938,8 +2040,40 @@
         `;
         tbody.appendChild(tr);
       });
+      // Auto-calculated simple interest on outstanding balance after the earliest overdue credit bill.
+      // Interest is displayed separately and is not added to principal automatically.
+      const accrued = calculatePartyInterest(farmerName);
+      if (accrued.amount > 0) {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b bg-amber-50';
+        tr.innerHTML = `<td class="p-2">${accrued.asOf}</td><td class="p-2"><span class="font-medium text-amber-800">વિલંબિત વ્યાજ (આપમેળે ગણતરી)</span><span class="block text-[10px] text-slate-500">${accrued.days} દિવસ × ${accrued.rate}% વાર્ષિક; મૂળ બાકી ₹${accrued.principal.toFixed(2)}</span></td><td class="p-2 text-right text-red-600 font-semibold">₹ ${accrued.amount.toFixed(2)}</td><td class="p-2 text-right">-</td><td class="p-2 text-right font-bold">₹ ${(Number((farmers.find(f=>f.name===farmerName)||{}).balance||0)+accrued.amount).toFixed(2)}</td>`;
+        tbody.appendChild(tr);
+      }
     }
 
+    function calculatePartyInterest(farmerName, asOfDate = new Date()) {
+      const partyInvoices = invoices.filter(inv => inv.farmerName === farmerName && inv.billType === 'ઉધાર' && inv.interestEnabled && inv.dueDate && Number(inv.interestRate) > 0 && new Date(inv.dueDate+'T23:59:59') < asOfDate);
+      if (!partyInvoices.length) return {amount:0,days:0,rate:0,principal:0,asOf:asOfDate.toISOString().slice(0,10)};
+      const firstDue = partyInvoices.map(inv=>new Date(inv.dueDate+'T00:00:00')).sort((a,b)=>a-b)[0];
+      const days = Math.max(0, Math.floor((asOfDate.getTime()-firstDue.getTime())/86400000));
+      const rate = Math.max(...partyInvoices.map(inv=>Number(inv.interestRate)||0));
+      const principal = Math.max(0, Number((farmers.find(f=>f.name===farmerName)||{}).balance||0));
+      const amount = Math.round(principal * rate / 100 * days / 365 * 100) / 100;
+      return {amount,days,rate,principal,asOf:asOfDate.toISOString().slice(0,10)};
+    }
+
+    function shareFarmerLedgerPDF() {
+      if (!activeFarmerForKhata) { showToast('પહેલાં પાર્ટી પસંદ કરો.', 'error'); return; }
+      const tx=khataLedger.filter(l=>l.farmerName===activeFarmerForKhata.name);
+      const interest=calculatePartyInterest(activeFarmerForKhata.name); const rows=tx.map(t=>`<tr><td>${t.date||''}</td><td>${t.type||''}<br>${t.note||''}</td><td>₹${Number(t.debit||0).toFixed(2)}</td><td>₹${Number(t.credit||0).toFixed(2)}</td><td>₹${Number(t.balance||0).toFixed(2)}</td></tr>`).join('')+(interest.amount>0?`<tr><td>${interest.asOf}</td><td>વિલંબિત વ્યાજ (${interest.days} દિવસ, ${interest.rate}% વાર્ષિક)</td><td>₹${interest.amount.toFixed(2)}</td><td>₹0.00</td><td>₹${(interest.principal+interest.amount).toFixed(2)}</td></tr>`:'');
+      const html=`<!doctype html><html lang="gu"><meta charset="utf-8"><title>ખાતાવહી ${activeFarmerForKhata.name}</title><style>body{font-family:Arial,sans-serif;padding:16px}h2{margin-bottom:4px}table{width:100%;border-collapse:collapse;font-size:12px}td,th{border:1px solid #999;padding:6px;text-align:left;vertical-align:top}@media print{button{display:none}}</style><h2>શ્રી બહુચર એગ્રો - ખાતાવહી</h2><p>${activeFarmerForKhata.name} | ગામ: ${activeFarmerForKhata.village||''} | મોબાઇલ: ${activeFarmerForKhata.phone||''}</p><p>હાલની મૂળ બાકી: ₹${Number(activeFarmerForKhata.balance||0).toFixed(2)} | ગણાયેલ વ્યાજ: ₹${interest.amount.toFixed(2)} | વ્યાજ સહિત: ₹${(Number(activeFarmerForKhata.balance||0)+interest.amount).toFixed(2)}</p><table><thead><tr><th>તારીખ</th><th>વિગત / પ્રોડક્ટ</th><th>ઉધાર</th><th>જમા</th><th>બાકી</th></tr></thead><tbody>${rows}</tbody></table><script>window.onload=()=>setTimeout(()=>window.print(),300)<\/script></html>`;
+      const w=window.open('','_blank'); if(!w){showToast('પોપ-અપ મંજૂર કરો અને ફરી પ્રયાસ કરો.','error');return;} w.document.open();w.document.write(html);w.document.close();
+    }
+    function renderCategorySummary(farmerName) {
+      const sums={'બિયારણ':0,'દવા/પેસ્ટિસાઇડ':0,'ખાતર':0};
+      invoices.filter(inv=>inv.farmerName===farmerName).forEach(inv=>(inv.items||[]).forEach(it=>{const cat=it.category||categoryForItem(it); if(sums[cat]!==undefined)sums[cat]+=Number(it.total||0);}));
+      const el=document.getElementById('khataCategorySummary'); if(el) el.innerHTML=Object.entries(sums).map(([k,v])=>`<div class="p-3 bg-slate-50 border rounded-lg"><div class="text-xs text-slate-500">${k} કુલ</div><div class="font-bold">₹${v.toFixed(2)}</div></div>`).join('');
+    }
     function recordFarmerPayment() {
       if (!activeFarmerForKhata) return;
 
@@ -2534,11 +2668,77 @@
 
 
 <script>
+// Party contacts and follow-up manager. Stored on this device and included in backup below.
+let agroFollowups = JSON.parse(localStorage.getItem('bahuchar_followups') || '[]');
+function saveFollowups(){ localStorage.setItem('bahuchar_followups', JSON.stringify(agroFollowups)); }
+function escParty(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function resetPartyForm(){document.getElementById('partyForm').reset();document.getElementById('partyEditId').value='';}
+function renderPartyManager(){
+ const q=(document.getElementById('partySearch')?.value||'').trim().toLowerCase();
+ const list=document.getElementById('partyManagerList'); if(!list)return;
+ const rows=(farmers||[]).filter(f=>[f.name,f.phone,f.village,f.address,f.type].some(v=>String(v||'').toLowerCase().includes(q)));
+ list.innerHTML=rows.length?rows.map(f=>`<div class="border rounded-xl p-3 flex flex-col gap-2"><div class="font-bold">${escParty(f.name)} <span class="text-xs font-normal text-slate-500">${escParty(f.type||'ખેડૂત')}</span></div><div class="text-sm text-slate-600">${escParty(f.village||'')} ${f.phone?' • '+escParty(f.phone):''}</div><div class="flex gap-2 flex-wrap"><button class="bg-green-700 text-white rounded-lg px-3 py-1.5 text-sm" onclick="partyCall('${f.id}')">📞 ફોન</button><button class="bg-emerald-600 text-white rounded-lg px-3 py-1.5 text-sm" onclick="partyWhatsApp('${f.id}')">WhatsApp</button><button class="border rounded-lg px-3 py-1.5 text-sm" onclick="editParty('${f.id}')">એડિટ</button><button class="border rounded-lg px-3 py-1.5 text-sm" onclick="prepareFollowup('${f.id}')">Follow-up</button></div></div>`).join(''):'<p class="text-sm text-slate-500">પાર્ટી મળી નથી.</p>';
+ const sel=document.getElementById('followParty'); if(sel){const old=sel.value;sel.innerHTML='<option value="">પાર્ટી પસંદ કરો</option>'+(farmers||[]).map(f=>`<option value="${escParty(f.id)}">${escParty(f.name)}</option>`).join('');if((farmers||[]).some(f=>String(f.id)===old))sel.value=old;}
+ renderFollowups();
+}
+function partyCall(id){const f=farmers.find(x=>String(x.id)===String(id));if(!f?.phone){alert('આ પાર્ટીનો મોબાઇલ નંબર દાખલ કરો.');return;}location.href='tel:'+String(f.phone).replace(/[^\d+]/g,'');}
+function partyWhatsApp(id){const f=farmers.find(x=>String(x.id)===String(id));if(!f?.phone){alert('આ પાર્ટીનો મોબાઇલ નંબર દાખલ કરો.');return;}const n=String(f.phone).replace(/\D/g,'');const intl=n.length===10?'91'+n:n;window.open('https://wa.me/'+intl,'_blank');}
+function editParty(id){const f=farmers.find(x=>String(x.id)===String(id));if(!f)return;document.getElementById('partyEditId').value=f.id;document.getElementById('partyName').value=f.name||'';document.getElementById('partyPhone').value=f.phone||'';document.getElementById('partyVillage').value=f.village||'';document.getElementById('partyType').value=f.type||'ખેડૂત';document.getElementById('partyAddress').value=f.address||'';document.getElementById('partyName').focus();window.scrollTo({top:0,behavior:'smooth'});}
+function prepareFollowup(id){document.getElementById('followParty').value=String(id);const d=new Date(Date.now()+86400000);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());document.getElementById('followWhen').value=d.toISOString().slice(0,16);document.getElementById('followNote').focus();document.getElementById('followForm').scrollIntoView({behavior:'smooth',block:'center'});}
+document.getElementById('partyForm').addEventListener('submit',e=>{e.preventDefault();const id=document.getElementById('partyEditId').value;const name=document.getElementById('partyName').value.trim();const phone=document.getElementById('partyPhone').value.trim();const village=document.getElementById('partyVillage').value.trim();const type=document.getElementById('partyType').value;const address=document.getElementById('partyAddress').value.trim();if(!name)return;const duplicate=farmers.find(f=>f.name.trim().toLowerCase()===name.toLowerCase()&&String(f.id)!==String(id));if(duplicate&&!confirm('આ નામની પાર્ટી પહેલેથી છે. તેમ છતાં સેવ કરવું છે?'))return;if(id){const f=farmers.find(x=>String(x.id)===String(id));if(f)Object.assign(f,{name,phone,village,type,address});}else farmers.push({id:'f_'+Date.now(),name,phone,village,type,address,balance:0});syncLocalStorage();resetPartyForm();renderPartyManager();renderFarmerSuggestions?.();renderFarmerKhataList?.();alert('પાર્ટીની માહિતી સેવ થઈ.');});
+document.getElementById('followForm').addEventListener('submit',e=>{e.preventDefault();const partyId=document.getElementById('followParty').value;const f=farmers.find(x=>String(x.id)===String(partyId));if(!f){alert('પાર્ટી પસંદ કરો.');return;}agroFollowups.push({id:'fu_'+Date.now(),partyId:String(f.id),partyName:f.name,phone:f.phone||'',when:document.getElementById('followWhen').value,note:document.getElementById('followNote').value.trim(),done:false,createdAt:new Date().toISOString()});saveFollowups();document.getElementById('followNote').value='';renderPartyManager();alert('Follow-up સેવ થયો. એપમાં Follow-up યાદી તપાસતા રહો.');});
+function completeFollowup(id){const f=agroFollowups.find(x=>x.id===id);if(f)f.done=!f.done;saveFollowups();renderFollowups();}
+function deleteFollowup(id){if(!confirm('આ Follow-up કાઢી નાખવો છે?'))return;agroFollowups=agroFollowups.filter(x=>x.id!==id);saveFollowups();renderFollowups();}
+function renderFollowups(){const box=document.getElementById('followList');if(!box)return;const now=new Date();const active=agroFollowups.filter(x=>!x.done).sort((a,b)=>String(a.when).localeCompare(String(b.when)));const due=active.filter(x=>new Date(x.when)<=now).length;document.getElementById('followSummary').innerHTML=`બાકી Follow-up: <b>${active.length}</b> • સમય થઈ ગયો: <b class="${due?'text-red-600':'text-green-700'}">${due}</b>`;box.innerHTML=agroFollowups.length?agroFollowups.slice().sort((a,b)=>String(a.when).localeCompare(String(b.when))).map(x=>`<div class="border rounded-lg p-3 ${x.done?'opacity-60 bg-slate-50':new Date(x.when)<=now?'border-red-300 bg-red-50':''}"><div class="font-bold">${escParty(x.partyName)} ${x.done?'<span class="text-green-700">(પૂર્ણ)</span>':''}</div><div class="text-sm">${escParty(new Date(x.when).toLocaleString('gu-IN'))}</div><div class="text-sm text-slate-600">${escParty(x.note)}</div><div class="flex gap-2 mt-2"><button class="border rounded px-2 py-1 text-xs" onclick="completeFollowup('${x.id}')">${x.done?'ફરી બાકી કરો':'પૂર્ણ થયું'}</button><button class="border rounded px-2 py-1 text-xs" onclick="deleteFollowup('${x.id}')">કાઢી નાખો</button>${x.phone?`<button class="border rounded px-2 py-1 text-xs" onclick="partyCall('${x.partyId}')">ફોન</button>`:''}</div></div>`).join(''):'<p class="text-sm text-slate-500">હજુ કોઈ Follow-up નથી.</p>';}
+const originalSyncLocalStorage=syncLocalStorage;syncLocalStorage=function(){originalSyncLocalStorage();saveFollowups();};
+window.addEventListener('DOMContentLoaded',()=>{renderPartyManager();});
+</script>
+
+<script>
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('./service-worker.js').catch(err => console.warn('Service worker registration failed:', err));
   });
 }
 </script>
+
+<div id="excelImportPanel" class="fixed inset-0 z-[9999] hidden bg-black/50 p-3 overflow-y-auto"><div class="max-w-lg mx-auto mt-8 bg-white rounded-2xl p-4 shadow-xl"><div class="flex justify-between items-center mb-3"><h2 class="text-lg font-bold">Excel / CSV માંથી ડેટા ઉમેરો</h2><button onclick="closeExcelImport()" class="border rounded-lg px-3 py-1">બંધ</button></div><p class="text-sm text-slate-600 mb-3">Excel ફાઇલ (.xlsx/.xls) અથવા CSV પસંદ કરો. પહેલા ફાઇલનો બેકઅપ લો. હેડરનું નામ હોય તો ઓળખવાનો પ્રયાસ થશે.</p><label class="block text-sm font-semibold mb-1">કયો ડેટા ઉમેરવો છે?</label><select id="excelImportType" class="w-full border rounded-lg p-2 mb-3"><option value="party">પાર્ટી / ખેડૂત</option><option value="supplier">સપ્લાયર</option><option value="item">આઇટમ / પ્રોડક્ટ</option></select><input id="excelImportFile" type="file" accept=".xlsx,.xls,.csv,text/csv" class="w-full border rounded-lg p-2 mb-3"><button onclick="importExcelRows()" class="w-full bg-green-700 text-white rounded-lg p-3 font-bold">ફાઇલ વાંચીને ડેટા ઉમેરો</button><p id="excelImportStatus" class="text-sm mt-3"></p></div></div>
+<button onclick="openExcelImport()" class="fixed bottom-4 right-4 z-40 bg-blue-700 text-white rounded-full shadow-lg px-4 py-3 font-bold">📥 Excel Import</button>
+<script>
+function openExcelImport(){document.getElementById('excelImportPanel').classList.remove('hidden');}
+function closeExcelImport(){document.getElementById('excelImportPanel').classList.add('hidden');}
+function normalizeExcelKey(v){return String(v||'').trim().toLowerCase().replace(/[\s_\-./()]/g,'');}
+function getExcelVal(row,keys){const wanted=keys.map(normalizeExcelKey);const key=Object.keys(row).find(k=>wanted.includes(normalizeExcelKey(k)));return key===undefined?'':row[key];}
+async function importExcelRows(){
+ const file=document.getElementById('excelImportFile').files[0], type=document.getElementById('excelImportType').value, status=document.getElementById('excelImportStatus');
+ if(!file){status.textContent='પહેલાં Excel અથવા CSV ફાઇલ પસંદ કરો.';return;}
+ try{
+  let rows;
+  if(/\.csv$/i.test(file.name)){const text=await file.text();rows=parseCSVImport(text);}
+  else {if(!window.XLSX){await new Promise((resolve,reject)=>{const sc=document.createElement('script');sc.src='https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js';sc.onload=resolve;sc.onerror=()=>reject(new Error('Excel લાઇબ્રેરી લોડ થઈ નથી. ઇન્ટરનેટ ચાલુ કરો અથવા CSV વાપરો.'));document.head.appendChild(sc);});}const buf=await file.arrayBuffer();const wb=XLSX.read(buf,{type:'array'});rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{defval:''});}
+  if(!rows.length)throw new Error('ફાઇલમાં હેડર સાથે ડેટાની પંક્તિઓ હોવી જોઈએ.');
+  if(!confirm(`${rows.length} પંક્તિઓ વાંચી. પસંદ કરેલા વિભાગમાં ઉમેરવી છે? ડુપ્લિકેટ નામો સ્કિપ થશે.`))return;
+  let added=0, skipped=0;
+  rows.forEach(r=>{
+   const name=String(getExcelVal(r,['name','નામ','પાર્ટીનું નામ','party name','supplier name','item name','product','product name','આઇટમ','વસ્તુ'])).trim();if(!name){skipped++;return;}
+   if(type==='party'){
+    if(farmers.some(x=>String(x.name).trim().toLowerCase()===name.toLowerCase())){skipped++;return;}
+    farmers.push({id:'f_'+Date.now()+'_'+added,name,phone:String(getExcelVal(r,['phone','mobile','મોબાઇલ','ફોન','મોબાઇલ નંબર'])).trim(),village:String(getExcelVal(r,['village','ગામ'])).trim(),address:String(getExcelVal(r,['address','સરનામું'])).trim(),type:String(getExcelVal(r,['type','category','પ્રકાર','કેટેગરી'])).trim()||'ખેડૂત',balance:Number(getExcelVal(r,['balance','બાકી','opening balance','શરૂઆતની બાકી']))||0,creditLimit:Number(getExcelVal(r,['creditlimit','credit limit','ક્રેડિટ લિમિટ']))||0});added++;
+   }else if(type==='supplier'){
+    if(suppliers.some(x=>String(x.name).trim().toLowerCase()===name.toLowerCase())){skipped++;return;}
+    suppliers.push({id:'s_'+Date.now()+'_'+added,name,phone:String(getExcelVal(r,['phone','mobile','મોબાઇલ','ફોન'])).trim(),address:String(getExcelVal(r,['address','સરનામું'])).trim(),balance:Number(getExcelVal(r,['balance','બાકી','opening balance']))||0});added++;
+   }else{
+    if(products.some(x=>String(x.name).trim().toLowerCase()===name.toLowerCase())){skipped++;return;}
+    const category=String(getExcelVal(r,['category','કેટેગરી','પ્રકાર'])).trim()||'અન્ય';
+    products.push({id:'p_'+Date.now()+'_'+added,name,category,batch:String(getExcelVal(r,['batch','batch no','બેચ'])).trim(),expiry:String(getExcelVal(r,['expiry','expiry date','એક્સપાયરી'])).trim(),gst:Number(getExcelVal(r,['gst','tax','જીએસટી']))||0,stock:Number(getExcelVal(r,['stock','qty','quantity','જથ્થો','સ્ટોક']))||0,costPrice:Number(getExcelVal(r,['costprice','cost price','purchase price','ખરીદ ભાવ']))||0,price:Number(getExcelVal(r,['price','selling price','વેચાણ ભાવ','ભાવ']))||0,unit:String(getExcelVal(r,['unit','એકમ'])).trim()||'નંગ'});added++;
+   }
+  });
+  syncLocalStorage();renderPartyManager?.();renderFarmerSuggestions?.();renderFarmerKhataList?.();renderInventoryTable?.();populateProductDropdowns?.();updateDashboardStats?.();
+  status.textContent=`પૂર્ણ: ${added} ઉમેરાયા, ${skipped} સ્કિપ થયા. ડેટા આ મોબાઇલમાં સેવ થયો.`;
+ }catch(e){status.textContent='ઇમ્પોર્ટ નિષ્ફળ: '+e.message;}
+}
+function parseCSVImport(text){const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(x=>x.trim());if(lines.length<2)return [];function parse(line){const a=[];let v='',q=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'&&line[i+1]==='"'&&q){v+='"';i++;}else if(c==='"')q=!q;else if(c===','&&!q){a.push(v.trim());v='';}else v+=c;}a.push(v.trim());return a;}const headers=parse(lines[0]);return lines.slice(1).map(l=>{const vals=parse(l),o={};headers.forEach((h,i)=>o[h]=vals[i]||'');return o;});}
+</script>
+
 </body>
 </html>
