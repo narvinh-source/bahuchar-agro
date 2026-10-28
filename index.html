@@ -1,0 +1,2544 @@
+<!DOCTYPE html>
+<html lang="gu">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>શ્રી બહુચર એગ્રો - સ્માર્ટ બિલિંગ & સ્ટોક મેનેજમેન્ટ</title>
+  
+  <!-- Web App Meta for Mobile / APK -->
+  <meta name="theme-color" content="#15803d">
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="બહુચર એગ્રો">
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Noto Sans Gujarati & Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Gujarati:wght@400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            gujarati: ['"Noto Sans Gujarati"', 'Inter', 'sans-serif'],
+          },
+          colors: {
+            agro: {
+              50: '#f0fdf4',
+              100: '#dcfce7',
+              500: '#22c55e',
+              600: '#16a34a',
+              700: '#15803d',
+              800: '#166534',
+              900: '#14532d',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Noto Sans Gujarati', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+    }
+    
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #printArea, #printArea * {
+        visibility: visible;
+      }
+      #printArea {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 8px;
+        background: white;
+        color: black;
+      }
+      body.printing-report #reportContainer,
+      body.printing-report #reportContainer * {
+        visibility: visible;
+      }
+      body.printing-report #reportContainer {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        margin: 0;
+        padding: 8px;
+        background: white;
+        color: black;
+        border: 0;
+        box-shadow: none;
+      }
+      body.printing-report #printArea,
+      body.printing-report #printArea * {
+        visibility: hidden;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+
+    ::-webkit-scrollbar {
+      width: 5px;
+      height: 5px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #94a3b8;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-gujarati">
+
+  <!-- TOP HEADER / BRANDING -->
+  <header class="bg-agro-800 text-white shadow-lg sticky top-0 z-40 no-print">
+    <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
+      <div class="flex items-center space-x-3 rtl:space-x-reverse">
+        <div class="w-11 h-11 bg-agro-500 rounded-full flex items-center justify-center text-white shadow-md border-2 border-white">
+          <i class="fa-solid fa-seedling text-xl"></i>
+        </div>
+        <div>
+          <h1 class="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+            શ્રી બહુચર એગ્રો સેન્ટર
+            <span class="text-[10px] font-semibold bg-agro-600 px-2 py-0.5 rounded-full border border-agro-400">હળવદ</span>
+          </h1>
+          <p class="text-xs text-green-200">
+            <i class="fa-solid fa-location-dot mr-1"></i> સુંદરી ભવાની, હળવદ &nbsp;|&nbsp; 
+            <i class="fa-solid fa-phone mr-1"></i> <a href="tel:8000518843" class="hover:underline font-semibold">8000518843</a>
+          </p>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="flex items-center gap-2">
+        <button onclick="showInstallModal()" class="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 px-3 py-1 rounded-lg text-xs font-bold shadow transition transform active:scale-95">
+          <i class="fa-solid fa-mobile-screen-button"></i>
+          <span>APK / એપ</span>
+        </button>
+
+        <button onclick="exportAgroBackup()" class="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow">
+          <i class="fa-solid fa-download"></i><span>બેકઅપ</span>
+        </button>
+        <button onclick="document.getElementById('agroRestoreFile').click()" class="bg-slate-100 hover:bg-white text-slate-900 px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow">
+          <i class="fa-solid fa-upload"></i><span>રીસ્ટોર</span>
+        </button>
+        <input id="agroRestoreFile" type="file" accept="application/json,.json" class="hidden" onchange="importAgroBackup(event)">
+        <button onclick="switchTab('newBillTab')" class="bg-agro-600 hover:bg-agro-700 text-white px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1 shadow">
+          <i class="fa-solid fa-file-invoice"></i>
+          <span>નવું બિલ</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs (With Supplier & Reports) -->
+    <div class="bg-agro-900 px-4 border-t border-agro-700/50">
+      <div class="max-w-7xl mx-auto flex space-x-1 md:space-x-2 overflow-x-auto py-1 text-xs md:text-sm">
+        <button onclick="switchTab('newBillTab')" id="tabBtn-newBillTab" class="tab-btn px-3 py-2 font-medium rounded-t-lg transition border-b-2 border-agro-400 text-white bg-agro-800 flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-cart-shopping"></i> નવું બિલિંગ
+        </button>
+        <button onclick="switchTab('inventoryTab')" id="tabBtn-inventoryTab" class="tab-btn px-3 py-2 font-medium rounded-t-lg transition border-b-2 border-transparent text-green-200 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-boxes-stacked"></i> દવા & સ્ટોક
+        </button>
+        <button onclick="switchTab('supplierTab')" id="tabBtn-supplierTab" class="tab-btn px-3 py-2 font-medium rounded-t-lg transition border-b-2 border-transparent text-green-200 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-truck-field"></i> સપ્લાયર / ખરીદી
+        </button>
+        <button onclick="switchTab('khataTab')" id="tabBtn-khataTab" class="tab-btn px-3 py-2 font-medium rounded-t-lg transition border-b-2 border-transparent text-green-200 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-book-bookmark"></i> ખેડૂત ખાતાવહી
+        </button>
+        <button onclick="switchTab('reportTab')" id="tabBtn-reportTab" class="tab-btn px-3 py-2 font-medium rounded-t-lg transition border-b-2 border-transparent text-green-200 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-chart-pie"></i> રિપોર્ટ્સ (Reports)
+        </button>
+        <button onclick="switchTab('historyTab')" id="tabBtn-historyTab" class="tab-btn px-3 py-2 font-medium rounded-t-lg transition border-b-2 border-transparent text-green-200 hover:text-white flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fa-solid fa-clock-rotate-left"></i> બિલ ઇતિહાસ
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Notification Toast Container -->
+  <div id="toastBox" class="fixed top-16 right-4 z-50 flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+  <!-- MAIN CONTAINER -->
+  <main class="flex-grow max-w-7xl mx-auto w-full p-3 md:p-5 no-print">
+
+    <!-- 1. NEW BILLING SECTION -->
+    <div id="newBillTab" class="tab-content space-y-4">
+      
+      <!-- Quick Dashboard Counters -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-green-100 text-green-700 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-indian-rupee-sign"></i>
+          </div>
+          <div>
+            <p class="text-[11px] text-slate-500 font-medium">આજનું કુલ વેચાણ</p>
+            <p id="statTodaySale" class="text-base font-bold text-slate-800">₹ 0.00</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3">
+          <div class="w-10 h-10 rounded-lg bg-red-100 text-red-700 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-hand-holding-dollar"></i>
+          </div>
+          <div>
+            <p class="text-[11px] text-slate-500 font-medium">ખેડૂત બાકી ઉધાર</p>
+            <p id="statTotalUdhar" class="text-base font-bold text-red-600">₹ 0.00</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50" onclick="switchTab('inventoryTab')">
+          <div class="w-10 h-10 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-triangle-exclamation"></i>
+          </div>
+          <div>
+            <p class="text-[11px] text-slate-500 font-medium">ઓછો સ્ટોક એલર્ટ</p>
+            <p id="statLowStock" class="text-base font-bold text-amber-600">0 વસ્તુ</p>
+          </div>
+        </div>
+
+        <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-sm flex items-center gap-3 cursor-pointer hover:bg-slate-50" onclick="switchTab('supplierTab')">
+          <div class="w-10 h-10 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center text-lg">
+            <i class="fa-solid fa-truck-arrow-right"></i>
+          </div>
+          <div>
+            <p class="text-[11px] text-slate-500 font-medium">સપ્લાયર બાકી રકમ</p>
+            <p id="statSupplierPayable" class="text-base font-bold text-indigo-700">₹ 0.00</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Billing Grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-5">
+        
+        <!-- Left: Customer Details & Item Selector -->
+        <div class="lg:col-span-7 space-y-4">
+          
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+            <div class="flex items-center justify-between mb-3 border-b pb-2">
+              <h2 class="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                <i class="fa-solid fa-user-tag text-agro-700"></i> ખેડૂત / ગ્રાહકની વિગત
+              </h2>
+              <div class="flex items-center gap-3">
+                <label class="flex items-center text-xs font-semibold gap-1.5 cursor-pointer">
+                  <input type="radio" name="billType" value="રોકડ" checked class="accent-agro-700 w-4 h-4">
+                  <span class="text-green-700">રોકડ (Cash)</span>
+                </label>
+                <label class="flex items-center text-xs font-semibold gap-1.5 cursor-pointer">
+                  <input type="radio" name="billType" value="ઉધાર" class="accent-red-600 w-4 h-4">
+                  <span class="text-red-600">ઉધાર (Credit)</span>
+                </label>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">ખેડૂતનું નામ *</label>
+                <input type="text" id="custName" list="customerSuggestions" placeholder="દા.ત. રમેશભાઈ પટેલ" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-agro-600 focus:outline-none" oninput="checkFarmerHistory()">
+                <datalist id="customerSuggestions"></datalist>
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">ગામ *</label>
+                <input type="text" id="custVillage" placeholder="દા.ત. સુંદરી ભવાની" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-agro-600 focus:outline-none">
+              </div>
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">મોબાઇલ નંબર</label>
+                <input type="tel" id="custPhone" placeholder="દા.ત. 98XXXXXXXX" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-agro-600 focus:outline-none">
+              </div>
+            </div>
+
+            <div id="farmerOldBalanceBanner" class="hidden mt-3 p-2 bg-amber-50 border border-amber-200 rounded-lg text-xs flex justify-between items-center text-amber-800">
+              <span><i class="fa-solid fa-triangle-exclamation mr-1"></i> જૂનું બાકી ઉધાર: <strong id="farmerOldBalVal">₹ 0</strong></span>
+              <button onclick="switchTab('khataTab')" class="underline font-bold">ખાતાવહી જુઓ</button>
+            </div>
+          </div>
+
+          <!-- Product Picker Card -->
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+            <h2 class="font-bold text-slate-800 flex items-center justify-between mb-3 border-b pb-2 text-sm">
+              <span class="flex items-center gap-2"><i class="fa-solid fa-cart-plus text-agro-700"></i> માલ / દવા પસંદ કરો</span>
+              <span class="text-[11px] bg-slate-100 text-slate-600 px-2 py-0.5 rounded font-medium">ઝડપી બિલિંગ</span>
+            </h2>
+
+            <div class="space-y-3">
+              <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">પ્રોડક્ટ પસંદ કરો</label>
+                <select id="selectedProduct" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-agro-600 focus:outline-none bg-slate-50 font-medium" onchange="onProductSelect()">
+                  <option value="">-- બિયારણ / ખાતર / દવા પસંદ કરો --</option>
+                </select>
+              </div>
+
+              <!-- Quick Info Badge -->
+              <div id="prodQuickInfo" class="hidden grid grid-cols-2 sm:grid-cols-4 gap-2 bg-slate-50 p-2.5 rounded-lg border text-xs text-slate-600">
+                <div>
+                  <span class="block text-slate-400">બેચ નં:</span>
+                  <span id="quickBatch" class="font-bold text-slate-800">-</span>
+                </div>
+                <div>
+                  <span class="block text-slate-400">એક્સપાયરી:</span>
+                  <span id="quickExp" class="font-bold text-slate-800">-</span>
+                </div>
+                <div>
+                  <span class="block text-slate-400">ઉપલબ્ધ સ્ટોક:</span>
+                  <span id="quickStock" class="font-bold text-green-700">-</span>
+                </div>
+                <div>
+                  <span class="block text-slate-400">GST %:</span>
+                  <span id="quickGst" class="font-bold text-slate-800">-</span>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">જથ્થો (Qty)</label>
+                  <input type="number" id="itemQty" value="1" min="0.1" step="any" class="w-full px-3 py-2 border rounded-lg text-sm font-bold focus:ring-2 focus:ring-agro-600 focus:outline-none" oninput="calculateItemTotalPreview()">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">વેચાણ ભાવ (₹)</label>
+                  <input type="number" id="itemRate" value="0" min="0" step="any" class="w-full px-3 py-2 border rounded-lg text-sm font-bold focus:ring-2 focus:ring-agro-600 focus:outline-none" oninput="calculateItemTotalPreview()">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">છૂટ (Discount ₹)</label>
+                  <input type="number" id="itemDisc" value="0" min="0" step="any" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-agro-600 focus:outline-none" oninput="calculateItemTotalPreview()">
+                </div>
+                <div>
+                  <label class="block text-xs font-semibold text-slate-600 mb-1">કુલ રકમ (₹)</label>
+                  <input type="text" id="itemSubTotalPreview" readonly value="0.00" class="w-full px-3 py-2 border rounded-lg text-sm bg-slate-100 font-bold text-slate-700 cursor-not-allowed">
+                </div>
+              </div>
+
+              <div class="flex justify-end pt-1">
+                <button type="button" onclick="addItemToCurrentBill()" class="w-full sm:w-auto bg-agro-700 hover:bg-agro-800 text-white font-bold px-5 py-2.5 rounded-lg text-xs md:text-sm shadow transition flex items-center justify-center gap-2">
+                  <i class="fa-solid fa-plus-circle"></i> બિલમાં આઇટમ ઉમેરો (Add Item)
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Current Invoice Items and Totals -->
+        <div class="lg:col-span-5 space-y-4">
+          <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col h-full justify-between">
+            <div>
+              <div class="flex items-center justify-between border-b pb-2 mb-3">
+                <h3 class="font-bold text-slate-800 flex items-center gap-2 text-sm">
+                  <i class="fa-solid fa-receipt text-agro-700"></i> ચાલુ બિલ આઇટમ્સ
+                </h3>
+                <span id="currentBillNo" class="text-xs bg-agro-100 text-agro-800 font-bold px-2 py-0.5 rounded">બિલ નં: BA-001</span>
+              </div>
+
+              <div class="overflow-x-auto max-h-64 overflow-y-auto border rounded-lg mb-3">
+                <table class="w-full text-left text-xs">
+                  <thead class="bg-slate-100 text-slate-600 uppercase font-semibold">
+                    <tr>
+                      <th class="p-2">વિગત</th>
+                      <th class="p-2 text-center">જથ્થો</th>
+                      <th class="p-2 text-right">ભાવ</th>
+                      <th class="p-2 text-right">કુલ (₹)</th>
+                      <th class="p-2 text-center">રદ</th>
+                    </tr>
+                  </thead>
+                  <tbody id="billItemsBody" class="divide-y divide-slate-100">
+                    <tr id="emptyBillRow">
+                      <td colspan="5" class="text-center py-8 text-slate-400">
+                        <i class="fa-solid fa-basket-shopping text-2xl mb-1 text-slate-300 block"></i>
+                        હજુ સુધી કોઈ આઇટમ ઉમેરેલ નથી.
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <!-- Breakdown -->
+            <div class="bg-slate-50 p-3 rounded-lg border space-y-1.5 text-xs">
+              <div class="flex justify-between text-slate-600">
+                <span>કુલ આઇટમ રકમ:</span>
+                <span id="summaryGross" class="font-semibold">₹ 0.00</span>
+              </div>
+              <div class="flex justify-between text-amber-800 bg-amber-50 rounded px-2 py-1">
+                <span>Composition Scheme: બિલમાં GST અલગથી વસૂલાત નથી</span>
+                <span class="font-semibold">Bill of Supply</span>
+              </div>
+              <span id="summaryGst" class="hidden">₹ 0.00</span>
+              <div class="flex justify-between text-slate-600">
+                <span>ડિસ્કાઉન્ટ:</span>
+                <span id="summaryDiscount" class="text-red-500 font-semibold">- ₹ 0.00</span>
+              </div>
+              <div class="flex justify-between items-center border-t border-slate-300 pt-2 text-sm font-bold text-slate-900">
+                <span>ચૂકવવાપાત્ર રકમ:</span>
+                <span id="summaryNet" class="text-lg text-agro-700 font-black">₹ 0.00</span>
+              </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="grid grid-cols-2 gap-2 mt-3">
+              <button onclick="clearCurrentBill()" class="py-2.5 border border-slate-300 text-slate-700 font-semibold rounded-lg hover:bg-slate-100 transition text-xs">
+                <i class="fa-solid fa-rotate-left mr-1"></i> રદ કરો
+              </button>
+              <button onclick="saveAndPreviewBill()" class="py-2.5 bg-agro-700 hover:bg-agro-800 text-white font-bold rounded-lg transition text-xs shadow flex items-center justify-center gap-1.5">
+                <i class="fa-solid fa-check"></i> બિલ પાકું કરો
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. INVENTORY & STOCK MANAGEMENT TAB -->
+    <div id="inventoryTab" class="tab-content hidden space-y-4">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2 w-full md:w-auto">
+          <div class="relative w-full md:w-64">
+            <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+            <input type="text" id="inventorySearch" placeholder="પ્રોડક્ટ અથવા બેચ શોધો..." class="w-full pl-8 pr-3 py-1.5 border rounded-lg text-xs focus:outline-none focus:ring-2 focus:ring-agro-600" oninput="renderInventoryTable()">
+          </div>
+          <select id="categoryFilter" class="px-3 py-1.5 border rounded-lg text-xs bg-white focus:outline-none" onchange="renderInventoryTable()">
+            <option value="ALL">બધી કેટેગરી</option>
+            <option value="બિયારણ">બિયારણ (Seeds)</option>
+            <option value="જંતુનાશક દવા">જંતુનાશક દવા (Pesticides)</option>
+            <option value="ખાતર">ખાતર (Fertilizers)</option>
+            <option value="અન્ય">અન્ય (Other)</option>
+          </select>
+        </div>
+
+        <button onclick="openProductModal()" class="w-full md:w-auto bg-agro-700 hover:bg-agro-800 text-white font-semibold px-4 py-2 rounded-lg text-xs flex items-center justify-center gap-1.5 shadow">
+          <i class="fa-solid fa-plus"></i> નવી પ્રોડક્ટ ઉમેરો
+        </button>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-slate-100 text-slate-700 uppercase font-semibold border-b">
+              <tr>
+                <th class="p-2.5">પ્રોડક્ટનું નામ</th>
+                <th class="p-2.5">પ્રકાર</th>
+                <th class="p-2.5">બેચ નંબર</th>
+                <th class="p-2.5">એક્સપાયરી</th>
+                <th class="p-2.5">GST %</th>
+                <th class="p-2.5 text-right">ખરીદ કિંમત</th>
+                <th class="p-2.5 text-right">વેચાણ કિંમત</th>
+                <th class="p-2.5 text-center">સ્ટોક</th>
+                <th class="p-2.5 text-center">ક્રિયા</th>
+              </tr>
+            </thead>
+            <tbody id="inventoryTableBody" class="divide-y divide-slate-100">
+              <!-- Dynamically Populated -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. SUPPLIER / VENDOR MANAGEMENT TAB (NEW) -->
+    <div id="supplierTab" class="tab-content hidden space-y-4">
+      <!-- Supplier Action Bar -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        
+        <!-- Left: Supplier List -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-3">
+          <div class="flex items-center justify-between border-b pb-2">
+            <h3 class="font-bold text-slate-800 text-xs md:text-sm flex items-center gap-2">
+              <i class="fa-solid fa-building text-agro-700"></i> સપ્લાયર / કંપની યાદી
+            </h3>
+            <button onclick="openSupplierModal()" class="bg-agro-700 hover:bg-agro-800 text-white px-2.5 py-1 rounded text-xs font-semibold">
+              + નવો સપ્લાયર
+            </button>
+          </div>
+
+          <div class="relative">
+            <i class="fa-solid fa-search absolute left-2.5 top-2 text-slate-400 text-xs"></i>
+            <input type="text" id="supplierSearchInput" placeholder="સપ્લાયર શોધો..." class="w-full pl-7 pr-3 py-1.5 border rounded-lg text-xs" oninput="renderSuppliersList()">
+          </div>
+
+          <div id="suppliersContainer" class="space-y-2 max-h-80 overflow-y-auto divide-y divide-slate-100">
+            <!-- Suppliers list rendered here -->
+          </div>
+        </div>
+
+        <!-- Right: Supplier Purchase Entry & Ledger -->
+        <div class="md:col-span-2 bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-4">
+          <div id="supplierHeaderDetails" class="border-b pb-3 flex flex-wrap justify-between items-center gap-2">
+            <div>
+              <h2 id="supDetailName" class="text-base font-bold text-slate-800">સપ્લાયર પસંદ કરો</h2>
+              <p id="supDetailSub" class="text-xs text-slate-500">મોબાઇલ અને GSTIN વિગત</p>
+            </div>
+            <div class="text-right">
+              <span class="text-xs text-slate-500 block">કુલ આપવાપાત્ર બાકી રકમ</span>
+              <span id="supDetailBalance" class="text-xl font-black text-rose-600">₹ 0.00</span>
+            </div>
+          </div>
+
+          <!-- Supplier Actions: New Purchase Bill OR Payment -->
+          <div id="supplierActionsContainer" class="hidden grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <!-- 1. Quick Purchase Entry -->
+            <button onclick="openPurchaseEntryModal()" class="p-3 bg-agro-50 hover:bg-agro-100 border border-agro-300 rounded-xl text-left flex items-center gap-3 transition">
+              <div class="w-10 h-10 rounded-lg bg-agro-600 text-white flex items-center justify-center text-lg">
+                <i class="fa-solid fa-dolly"></i>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-agro-900">+ નવી ખરીદી એન્ટ્રી (Purchase)</p>
+                <p class="text-[10px] text-agro-700">માલની આવક અને સ્ટોક વધારો</p>
+              </div>
+            </button>
+
+            <!-- 2. Record Payment to Supplier -->
+            <button onclick="openSupplierPayModal()" class="p-3 bg-blue-50 hover:bg-blue-100 border border-blue-300 rounded-xl text-left flex items-center gap-3 transition">
+              <div class="w-10 h-10 rounded-lg bg-blue-600 text-white flex items-center justify-center text-lg">
+                <i class="fa-solid fa-money-bill-wave"></i>
+              </div>
+              <div>
+                <p class="text-xs font-bold text-blue-900">સપ્લાયરને ચૂકવણી (Payment)</p>
+                <p class="text-[10px] text-blue-700">કંપનીને આપેલ રૂપિયાની નોંધ</p>
+              </div>
+            </button>
+          </div>
+
+          <!-- Supplier Ledger History Table -->
+          <div>
+            <h4 class="text-xs font-bold text-slate-700 uppercase mb-2">સપ્લાયર ખાતાવહી (ખરીદી & ચૂકવણી ઇતિહાસ)</h4>
+            <div class="overflow-x-auto border rounded-lg">
+              <table class="w-full text-xs text-left">
+                <thead class="bg-slate-100 text-slate-600 font-semibold border-b">
+                  <tr>
+                    <th class="p-2">તારીખ</th>
+                    <th class="p-2">બિલ / વિગત</th>
+                    <th class="p-2 text-right">ખરીદી રકમ (+)</th>
+                    <th class="p-2 text-right">ચૂકવેલ રકમ (-)</th>
+                    <th class="p-2 text-right">બાકી રકમ</th>
+                  </tr>
+                </thead>
+                <tbody id="supplierLedgerBody" class="divide-y divide-slate-100">
+                  <tr>
+                    <td colspan="5" class="text-center py-6 text-slate-400">કોઈ સપ્લાયર પસંદ કરો</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. KHATA BOOK (ખેડૂત ખાતાવહી / ઉધાર) TAB -->
+    <div id="khataTab" class="tab-content hidden space-y-4">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <!-- Farmer List -->
+        <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+          <h3 class="font-bold text-slate-800 text-xs md:text-sm mb-3 flex items-center gap-2">
+            <i class="fa-solid fa-users text-agro-700"></i> ખેડૂત ખાતાઓની યાદી
+          </h3>
+          <div class="relative mb-3">
+            <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+            <input type="text" id="khataFarmerSearch" placeholder="ખેડૂત અથવા ગામ શોધો..." class="w-full pl-8 pr-3 py-1.5 border rounded-lg text-xs focus:outline-none" oninput="renderFarmerKhataList()">
+          </div>
+          <div id="khataFarmersList" class="space-y-2 max-h-80 overflow-y-auto divide-y divide-slate-100">
+            <!-- Farmers List -->
+          </div>
+        </div>
+
+        <!-- Ledger & Payment Details -->
+        <div class="md:col-span-2 bg-white p-4 rounded-xl shadow-sm border border-slate-200 space-y-4">
+          <div id="khataDetailHeader" class="border-b pb-3 flex flex-wrap justify-between items-center gap-2">
+            <div>
+              <h2 id="khataFarmerName" class="text-base font-bold text-slate-800">ખેડૂત પસંદ કરો</h2>
+              <p id="khataFarmerSub" class="text-xs text-slate-500">ગામ અને મોબાઇલ વિગતો</p>
+            </div>
+            <div class="text-right">
+              <span class="text-xs text-slate-500 block">કુલ બાકી ઉધાર રકમ</span>
+              <span id="khataFarmerBalance" class="text-xl font-black text-red-600">₹ 0.00</span>
+            </div>
+          </div>
+
+          <!-- Add Payment Transaction -->
+          <div id="khataActionForm" class="hidden bg-slate-50 p-3 rounded-lg border space-y-2">
+            <h4 class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+              <i class="fa-solid fa-money-bill-transfer text-green-600"></i> જમા રકમ નોંધો (ખેડૂતે રૂપિયા આપ્યા)
+            </h4>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <input type="number" id="khataPayAmount" placeholder="જમા રકમ (₹)" class="px-3 py-1.5 border rounded text-xs">
+              <input type="text" id="khataPayNote" placeholder="વિગત (દા.ત. રોકડા / GPAY)" class="px-3 py-1.5 border rounded text-xs">
+              <button onclick="recordFarmerPayment()" class="bg-green-700 hover:bg-green-800 text-white font-semibold px-3 py-1.5 rounded text-xs transition">
+                જમા નોંધો
+              </button>
+            </div>
+          </div>
+
+          <!-- Transaction Ledger -->
+          <div class="overflow-x-auto">
+            <h4 class="text-xs font-semibold text-slate-500 mb-2 uppercase">લેવડ-દેવડ ઇતિહાસ (Ledger History)</h4>
+            <table class="w-full text-xs text-left">
+              <thead class="bg-slate-100 text-slate-600 font-semibold border-b">
+                <tr>
+                  <th class="p-2">તારીખ</th>
+                  <th class="p-2">વિગત</th>
+                  <th class="p-2 text-right">ઉધાર (Debit)</th>
+                  <th class="p-2 text-right">જમા (Credit)</th>
+                  <th class="p-2 text-right">બાકી સિલક</th>
+                </tr>
+              </thead>
+              <tbody id="khataLedgerBody" class="divide-y divide-slate-100">
+                <tr>
+                  <td colspan="5" class="text-center py-6 text-slate-400">કોઈ ખેડૂત પસંદ કરો</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5. REPORTS MENU (NEW & DETAILED) -->
+    <div id="reportTab" class="tab-content hidden space-y-4">
+      <!-- Report Selection Controls -->
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+        <div class="flex flex-wrap items-center gap-2">
+          <label class="text-xs font-bold text-slate-700">રિપોર્ટ પસંદ કરો:</label>
+          <select id="activeReportType" onchange="generateSelectedReport()" class="px-3 py-1.5 border rounded-lg text-xs font-medium bg-white focus:outline-none">
+            <option value="dailySales">૧. રોજિંદો વેચાણ રિપોર્ટ (Daily Sales Report)</option>
+            <option value="stockRegister">૨. દવા & સ્ટોક રજિસ્ટર રિપોર્ટ (Stock Register)</option>
+            <option value="profitMargin">૩. નફો-નુકસાન રિપોર્ટ (Profit & Margin Report)</option>
+            <option value="gstSummary">૪. જીએસટી સમરી રિપોર્ટ (GST Sales Summary)</option>
+          </select>
+        </div>
+
+        <div class="flex items-center gap-2">
+          <button onclick="printReport()" class="bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow">
+            <i class="fa-solid fa-print"></i> રિપોર્ટ પ્રિન્ટ
+          </button>
+          <button onclick="exportReportCSV()" class="bg-agro-700 hover:bg-agro-800 text-white px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1 shadow">
+            <i class="fa-solid fa-file-excel"></i> એક્સેલ / CSV
+          </button>
+        </div>
+      </div>
+
+      <!-- Report View Area -->
+      <div id="reportContainer" class="bg-white rounded-xl shadow-sm border border-slate-200 p-4 overflow-hidden">
+        <!-- Rendered Report Content injected by JavaScript -->
+      </div>
+    </div>
+
+    <!-- 6. PAST INVOICES HISTORY TAB -->
+    <div id="historyTab" class="tab-content hidden space-y-4">
+      <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center justify-between gap-3">
+        <div class="relative w-full md:w-80">
+          <i class="fa-solid fa-magnifying-glass absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+          <input type="text" id="historySearch" placeholder="બિલ નં, ખેડૂતનું નામ અથવા ગામ..." class="w-full pl-8 pr-3 py-1.5 border rounded-lg text-xs focus:outline-none" oninput="renderInvoiceHistory()">
+        </div>
+        <div class="text-xs text-slate-500 font-medium">
+          કુલ જનરેટ કરેલા બિલો: <strong id="historyCount" class="text-slate-800">0</strong>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs md:text-sm">
+            <thead class="bg-slate-100 text-slate-700 uppercase font-semibold border-b">
+              <tr>
+                <th class="p-2.5">બિલ નં.</th>
+                <th class="p-2.5">તારીખ</th>
+                <th class="p-2.5">ખેડૂત & ગામ</th>
+                <th class="p-2.5">પ્રકાર</th>
+                <th class="p-2.5 text-right">કુલ રકમ</th>
+                <th class="p-2.5 text-center">ક્રિયા</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody" class="divide-y divide-slate-100">
+              <!-- Populated by JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- MODALS SECTION -->
+
+  <!-- 1. PRODUCT ADD / EDIT MODAL -->
+  <div id="productModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 no-print">
+    <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+      <div class="bg-agro-800 text-white px-5 py-3 flex justify-between items-center">
+        <h3 id="modalProdTitle" class="font-bold text-sm md:text-base flex items-center gap-2">
+          <i class="fa-solid fa-box-open"></i> નવી પ્રોડક્ટ ઉમેરો
+        </h3>
+        <button onclick="closeProductModal()" class="text-white/80 hover:text-white text-base">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form id="productForm" onsubmit="saveProduct(event)" class="p-5 space-y-3">
+        <input type="hidden" id="modalProdId">
+        
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">પ્રોડક્ટનું નામ *</label>
+          <input type="text" id="mProdName" required placeholder="દા.ત. કોરાજન ૬૦ મિલી અથવા કપાસ બિયારણ" class="w-full px-3 py-2 border rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-agro-600">
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">કેટેગરી *</label>
+            <select id="mProdCategory" required class="w-full px-3 py-2 border rounded-lg text-xs md:text-sm">
+              <option value="બિયારણ">બિયારણ (Seeds)</option>
+              <option value="જંતુનાશક દવા">જંતુનાશક દવા (Pesticides)</option>
+              <option value="ખાતર">ખાતર (Fertilizers)</option>
+              <option value="અન્ય">અન્ય (Other)</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">પેકિંગ / એકમ (Unit) *</label>
+            <input type="text" id="mProdUnit" required placeholder="દા.ત. 100 ml, થેલી, 50 Kg" class="w-full px-3 py-2 border rounded-lg text-xs md:text-sm">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">બેચ નંબર</label>
+            <input type="text" id="mProdBatch" placeholder="દા.ત. CR-890" class="w-full px-3 py-2 border rounded-lg text-xs md:text-sm uppercase">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">એક્સપાયરી તારીખ</label>
+            <input type="date" id="mProdExpiry" class="w-full px-3 py-2 border rounded-lg text-xs md:text-sm">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">GST (%)</label>
+            <select id="mProdGst" class="w-full px-2 py-2 border rounded-lg text-xs">
+              <option value="0">0%</option>
+              <option value="5">5%</option>
+              <option value="12">12%</option>
+              <option value="18" selected>18%</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">ખરીદ કિંમત (₹)</label>
+            <input type="number" id="mProdCost" min="0" step="any" required placeholder="₹ 0" class="w-full px-2 py-2 border rounded-lg text-xs font-bold text-slate-700">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">વેચાણ કિંમત (₹)</label>
+            <input type="number" id="mProdPrice" min="0" step="any" required placeholder="₹ 0" class="w-full px-2 py-2 border rounded-lg text-xs font-bold text-agro-700">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">શરૂઆતનો સ્ટોક</label>
+            <input type="number" id="mProdStock" min="0" step="any" required value="10" class="w-full px-2 py-2 border rounded-lg text-xs font-bold">
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-3 border-t">
+          <button type="button" onclick="closeProductModal()" class="px-4 py-1.5 border rounded-lg text-xs font-semibold text-slate-600">રદ કરો</button>
+          <button type="submit" class="px-4 py-1.5 bg-agro-700 hover:bg-agro-800 text-white rounded-lg text-xs font-bold shadow">સાચવો</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 2. SUPPLIER ADD MODAL -->
+  <div id="supplierModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 no-print">
+    <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl overflow-hidden">
+      <div class="bg-agro-800 text-white px-5 py-3 flex justify-between items-center">
+        <h3 class="font-bold text-sm md:text-base flex items-center gap-2">
+          <i class="fa-solid fa-truck"></i> નવો સપ્લાયર / કંપની ઉમેરો
+        </h3>
+        <button onclick="closeSupplierModal()" class="text-white/80 hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form id="supplierForm" onsubmit="saveNewSupplier(event)" class="p-5 space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">સપ્લાયર / કંપનીનું નામ *</label>
+          <input type="text" id="supName" required placeholder="દા.ત. UPL ઇન્ડિયા લિમિટેડ" class="w-full px-3 py-2 border rounded-lg text-xs md:text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">સંપર્ક વ્યક્તિ / મોબાઇલ *</label>
+          <input type="tel" id="supPhone" required placeholder="દા.ત. 98250XXXXX" class="w-full px-3 py-2 border rounded-lg text-xs md:text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">સરનામું / શહેર</label>
+          <input type="text" id="supAddress" placeholder="દા.ત. અમદાવાદ / રાજકોટ" class="w-full px-3 py-2 border rounded-lg text-xs md:text-sm">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">GSTIN નંબર</label>
+          <input type="text" id="supGstin" placeholder="24AAACU..." class="w-full px-3 py-2 border rounded-lg text-xs md:text-sm uppercase">
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+          <button type="button" onclick="closeSupplierModal()" class="px-4 py-1.5 border rounded-lg text-xs font-semibold text-slate-600">રદ કરો</button>
+          <button type="submit" class="px-4 py-1.5 bg-agro-700 hover:bg-agro-800 text-white rounded-lg text-xs font-bold shadow">સપ્લાયર સાચવો</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 3. PURCHASE ENTRY MODAL -->
+  <div id="purchaseModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 no-print">
+    <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
+      <div class="bg-agro-800 text-white px-5 py-3 flex justify-between items-center">
+        <h3 class="font-bold text-sm md:text-base flex items-center gap-2">
+          <i class="fa-solid fa-cart-flatbed"></i> સપ્લાયર પાસેથી નવી ખરીદી (Purchase Bill)
+        </h3>
+        <button onclick="closePurchaseEntryModal()" class="text-white/80 hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form id="purchaseForm" onsubmit="savePurchaseEntry(event)" class="p-5 space-y-3">
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">સપ્લાયર બિલ નં *</label>
+            <input type="text" id="pBillInvoiceNo" required placeholder="દા.ત. INV-9042" class="w-full px-3 py-1.5 border rounded-lg text-xs font-mono">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">ખરીદી તારીખ *</label>
+            <input type="date" id="pBillDate" required class="w-full px-3 py-1.5 border rounded-lg text-xs">
+          </div>
+        </div>
+
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">આવતી પ્રોડક્ટ પસંદ કરો *</label>
+          <select id="pBillProduct" required class="w-full px-3 py-2 border rounded-lg text-xs md:text-sm font-medium">
+            <!-- options from products -->
+          </select>
+        </div>
+
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">બેચ નંબર</label>
+            <input type="text" id="pBillBatch" placeholder="દા.ત. BT-2026" class="w-full px-3 py-1.5 border rounded-lg text-xs uppercase">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">નવી એક્સપાયરી તારીખ</label>
+            <input type="date" id="pBillExpiry" class="w-full px-3 py-1.5 border rounded-lg text-xs">
+          </div>
+        </div>
+
+        <div class="grid grid-cols-3 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">ખરીદેલ જથ્થો (Qty) *</label>
+            <input type="number" id="pBillQty" min="1" step="any" required value="10" class="w-full px-3 py-1.5 border rounded-lg text-xs font-bold" oninput="calcPurchaseTotal()">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">ખરીદ ભાવ (દર ₹) *</label>
+            <input type="number" id="pBillCostRate" min="0" step="any" required placeholder="₹ 0" class="w-full px-3 py-1.5 border rounded-lg text-xs font-bold" oninput="calcPurchaseTotal()">
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">કુલ બિલ રકમ (₹)</label>
+            <input type="number" id="pBillTotalAmt" readonly class="w-full px-3 py-1.5 border rounded-lg text-xs bg-slate-100 font-black text-rose-700">
+          </div>
+        </div>
+
+        <div class="flex justify-end gap-2 pt-2 border-t">
+          <button type="button" onclick="closePurchaseEntryModal()" class="px-4 py-1.5 border rounded-lg text-xs font-semibold text-slate-600">રદ કરો</button>
+          <button type="submit" class="px-4 py-1.5 bg-agro-700 hover:bg-agro-800 text-white rounded-lg text-xs font-bold shadow">ખરીદી નોંધો & સ્ટોક વધારો</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 4. SUPPLIER PAYMENT MODAL -->
+  <div id="supplierPayModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 no-print">
+    <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl overflow-hidden">
+      <div class="bg-blue-800 text-white px-5 py-3 flex justify-between items-center">
+        <h3 class="font-bold text-sm md:text-base flex items-center gap-2">
+          <i class="fa-solid fa-money-check-dollar"></i> સપ્લાયરને ચૂકવણી નોંધો
+        </h3>
+        <button onclick="closeSupplierPayModal()" class="text-white/80 hover:text-white">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+      <form onsubmit="saveSupplierPayment(event)" class="p-5 space-y-3">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">ચૂકવેલ રકમ (₹) *</label>
+          <input type="number" id="supPayAmt" required min="1" step="any" placeholder="₹ 0.00" class="w-full px-3 py-2 border rounded-lg text-base font-bold text-blue-700">
+        </div>
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">ચુકવણી મોડ / વિગત</label>
+          <input type="text" id="supPayNote" placeholder="દા.ત. બેંક NEFT / ચેક નં / રોકડા" class="w-full px-3 py-2 border rounded-lg text-xs">
+        </div>
+        <div class="flex justify-end gap-2 pt-2 border-t">
+          <button type="button" onclick="closeSupplierPayModal()" class="px-4 py-1.5 border rounded-lg text-xs text-slate-600">રદ કરો</button>
+          <button type="submit" class="px-4 py-1.5 bg-blue-700 hover:bg-blue-800 text-white rounded-lg text-xs font-bold shadow">ચૂકવણી સાચવો</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 5. INVOICE PREVIEW / PRINT MODAL -->
+  <div id="invoiceModal" class="fixed inset-0 bg-black/70 z-50 hidden flex items-center justify-center p-2 sm:p-4 no-print">
+    <div class="bg-white rounded-2xl w-full max-w-3xl shadow-2xl flex flex-col max-h-[92vh] overflow-hidden">
+      <div class="bg-slate-800 text-white px-4 py-2.5 flex flex-wrap items-center justify-between gap-2 border-b">
+        <div class="flex items-center gap-2">
+          <span class="font-bold text-sm"><i class="fa-solid fa-file-invoice mr-1 text-green-400"></i> બિલ પ્રિવ્યૂ</span>
+          <span id="previewBillTag" class="text-xs bg-agro-700 px-2 py-0.5 rounded font-semibold">રોકડ બિલ</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="shareInvoiceWhatsApp()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
+            <i class="fa-brands fa-whatsapp"></i> વોટ્સએપ
+          </button>
+          <button onclick="window.print()" class="bg-agro-600 hover:bg-agro-700 text-white px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1">
+            <i class="fa-solid fa-print"></i> પ્રિન્ટ
+          </button>
+          <button onclick="closeInvoiceModal()" class="text-slate-400 hover:text-white px-2 py-1 text-base">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Printable Sheet -->
+      <div class="overflow-y-auto p-4 sm:p-6 bg-slate-50 flex justify-center">
+        <div id="printArea" class="bg-white p-6 rounded-lg shadow-sm border border-slate-200 w-full max-w-2xl text-slate-800 text-xs sm:text-sm">
+          
+          <div class="text-center border-b-2 border-slate-800 pb-3 mb-3">
+            <h1 class="text-xl sm:text-2xl font-black text-slate-900 tracking-wide">શ્રી બહુચર એગ્રો સેન્ટર</h1>
+            <p class="font-bold text-sm border border-slate-400 inline-block px-3 py-1 mt-1">BILL OF SUPPLY — COMPOSITION TAXABLE PERSON</p>
+            <p class="text-[10px] font-semibold text-slate-700">Composition taxable person, not eligible to collect tax on supplies</p>
+            <p class="text-xs font-medium text-slate-700">બિયારણ, ખાતર અને ઉત્કૃષ્ટ જંતુનાશક દવાઓના વિક્રેતા</p>
+            <p class="text-xs text-slate-600">મુ. સુંદરી ભવાની, તા. હળવદ, જિ. મોરબી | મો. ૮૦૦૦૫૧૮૮૪૩ / 8000518843</p>
+            <div class="flex justify-between items-center text-[10px] text-slate-500 mt-1 pt-1 border-t border-dashed">
+              <span>GSTIN: <strong class="text-slate-700">તમારો સાચો GSTIN સેટ કરો</strong></span>
+              <span>એગ્રો લાયસન્સ નં: <strong>તમારો લાઇસન્સ નંબર ચકાસો</strong></span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded border mb-3 text-xs">
+            <div>
+              <p class="text-slate-500">ગ્રાહક / ખેડૂત:</p>
+              <p id="pCustName" class="font-bold text-slate-900 text-sm">-</p>
+              <p class="text-slate-600">ગામ: <span id="pCustVillage" class="font-medium">-</span> | મો: <span id="pCustPhone" class="font-medium">-</span></p>
+            </div>
+            <div class="text-right">
+              <p class="text-slate-500">બિલ નંબર:</p>
+              <p id="pBillNo" class="font-bold text-slate-900 text-sm">BA-001</p>
+              <p class="text-slate-600">તારીખ: <span id="pBillDate" class="font-medium">-</span></p>
+              <p class="text-slate-600">પ્રકાર: <span id="pBillType" class="font-bold text-agro-800">રોકડ</span></p>
+            </div>
+          </div>
+
+          <table class="w-full border-collapse border border-slate-300 text-left mb-3 text-xs">
+            <thead>
+              <tr class="bg-slate-100 text-slate-700 font-bold border-b border-slate-300">
+                <th class="p-1 border border-slate-300 w-7 text-center">ક્રમ</th>
+                <th class="p-1.5 border border-slate-300">વિગત (દવા/બિયારણ)</th>
+                <th class="p-1.5 border border-slate-300">બેચ નં</th>
+                <th class="p-1.5 border border-slate-300 text-center">એક્સપાયરી</th>
+                <th class="p-1.5 border border-slate-300 text-center">જથ્થો</th>
+                <th class="p-1.5 border border-slate-300 text-right">ભાવ (₹)</th>
+                <th class="p-1.5 border border-slate-300 text-right">કુલ (₹)</th>
+              </tr>
+            </thead>
+            <tbody id="pItemsBody"></tbody>
+            <tfoot class="border-t-2 border-slate-700 font-semibold bg-slate-50">
+              <tr>
+                <td colspan="4" class="p-1.5 border border-slate-300 text-right font-bold">કુલ સરવાળો (Total):</td>
+                <td id="pTotalQty" class="p-1.5 border border-slate-300 text-center font-bold">0</td>
+                <td class="p-1.5 border border-slate-300 text-right">-</td>
+                <td id="pGrandTotal" class="p-1.5 border border-slate-300 text-right font-black text-sm text-slate-900">₹ 0.00</td>
+              </tr>
+            </tfoot>
+          </table>
+
+          <div class="border-t pt-2 space-y-1 text-xs">
+            <p class="text-slate-700">શબ્દોમાં: <strong id="pAmountInWords">શૂન્ય પૂરા</strong></p>
+            <div class="grid grid-cols-2 gap-4 pt-2 items-end">
+              <div class="text-[9px] text-slate-500">
+                <p>૧. વેચેલો માલ પાછો લેવાશે નહીં.</p>
+                <p>૨. દવાનો છંટકાવ કૃષિ નિષ્ણાતની સલાહ મુજબ કરવો.</p>
+              </div>
+              <div class="text-right text-xs">
+                <p class="mb-6 font-medium">શ્રી બહુચર એગ્રો સેન્ટર વતી</p>
+                <p class="border-t border-slate-400 inline-block px-4 font-bold text-slate-800">અધિકૃત સહી</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 6. APK INSTALL INFO MODAL -->
+  <div id="installModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-4 no-print">
+    <div class="bg-white rounded-2xl w-full max-w-md shadow-2xl p-5 space-y-3">
+      <div class="flex items-center justify-between border-b pb-2">
+        <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+          <i class="fa-solid fa-mobile-screen-button text-agro-700"></i> મોબાઇલમાં ઍપ (APK) ઇન્સ્ટોલેશન
+        </h3>
+        <button onclick="closeInstallModal()" class="text-slate-400 hover:text-slate-700">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="space-y-2 text-xs text-slate-600">
+        <p class="font-bold text-agro-800">૧. સીધું ઇન્સ્ટોલ (બ્રાઉઝરમાંથી):</p>
+        <p>ક્રોમ (Chrome) બ્રાઉઝરમાં ઉપર જમણી બાજુ <strong>ત્રણ ટપકાં (⋮)</strong> પર ક્લિક કરીને <strong>"Add to Home screen"</strong> અથવા <strong>"Install app"</strong> પસંદ કરો.</p>
+        
+        <p class="font-bold text-slate-800 pt-2">૨. ડાયરેક્ટ .APK ફાઇલ બનાવવા માટે:</p>
+        <p>આ વેબ પેજ લિંકને <strong>PWABuilder.com</strong> અથવા <strong>Capacitor CLI</strong> માં નાખીને ગૂગલ પ્લે-સ્ટોર કક્ષાની સિંગલ .apk બનાવી શકાય છે.</p>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button onclick="closeInstallModal()" class="bg-agro-700 hover:bg-agro-800 text-white font-bold px-4 py-1.5 rounded-lg text-xs">સમજાઈ ગયું</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JAVASCRIPT APPLICATION LOGIC -->
+  <script>
+    // --- Initial Agro Data ---
+    const DEFAULT_PRODUCTS = [
+      { id: '1', name: 'કપાસ બિયારણ (BG-II બોલગાર્ડ)', category: 'બિયારણ', unit: '૪૫૦ ગ્રામ પેકેટ', batch: 'BG-409', expiry: '2027-11-30', hsn: '1209', gst: 0, costPrice: 750, price: 864, stock: 85 },
+      { id: '2', name: 'કોરાજન જંતુનાશક (Coragen FMC)', category: 'જંતુનાશક દવા', unit: '૬૦ મિલી બોટલ', batch: 'CR-104', expiry: '2027-04-15', hsn: '3808', gst: 18, costPrice: 1050, price: 1250, stock: 24 },
+      { id: '3', name: 'યુરિયા ખાતર (IFFCO Neem Coated)', category: 'ખાતર', unit: '૪૫ કિલો બેગ', batch: 'UR-88', expiry: '2028-12-31', hsn: '3102', gst: 5, costPrice: 245, price: 268, stock: 120 },
+      { id: '4', name: 'પ્રોફેનોફોસ + સાયપરમેથ્રિન ૪૪% EC', category: 'જંતુનાશક દવા', unit: '૧ લિટર બોટલ', batch: 'PF-22', expiry: '2026-11-10', hsn: '3808', gst: 18, costPrice: 540, price: 680, stock: 3 },
+      { id: '5', name: 'ડી.એ.પી ખાતર (DAP 18:46:0)', category: 'ખાતર', unit: '૫૦ કિલો બેગ', batch: 'DP-901', expiry: '2028-01-01', hsn: '3105', gst: 5, costPrice: 1250, price: 1350, stock: 45 },
+      { id: '6', name: 'સલ્ફર ૮૦% WDG (ફૂગનાશક)', category: 'જંતુનાશક દવા', unit: '૧ કિલો પાઉચ', batch: 'SF-11', expiry: '2027-02-28', hsn: '3808', gst: 12, costPrice: 175, price: 220, stock: 18 }
+    ];
+
+    const DEFAULT_SUPPLIERS = [
+      { id: 'sup1', name: 'FMC ઇન્ડિયા પ્રાઇવેટ લિમિટેડ', phone: '9825112233', address: 'અમદાવાદ', gstin: '24AAACF1234K1Z2', balance: 25000 },
+      { id: 'sup2', name: 'ઇફ્કો ફર્ટિલાઇઝર્સ (IFFCO કડી)', phone: '9426334455', address: 'કડી', gstin: '24AAACI9876L1Z4', balance: 12000 },
+      { id: 'sup3', name: 'રાસી સીડ્સ લિમિટેડ', phone: '9727445566', address: 'રાજકોટ', gstin: '24AAACR5544M1Z9', balance: 0 }
+    ];
+
+    const DEFAULT_FARMERS = [
+      { id: 'f1', name: 'રમેશભાઈ ગોવિંદભાઈ પટેલ', village: 'સુંદરી ભવાની', phone: '9825123456', balance: 3500 },
+      { id: 'f2', name: 'હરેશભાઈ મગનભાઈ પટેલ', village: 'કડી', phone: '9428789012', balance: 0 },
+      { id: 'f3', name: 'ભરતસિંહ ચાવડા', village: 'હળવદ', phone: '9712345678', balance: 8200 }
+    ];
+
+    // --- State Storage ---
+    let products = JSON.parse(localStorage.getItem('bahuchar_products')) || DEFAULT_PRODUCTS;
+    let suppliers = JSON.parse(localStorage.getItem('bahuchar_suppliers')) || DEFAULT_SUPPLIERS;
+    let supplierLedger = JSON.parse(localStorage.getItem('bahuchar_sup_ledger')) || [
+      { id: 'sl1', supplierName: 'FMC ઇન્ડિયા પ્રાઇવેટ લિમિટેડ', date: '2026-10-15', billNo: 'FMC-8941', purchase: 25000, payment: 0, balance: 25000, note: 'કોરાજન સ્ટોક ખરીદી' },
+      { id: 'sl2', supplierName: 'ઇફ્કો ફર્ટિલાઇઝર્સ (IFFCO કડી)', date: '2026-10-18', billNo: 'IFF-201', purchase: 12000, payment: 0, balance: 12000, note: 'યુરિયા અને DAP' }
+    ];
+    let farmers = JSON.parse(localStorage.getItem('bahuchar_farmers')) || DEFAULT_FARMERS;
+    let khataLedger = JSON.parse(localStorage.getItem('bahuchar_ledger')) || [
+      { id: 'l1', farmerName: 'રમેશભાઈ ગોવિંદભાઈ પટેલ', date: '2026-10-20', type: 'ઉધાર બિલ', debit: 3500, credit: 0, balance: 3500, note: 'બિલ BA-000' },
+      { id: 'l2', farmerName: 'ભરતસિંહ ચાવડા', date: '2026-10-22', type: 'ઉધાર બિલ', debit: 8200, credit: 0, balance: 8200, note: 'બિલ BA-000' }
+    ];
+    let invoices = JSON.parse(localStorage.getItem('bahuchar_invoices')) || [];
+
+    let currentBillItems = [];
+    let activeSupplierForDetails = null;
+    let activeFarmerForKhata = null;
+    let lastGeneratedInvoice = null;
+
+    // --- On Application Load ---
+    window.addEventListener('DOMContentLoaded', () => {
+      syncLocalStorage();
+      populateProductDropdowns();
+      renderInventoryTable();
+      renderSuppliersList();
+      renderFarmerSuggestions();
+      renderFarmerKhataList();
+      renderInvoiceHistory();
+      updateDashboardStats();
+      generateNextBillNumber();
+    });
+
+    function syncLocalStorage() {
+      localStorage.setItem('bahuchar_products', JSON.stringify(products));
+      localStorage.setItem('bahuchar_suppliers', JSON.stringify(suppliers));
+      localStorage.setItem('bahuchar_sup_ledger', JSON.stringify(supplierLedger));
+      localStorage.setItem('bahuchar_farmers', JSON.stringify(farmers));
+      localStorage.setItem('bahuchar_ledger', JSON.stringify(khataLedger));
+      localStorage.setItem('bahuchar_invoices', JSON.stringify(invoices));
+    }
+
+    // --- Tab Switching ---
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('border-agro-400', 'text-white', 'bg-agro-800');
+        btn.classList.add('border-transparent', 'text-green-200');
+      });
+
+      const target = document.getElementById(tabId);
+      if (target) target.classList.remove('hidden');
+
+      const btn = document.getElementById(`tabBtn-${tabId}`);
+      if (btn) {
+        btn.classList.add('border-agro-400', 'text-white', 'bg-agro-800');
+        btn.classList.remove('border-transparent', 'text-green-200');
+      }
+
+      if (tabId === 'inventoryTab') renderInventoryTable();
+      if (tabId === 'supplierTab') renderSuppliersList();
+      if (tabId === 'khataTab') renderFarmerKhataList();
+      if (tabId === 'reportTab') generateSelectedReport();
+      if (tabId === 'historyTab') renderInvoiceHistory();
+      updateDashboardStats();
+    }
+
+    function showToast(message, type = 'info') {
+      const container = document.getElementById('toastBox');
+      const toast = document.createElement('div');
+      
+      let bg = 'bg-slate-800 text-white';
+      let icon = 'fa-info-circle';
+      if (type === 'success') { bg = 'bg-green-700 text-white'; icon = 'fa-circle-check'; }
+      if (type === 'error') { bg = 'bg-red-700 text-white'; icon = 'fa-triangle-exclamation'; }
+
+      toast.className = `${bg} px-4 py-2 rounded-lg shadow-lg text-xs font-semibold flex items-center gap-2 transform transition-all duration-300 pointer-events-auto`;
+      toast.innerHTML = `<i class="fa-solid ${icon}"></i> <span>${message}</span>`;
+      container.appendChild(toast);
+
+      setTimeout(() => {
+        toast.style.opacity = '0';
+        setTimeout(() => toast.remove(), 300);
+      }, 3000);
+    }
+
+    // --- Billing Mechanics ---
+    function generateNextBillNumber() {
+      const nextNum = invoices.length + 1;
+      const formatted = 'BA-' + String(nextNum).padStart(3, '0');
+      document.getElementById('currentBillNo').innerText = `બિલ નં: ${formatted}`;
+      return formatted;
+    }
+
+    function populateProductDropdowns() {
+      const select = document.getElementById('selectedProduct');
+      const purchaseSelect = document.getElementById('pBillProduct');
+      
+      select.innerHTML = '<option value="">-- બિયારણ / ખાતર / દવા પસંદ કરો --</option>';
+      purchaseSelect.innerHTML = '<option value="">-- પ્રોડક્ટ પસંદ કરો --</option>';
+
+      products.forEach(p => {
+        const opt = document.createElement('option');
+        opt.value = p.id;
+        opt.textContent = `${p.name} (${p.unit}) - સ્ટોક: ${p.stock} - ભાવ: ₹${p.price}`;
+        select.appendChild(opt);
+
+        const pOpt = document.createElement('option');
+        pOpt.value = p.id;
+        pOpt.textContent = `${p.name} (${p.unit})`;
+        purchaseSelect.appendChild(pOpt);
+      });
+    }
+
+    function onProductSelect() {
+      const pId = document.getElementById('selectedProduct').value;
+      const infoBox = document.getElementById('prodQuickInfo');
+      if (!pId) {
+        infoBox.classList.add('hidden');
+        document.getElementById('itemRate').value = 0;
+        document.getElementById('itemQty').value = 1;
+        document.getElementById('itemSubTotalPreview').value = '0.00';
+        return;
+      }
+
+      const p = products.find(x => x.id === pId);
+      if (p) {
+        infoBox.classList.remove('hidden');
+        document.getElementById('quickBatch').innerText = p.batch || 'N/A';
+        document.getElementById('quickExp').innerText = p.expiry || 'N/A';
+        document.getElementById('quickStock').innerText = `${p.stock} ${p.unit}`;
+        document.getElementById('quickGst').innerText = `${p.gst}%`;
+        
+        document.getElementById('itemRate').value = p.price;
+        document.getElementById('itemQty').value = 1;
+        document.getElementById('itemDisc').value = 0;
+        calculateItemTotalPreview();
+      }
+    }
+
+    function calculateItemTotalPreview() {
+      const qty = parseFloat(document.getElementById('itemQty').value) || 0;
+      const rate = parseFloat(document.getElementById('itemRate').value) || 0;
+      const disc = parseFloat(document.getElementById('itemDisc').value) || 0;
+      const total = Math.max(0, (qty * rate) - disc);
+      document.getElementById('itemSubTotalPreview').value = total.toFixed(2);
+    }
+
+    function addItemToCurrentBill() {
+      const pId = document.getElementById('selectedProduct').value;
+      if (!pId) {
+        showToast('કૃપા કરીને પહેલા પ્રોડક્ટ પસંદ કરો!', 'error');
+        return;
+      }
+
+      const p = products.find(x => x.id === pId);
+      const qty = parseFloat(document.getElementById('itemQty').value) || 0;
+      const rate = parseFloat(document.getElementById('itemRate').value) || 0;
+      const disc = parseFloat(document.getElementById('itemDisc').value) || 0;
+
+      if (qty <= 0) {
+        showToast('જથ્થો (Qty) ૦ થી વધુ હોવો જોઈએ', 'error');
+        return;
+      }
+
+      const alreadyAdded = currentBillItems
+        .filter(item => item.productId === p.id)
+        .reduce((sum, item) => sum + Number(item.qty || 0), 0);
+      const remainingStock = Number(p.stock || 0) - alreadyAdded;
+      if (qty > remainingStock) {
+        showToast(`પૂરતો સ્ટોક નથી. હાલ બિલમાં ઉમેર્યા પછી બાકી સ્ટોક: ${Math.max(0, remainingStock)} છે.`, 'error');
+        return;
+      }
+      if (rate < 0 || disc < 0 || disc > qty * rate) {
+        showToast('ભાવ અને છૂટની રકમ તપાસો. છૂટ કુલ આઇટમ રકમથી વધુ ન હોવી જોઈએ.', 'error');
+        return;
+      }
+
+      const lineTotal = Math.max(0, (qty * rate) - disc);
+      const gstAmount = (lineTotal * (p.gst || 0)) / (100 + (p.gst || 0));
+
+      currentBillItems.push({
+        productId: p.id,
+        name: p.name,
+        unit: p.unit,
+        batch: p.batch || 'N/A',
+        expiry: p.expiry || 'N/A',
+        costPrice: p.costPrice || 0,
+        gstPercent: p.gst || 0,
+        gstAmount: gstAmount,
+        qty: qty,
+        rate: rate,
+        discount: disc,
+        total: lineTotal
+      });
+
+      renderCurrentBillItems();
+      
+      document.getElementById('selectedProduct').value = '';
+      document.getElementById('prodQuickInfo').classList.add('hidden');
+      document.getElementById('itemQty').value = 1;
+      document.getElementById('itemRate').value = 0;
+      document.getElementById('itemDisc').value = 0;
+      document.getElementById('itemSubTotalPreview').value = '0.00';
+
+      showToast(`${p.name} ઉમેરાઈ ગઈ`, 'success');
+    }
+
+    function removeBillItem(index) {
+      currentBillItems.splice(index, 1);
+      renderCurrentBillItems();
+    }
+
+    function renderCurrentBillItems() {
+      const tbody = document.getElementById('billItemsBody');
+      tbody.innerHTML = '';
+
+      if (currentBillItems.length === 0) {
+        tbody.innerHTML = `
+          <tr id="emptyBillRow">
+            <td colspan="5" class="text-center py-6 text-slate-400">
+              <i class="fa-solid fa-basket-shopping text-2xl mb-1 text-slate-300 block"></i>
+              હજુ સુધી કોઈ આઇટમ ઉમેરેલ નથી.
+            </td>
+          </tr>
+        `;
+        updateBillTotals();
+        return;
+      }
+
+      currentBillItems.forEach((item, idx) => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition border-b';
+        tr.innerHTML = `
+          <td class="p-2">
+            <div class="font-semibold text-slate-800">${item.name}</div>
+            <div class="text-[10px] text-slate-400">બેચ: ${item.batch} | Exp: ${item.expiry}</div>
+          </td>
+          <td class="p-2 text-center font-bold">${item.qty}</td>
+          <td class="p-2 text-right">₹${item.rate}</td>
+          <td class="p-2 text-right font-bold text-slate-900">₹${item.total.toFixed(2)}</td>
+          <td class="p-2 text-center">
+            <button onclick="removeBillItem(${idx})" class="text-red-500 hover:text-red-700 p-1">
+              <i class="fa-solid fa-trash-can"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      updateBillTotals();
+    }
+
+    function updateBillTotals() {
+      let gross = 0;
+      let totalGst = 0;
+      let totalDisc = 0;
+
+      currentBillItems.forEach(item => {
+        gross += (item.qty * item.rate);
+        totalDisc += item.discount;
+        totalGst += item.gstAmount;
+      });
+
+      const net = Math.max(0, gross - totalDisc);
+
+      document.getElementById('summaryGross').innerText = `₹ ${gross.toFixed(2)}`;
+      document.getElementById('summaryDiscount').innerText = `- ₹ ${totalDisc.toFixed(2)}`;
+      document.getElementById('summaryGst').innerText = `₹ ${totalGst.toFixed(2)}`;
+      document.getElementById('summaryNet').innerText = `₹ ${net.toFixed(2)}`;
+    }
+
+    function clearCurrentBill() {
+      currentBillItems = [];
+      document.getElementById('custName').value = '';
+      document.getElementById('custVillage').value = '';
+      document.getElementById('custPhone').value = '';
+      document.getElementById('farmerOldBalanceBanner').classList.add('hidden');
+      renderCurrentBillItems();
+    }
+
+    function checkFarmerHistory() {
+      const name = document.getElementById('custName').value.trim();
+      const match = farmers.find(f => f.name.toLowerCase() === name.toLowerCase());
+      const banner = document.getElementById('farmerOldBalanceBanner');
+
+      if (match) {
+        document.getElementById('custVillage').value = match.village;
+        document.getElementById('custPhone').value = match.phone;
+        if (match.balance > 0) {
+          banner.classList.remove('hidden');
+          document.getElementById('farmerOldBalVal').innerText = `₹ ${match.balance.toFixed(2)}`;
+        } else {
+          banner.classList.add('hidden');
+        }
+      } else {
+        banner.classList.add('hidden');
+      }
+    }
+
+    function renderFarmerSuggestions() {
+      const datalist = document.getElementById('customerSuggestions');
+      datalist.innerHTML = '';
+      farmers.forEach(f => {
+        const opt = document.createElement('option');
+        opt.value = f.name;
+        opt.label = `${f.village} (${f.phone})`;
+        datalist.appendChild(opt);
+      });
+    }
+
+    function saveAndPreviewBill() {
+      const custName = document.getElementById('custName').value.trim();
+      const village = document.getElementById('custVillage').value.trim();
+      const phone = document.getElementById('custPhone').value.trim() || 'N/A';
+      const billType = document.querySelector('input[name="billType"]:checked').value;
+
+      if (!custName) {
+        showToast('ખેડૂતનું નામ દાખલ કરો!', 'error');
+        return;
+      }
+      if (!village) {
+        showToast('ગામનું નામ દાખલ કરો!', 'error');
+        return;
+      }
+      if (currentBillItems.length === 0) {
+        showToast('ઓછામાં ઓછી ૧ આઇટમ ઉમેરો!', 'error');
+        return;
+      }
+
+      const qtyByProduct = {};
+      currentBillItems.forEach(item => {
+        qtyByProduct[item.productId] = (qtyByProduct[item.productId] || 0) + Number(item.qty || 0);
+      });
+      for (const [productId, requestedQty] of Object.entries(qtyByProduct)) {
+        const product = products.find(p => p.id === productId);
+        if (!product || requestedQty > Number(product.stock || 0)) {
+          showToast(`સ્ટોક બદલાયો છે અથવા પૂરતો નથી: ${product?.name || 'પ્રોડક્ટ'}. બિલ પાકું કરતાં પહેલાં આઇટમ તપાસો.`, 'error');
+          return;
+        }
+      }
+
+      const billNo = generateNextBillNumber();
+      const today = new Date().toLocaleDateString('gu-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      
+      let grandTotal = 0;
+      let totalCost = 0;
+      currentBillItems.forEach(i => {
+        grandTotal += i.total;
+        totalCost += (i.qty * i.costPrice);
+      });
+
+      // Deduct Stock
+      currentBillItems.forEach(item => {
+        const prod = products.find(p => p.id === item.productId);
+        if (prod) {
+          prod.stock = Math.max(0, prod.stock - item.qty);
+        }
+      });
+
+      // Handle Farmer Credit
+      let farmerObj = farmers.find(f => f.name.toLowerCase() === custName.toLowerCase());
+      if (!farmerObj) {
+        farmerObj = {
+          id: 'f_' + Date.now(),
+          name: custName,
+          village: village,
+          phone: phone,
+          balance: 0
+        };
+        farmers.push(farmerObj);
+      } else {
+        farmerObj.village = village;
+        if (phone !== 'N/A') farmerObj.phone = phone;
+      }
+
+      if (billType === 'ઉધાર') {
+        farmerObj.balance += grandTotal;
+        khataLedger.push({
+          id: 'l_' + Date.now(),
+          farmerName: custName,
+          date: today,
+          type: 'ઉધાર બિલ',
+          debit: grandTotal,
+          credit: 0,
+          balance: farmerObj.balance,
+          note: `બિલ નં: ${billNo}`
+        });
+      }
+
+      const invoiceData = {
+        billNo: billNo,
+        date: today,
+        timestamp: Date.now(),
+        farmerName: custName,
+        village: village,
+        phone: phone,
+        billType: billType,
+        items: [...currentBillItems],
+        grandTotal: grandTotal,
+        totalCost: totalCost,
+        profit: grandTotal - totalCost
+      };
+
+      invoices.unshift(invoiceData);
+      lastGeneratedInvoice = invoiceData;
+
+      syncLocalStorage();
+      populateProductDropdowns();
+      renderInventoryTable();
+      renderFarmerSuggestions();
+      renderInvoiceHistory();
+      updateDashboardStats();
+
+      openInvoiceModal(invoiceData);
+      clearCurrentBill();
+      showToast(`બિલ ${billNo} પાકું થઈ ગયું!`, 'success');
+    }
+
+    function openInvoiceModal(inv) {
+      document.getElementById('pCustName').innerText = inv.farmerName;
+      document.getElementById('pCustVillage').innerText = inv.village;
+      document.getElementById('pCustPhone').innerText = inv.phone;
+      document.getElementById('pBillNo').innerText = inv.billNo;
+      document.getElementById('pBillDate').innerText = inv.date;
+      document.getElementById('pBillType').innerText = inv.billType;
+      document.getElementById('previewBillTag').innerText = `${inv.billType} બિલ`;
+
+      const tbody = document.getElementById('pItemsBody');
+      tbody.innerHTML = '';
+
+      let totalQty = 0;
+      inv.items.forEach((item, index) => {
+        totalQty += item.qty;
+        const tr = document.createElement('tr');
+        tr.className = 'border-b border-slate-200';
+        tr.innerHTML = `
+          <td class="p-1 border border-slate-300 text-center">${index + 1}</td>
+          <td class="p-1.5 border border-slate-300">
+            <strong>${item.name}</strong> <span class="text-[9px] text-slate-500">(${item.unit})</span>
+          </td>
+          <td class="p-1.5 border border-slate-300">${item.batch}</td>
+          <td class="p-1.5 border border-slate-300 text-center">${item.expiry}</td>
+          <td class="p-1.5 border border-slate-300 text-center font-bold">${item.qty}</td>
+          <td class="p-1.5 border border-slate-300 text-right">₹${item.rate}</td>
+          <td class="p-1.5 border border-slate-300 text-right font-bold">₹${item.total.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      document.getElementById('pTotalQty').innerText = totalQty;
+      document.getElementById('pGrandTotal').innerText = `₹ ${inv.grandTotal.toFixed(2)}`;
+      document.getElementById('pAmountInWords').innerText = `₹ ${inv.grandTotal.toFixed(2)} પૂરા (અંકે)`;
+
+      document.getElementById('invoiceModal').classList.remove('hidden');
+    }
+
+    function closeInvoiceModal() {
+      document.getElementById('invoiceModal').classList.add('hidden');
+    }
+
+    function shareInvoiceWhatsApp() {
+      if (!lastGeneratedInvoice) return;
+      const inv = lastGeneratedInvoice;
+      
+      let itemLines = '';
+      inv.items.forEach((it, i) => {
+        itemLines += `${i+1}. ${it.name} (${it.qty} ${it.unit}) = ₹${it.total}\n`;
+      });
+
+      const text = `*શ્રી બહુચર એગ્રો સેન્ટર - હળવદ*\n` +
+                   `મો. 8000518843 | મુ. સુંદરી ભવાની\n` +
+                   `--------------------------------\n` +
+                   `*બિલ નં:* ${inv.billNo} | *તારીખ:* ${inv.date}\n` +
+                   `*ખેડૂત:* ${inv.farmerName} (${inv.village})\n` +
+                   `*પ્રકાર:* ${inv.billType}\n` +
+                   `--------------------------------\n` +
+                   `*આઇટમ્સ:*\n${itemLines}` +
+                   `--------------------------------\n` +
+                   `*કુલ રકમ: ₹ ${inv.grandTotal.toFixed(2)}*\n\n` +
+                   `બહુચર એગ્રોમાંથી ખરીદી કરવા બદલ આપનો ખૂબ ખૂબ આભાર! 🙏`;
+
+      const encoded = encodeURIComponent(text);
+      window.open(`https://api.whatsapp.com/send?text=${encoded}`, '_blank');
+    }
+
+    // --- Inventory Management ---
+    function renderInventoryTable() {
+      const tbody = document.getElementById('inventoryTableBody');
+      tbody.innerHTML = '';
+      const search = (document.getElementById('inventorySearch')?.value || '').toLowerCase();
+      const cat = document.getElementById('categoryFilter')?.value || 'ALL';
+
+      const filtered = products.filter(p => {
+        const matchSearch = p.name.toLowerCase().includes(search) || (p.batch && p.batch.toLowerCase().includes(search));
+        const matchCat = (cat === 'ALL') || (p.category === cat);
+        return matchSearch && matchCat;
+      });
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="9" class="text-center py-6 text-slate-400">કોઈ પ્રોડક્ટ મળી નથી</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(p => {
+        const isLow = p.stock <= 5;
+        const isExpiring = checkIsExpiringSoon(p.expiry);
+
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 transition border-b';
+        tr.innerHTML = `
+          <td class="p-2.5">
+            <div class="font-bold text-slate-900">${p.name}</div>
+            <div class="text-[10px] text-slate-500">${p.unit}</div>
+          </td>
+          <td class="p-2.5">
+            <span class="px-2 py-0.5 rounded text-[11px] font-semibold ${getCategoryBadge(p.category)}">${p.category}</span>
+          </td>
+          <td class="p-2.5 font-mono text-xs">${p.batch || '-'}</td>
+          <td class="p-2.5">
+            <span class="${isExpiring ? 'text-red-600 font-bold' : 'text-slate-600'}">${p.expiry || '-'}</span>
+            ${isExpiring ? '<span class="block text-[9px] text-red-500 font-bold">નજીક છે!</span>' : ''}
+          </td>
+          <td class="p-2.5 font-medium">${p.gst}%</td>
+          <td class="p-2.5 text-right font-semibold text-slate-600">₹ ${p.costPrice || 0}</td>
+          <td class="p-2.5 text-right font-bold text-agro-800">₹ ${p.price}</td>
+          <td class="p-2.5 text-center">
+            <span class="inline-block px-2.5 py-0.5 rounded-full text-xs font-bold ${isLow ? 'bg-red-100 text-red-700 animate-pulse' : 'bg-green-100 text-green-800'}">
+              ${p.stock}
+            </span>
+          </td>
+          <td class="p-2.5 text-center space-x-1">
+            <button onclick="editProduct('${p.id}')" class="text-blue-600 hover:text-blue-800 p-1" title="સુધારો">
+              <i class="fa-solid fa-pen-to-square"></i>
+            </button>
+            <button onclick="deleteProduct('${p.id}')" class="text-red-500 hover:text-red-700 p-1" title="ડિલીટ">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function getCategoryBadge(cat) {
+      if (cat === 'બિયારણ') return 'bg-amber-100 text-amber-800';
+      if (cat === 'જંતુનાશક દવા') return 'bg-rose-100 text-rose-800';
+      if (cat === 'ખાતર') return 'bg-emerald-100 text-emerald-800';
+      return 'bg-slate-100 text-slate-800';
+    }
+
+    function checkIsExpiringSoon(expiryDateStr) {
+      if (!expiryDateStr) return false;
+      const exp = new Date(expiryDateStr);
+      const now = new Date();
+      const diffDays = (exp - now) / (1000 * 60 * 60 * 24);
+      return diffDays <= 90 && diffDays >= 0;
+    }
+
+    function openProductModal(prod = null) {
+      document.getElementById('productForm').reset();
+      if (prod) {
+        document.getElementById('modalProdTitle').innerText = 'પ્રોડક્ટમાં સુધારો કરો';
+        document.getElementById('modalProdId').value = prod.id;
+        document.getElementById('mProdName').value = prod.name;
+        document.getElementById('mProdCategory').value = prod.category;
+        document.getElementById('mProdUnit').value = prod.unit;
+        document.getElementById('mProdBatch').value = prod.batch || '';
+        document.getElementById('mProdExpiry').value = prod.expiry || '';
+        document.getElementById('mProdGst').value = prod.gst;
+        document.getElementById('mProdCost').value = prod.costPrice || 0;
+        document.getElementById('mProdPrice').value = prod.price;
+        document.getElementById('mProdStock').value = prod.stock;
+      } else {
+        document.getElementById('modalProdTitle').innerText = 'નવી પ્રોડક્ટ ઉમેરો';
+        document.getElementById('modalProdId').value = '';
+      }
+      document.getElementById('productModal').classList.remove('hidden');
+    }
+
+    function closeProductModal() {
+      document.getElementById('productModal').classList.add('hidden');
+    }
+
+    function saveProduct(e) {
+      e.preventDefault();
+      const id = document.getElementById('modalProdId').value;
+      const name = document.getElementById('mProdName').value.trim();
+      const category = document.getElementById('mProdCategory').value;
+      const unit = document.getElementById('mProdUnit').value.trim();
+      const batch = document.getElementById('mProdBatch').value.trim();
+      const expiry = document.getElementById('mProdExpiry').value;
+      const gst = parseFloat(document.getElementById('mProdGst').value) || 0;
+      const costPrice = parseFloat(document.getElementById('mProdCost').value) || 0;
+      const price = parseFloat(document.getElementById('mProdPrice').value) || 0;
+      const stock = parseFloat(document.getElementById('mProdStock').value) || 0;
+
+      if (id) {
+        const p = products.find(x => x.id === id);
+        if (p) {
+          p.name = name; p.category = category; p.unit = unit;
+          p.batch = batch; p.expiry = expiry; p.gst = gst;
+          p.costPrice = costPrice; p.price = price; p.stock = stock;
+          showToast('પ્રોડક્ટ સુધારી લેવામાં આવી', 'success');
+        }
+      } else {
+        products.push({
+          id: 'p_' + Date.now(),
+          name, category, unit, batch, expiry, gst, costPrice, price, stock
+        });
+        showToast('નવી પ્રોડક્ટ ઉમેરાઈ ગઈ', 'success');
+      }
+
+      syncLocalStorage();
+      populateProductDropdowns();
+      renderInventoryTable();
+      updateDashboardStats();
+      closeProductModal();
+    }
+
+    function editProduct(id) {
+      const p = products.find(x => x.id === id);
+      if (p) openProductModal(p);
+    }
+
+    function deleteProduct(id) {
+      if (confirm('શું તમે ખરેખર આ પ્રોડક્ટ ડિલીટ કરવા માંગો છો?')) {
+        products = products.filter(x => x.id !== id);
+        syncLocalStorage();
+        populateProductDropdowns();
+        renderInventoryTable();
+        updateDashboardStats();
+        showToast('પ્રોડક્ટ કાઢી નાખવામાં આવી', 'info');
+      }
+    }
+
+    // --- SUPPLIER / VENDOR MANAGEMENT (NEW) ---
+    function renderSuppliersList() {
+      const container = document.getElementById('suppliersContainer');
+      container.innerHTML = '';
+      const q = (document.getElementById('supplierSearchInput')?.value || '').toLowerCase();
+
+      const filtered = suppliers.filter(s => s.name.toLowerCase().includes(q) || s.phone.includes(q) || (s.address && s.address.toLowerCase().includes(q)));
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 py-3 text-center">કોઈ સપ્લાયર મળ્યા નથી</p>`;
+        return;
+      }
+
+      filtered.forEach(s => {
+        const div = document.createElement('div');
+        div.className = `p-2.5 rounded-lg cursor-pointer hover:bg-slate-50 transition ${activeSupplierForDetails?.id === s.id ? 'bg-agro-50 border border-agro-300' : ''}`;
+        div.onclick = () => selectSupplier(s);
+        div.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="font-bold text-slate-800 text-xs">${s.name}</p>
+              <p class="text-[11px] text-slate-500">${s.address || 'ગુજરાત'} | મો: ${s.phone}</p>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-bold ${s.balance > 0 ? 'text-rose-600' : 'text-slate-500'}">
+                ₹ ${s.balance.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function selectSupplier(s) {
+      activeSupplierForDetails = s;
+      document.getElementById('supDetailName').innerText = s.name;
+      document.getElementById('supDetailSub').innerText = `મો: ${s.phone} | સરનામું: ${s.address || 'N/A'} | GSTIN: ${s.gstin || 'N/A'}`;
+      document.getElementById('supDetailBalance').innerText = `₹ ${s.balance.toFixed(2)}`;
+      document.getElementById('supplierActionsContainer').classList.remove('hidden');
+
+      renderSupplierLedger(s.name);
+      renderSuppliersList();
+    }
+
+    function renderSupplierLedger(supplierName) {
+      const tbody = document.getElementById('supplierLedgerBody');
+      tbody.innerHTML = '';
+
+      const txns = supplierLedger.filter(l => l.supplierName === supplierName);
+
+      if (txns.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">કોઈ ખરીદી કે ચૂકવણી નોંધાયેલ નથી</td></tr>`;
+        return;
+      }
+
+      txns.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b';
+        tr.innerHTML = `
+          <td class="p-2">${t.date}</td>
+          <td class="p-2">
+            <span class="font-bold text-slate-800">${t.billNo || 'ચૂકવણી'}</span>
+            <span class="block text-[10px] text-slate-400">${t.note || ''}</span>
+          </td>
+          <td class="p-2 text-right font-semibold text-rose-600">${t.purchase > 0 ? '₹ ' + t.purchase.toFixed(2) : '-'}</td>
+          <td class="p-2 text-right font-semibold text-green-700">${t.payment > 0 ? '₹ ' + t.payment.toFixed(2) : '-'}</td>
+          <td class="p-2 text-right font-bold text-slate-800">₹ ${t.balance.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function openSupplierModal() {
+      document.getElementById('supplierForm').reset();
+      document.getElementById('supplierModal').classList.remove('hidden');
+    }
+    function closeSupplierModal() {
+      document.getElementById('supplierModal').classList.add('hidden');
+    }
+
+    function saveNewSupplier(e) {
+      e.preventDefault();
+      const name = document.getElementById('supName').value.trim();
+      const phone = document.getElementById('supPhone').value.trim();
+      const address = document.getElementById('supAddress').value.trim();
+      const gstin = document.getElementById('supGstin').value.trim();
+
+      const newSup = {
+        id: 'sup_' + Date.now(),
+        name, phone, address, gstin, balance: 0
+      };
+
+      suppliers.push(newSup);
+      syncLocalStorage();
+      renderSuppliersList();
+      selectSupplier(newSup);
+      closeSupplierModal();
+      showToast('નવો સપ્લાયર ઉમેરાઈ ગયો!', 'success');
+    }
+
+    // Purchase Entry
+    function openPurchaseEntryModal() {
+      if (!activeSupplierForDetails) return;
+      document.getElementById('purchaseForm').reset();
+      document.getElementById('pBillDate').value = new Date().toISOString().split('T')[0];
+      populateProductDropdowns();
+      document.getElementById('purchaseModal').classList.remove('hidden');
+    }
+    function closePurchaseEntryModal() {
+      document.getElementById('purchaseModal').classList.add('hidden');
+    }
+
+    function calcPurchaseTotal() {
+      const q = parseFloat(document.getElementById('pBillQty').value) || 0;
+      const r = parseFloat(document.getElementById('pBillCostRate').value) || 0;
+      document.getElementById('pBillTotalAmt').value = (q * r).toFixed(2);
+    }
+
+    function savePurchaseEntry(e) {
+      e.preventDefault();
+      if (!activeSupplierForDetails) return;
+
+      const billNo = document.getElementById('pBillInvoiceNo').value.trim();
+      const date = document.getElementById('pBillDate').value;
+      const prodId = document.getElementById('pBillProduct').value;
+      const batch = document.getElementById('pBillBatch').value.trim();
+      const expiry = document.getElementById('pBillExpiry').value;
+      const qty = parseFloat(document.getElementById('pBillQty').value) || 0;
+      const costRate = parseFloat(document.getElementById('pBillCostRate').value) || 0;
+      const totalPurchase = qty * costRate;
+
+      // Update Inventory Product Stock
+      const prod = products.find(p => p.id === prodId);
+      if (prod) {
+        prod.stock += qty;
+        prod.costPrice = costRate;
+        if (batch) prod.batch = batch;
+        if (expiry) prod.expiry = expiry;
+      }
+
+      // Update Supplier Balance & Ledger
+      activeSupplierForDetails.balance += totalPurchase;
+      supplierLedger.push({
+        id: 'sl_' + Date.now(),
+        supplierName: activeSupplierForDetails.name,
+        date: date,
+        billNo: billNo,
+        purchase: totalPurchase,
+        payment: 0,
+        balance: activeSupplierForDetails.balance,
+        note: `ખરીદી: ${prod ? prod.name : 'માલ'} (${qty} નંગ)`
+      });
+
+      syncLocalStorage();
+      renderInventoryTable();
+      selectSupplier(activeSupplierForDetails);
+      updateDashboardStats();
+      closePurchaseEntryModal();
+      showToast('ખરીદી સફળતાપૂર્વક નોંધાઈ & સ્ટોક વધાર્યો!', 'success');
+    }
+
+    // Supplier Payment
+    function openSupplierPayModal() {
+      if (!activeSupplierForDetails) return;
+      document.getElementById('supPayAmt').value = '';
+      document.getElementById('supPayNote').value = '';
+      document.getElementById('supplierPayModal').classList.remove('hidden');
+    }
+    function closeSupplierPayModal() {
+      document.getElementById('supplierPayModal').classList.add('hidden');
+    }
+
+    function saveSupplierPayment(e) {
+      e.preventDefault();
+      if (!activeSupplierForDetails) return;
+
+      const amt = parseFloat(document.getElementById('supPayAmt').value) || 0;
+      const note = document.getElementById('supPayNote').value.trim() || 'ચૂકવણી';
+
+      if (amt <= 0) {
+        showToast('માન્ય રકમ દાખલ કરો!', 'error');
+        return;
+      }
+
+      if (amt > Number(activeSupplierForDetails.balance || 0)) {
+        showToast('ચૂકવણીની રકમ સપ્લાયરનાં બાકી બેલેન્સ કરતાં વધુ છે.', 'error');
+        return;
+      }
+      activeSupplierForDetails.balance = Number(activeSupplierForDetails.balance || 0) - amt;
+      const today = new Date().toLocaleDateString('gu-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+      supplierLedger.push({
+        id: 'sl_' + Date.now(),
+        supplierName: activeSupplierForDetails.name,
+        date: today,
+        billNo: 'PAYMENT',
+        purchase: 0,
+        payment: amt,
+        balance: activeSupplierForDetails.balance,
+        note: note
+      });
+
+      syncLocalStorage();
+      selectSupplier(activeSupplierForDetails);
+      updateDashboardStats();
+      closeSupplierPayModal();
+      showToast(`સપ્લાયરને ₹ ${amt} ચૂકવણી નોંધાઈ ગઈ`, 'success');
+    }
+
+    // --- KHATA BOOK LOGIC ---
+    function renderFarmerKhataList() {
+      const container = document.getElementById('khataFarmersList');
+      container.innerHTML = '';
+      const query = (document.getElementById('khataFarmerSearch')?.value || '').toLowerCase();
+
+      const filtered = farmers.filter(f => f.name.toLowerCase().includes(query) || f.village.toLowerCase().includes(query));
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 py-3 text-center">કોઈ ખેડૂત મળ્યા નથી</p>`;
+        return;
+      }
+
+      filtered.forEach(f => {
+        const div = document.createElement('div');
+        div.className = `p-2 rounded-lg cursor-pointer hover:bg-slate-50 transition ${activeFarmerForKhata?.name === f.name ? 'bg-green-50 border border-green-200' : ''}`;
+        div.onclick = () => selectFarmerForKhata(f);
+        div.innerHTML = `
+          <div class="flex justify-between items-start">
+            <div>
+              <p class="font-bold text-slate-800 text-xs">${f.name}</p>
+              <p class="text-[10px] text-slate-500">${f.village} | ${f.phone}</p>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-bold ${f.balance > 0 ? 'text-red-600' : 'text-green-700'}">
+                ₹ ${f.balance.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function selectFarmerForKhata(farmer) {
+      activeFarmerForKhata = farmer;
+      document.getElementById('khataFarmerName').innerText = farmer.name;
+      document.getElementById('khataFarmerSub').innerText = `ગામ: ${farmer.village} | મો: ${farmer.phone}`;
+      document.getElementById('khataFarmerBalance').innerText = `₹ ${farmer.balance.toFixed(2)}`;
+      document.getElementById('khataActionForm').classList.remove('hidden');
+
+      renderFarmerLedgerHistory(farmer.name);
+      renderFarmerKhataList();
+    }
+
+    function renderFarmerLedgerHistory(farmerName) {
+      const tbody = document.getElementById('khataLedgerBody');
+      tbody.innerHTML = '';
+
+      const farmerTransactions = khataLedger.filter(l => l.farmerName === farmerName);
+
+      if (farmerTransactions.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-6 text-slate-400">આ ખેડૂતનો કોઈ વ્યવહાર નોંધાયેલ નથી</td></tr>`;
+        return;
+      }
+
+      farmerTransactions.forEach(t => {
+        const tr = document.createElement('tr');
+        tr.className = 'border-b';
+        tr.innerHTML = `
+          <td class="p-2">${t.date}</td>
+          <td class="p-2">
+            <span class="font-medium">${t.type}</span>
+            <span class="block text-[10px] text-slate-400">${t.note || ''}</span>
+          </td>
+          <td class="p-2 text-right text-red-600 font-semibold">${t.debit > 0 ? '₹ ' + t.debit.toFixed(2) : '-'}</td>
+          <td class="p-2 text-right text-green-700 font-semibold">${t.credit > 0 ? '₹ ' + t.credit.toFixed(2) : '-'}</td>
+          <td class="p-2 text-right font-bold text-slate-800">₹ ${t.balance.toFixed(2)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function recordFarmerPayment() {
+      if (!activeFarmerForKhata) return;
+
+      const amt = parseFloat(document.getElementById('khataPayAmount').value) || 0;
+      const note = document.getElementById('khataPayNote').value.trim() || 'રોકડા જમા કર્યા';
+
+      if (amt <= 0) {
+        showToast('માન્ય રકમ દાખલ કરો', 'error');
+        return;
+      }
+
+      if (amt > Number(activeFarmerForKhata.balance || 0)) {
+        showToast('જમા રકમ ખેડૂતની બાકી ઉધાર રકમ કરતાં વધુ છે.', 'error');
+        return;
+      }
+      activeFarmerForKhata.balance = Number(activeFarmerForKhata.balance || 0) - amt;
+      const today = new Date().toLocaleDateString('gu-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+
+      khataLedger.push({
+        id: 'l_' + Date.now(),
+        farmerName: activeFarmerForKhata.name,
+        date: today,
+        type: 'જમા પાવતી (Payment)',
+        debit: 0,
+        credit: amt,
+        balance: activeFarmerForKhata.balance,
+        note: note
+      });
+
+      syncLocalStorage();
+      selectFarmerForKhata(activeFarmerForKhata);
+      updateDashboardStats();
+      document.getElementById('khataPayAmount').value = '';
+      document.getElementById('khataPayNote').value = '';
+      showToast(`₹ ${amt} સફળતાપૂર્વક જમા થયા`, 'success');
+    }
+
+    // --- REPORTS SYSTEM (NEW) ---
+    function generateSelectedReport() {
+      const type = document.getElementById('activeReportType').value;
+      const container = document.getElementById('reportContainer');
+
+      if (type === 'dailySales') {
+        renderDailySalesReport(container);
+      } else if (type === 'stockRegister') {
+        renderStockRegisterReport(container);
+      } else if (type === 'profitMargin') {
+        renderProfitMarginReport(container);
+      } else if (type === 'gstSummary') {
+        renderGstSummaryReport(container);
+      }
+    }
+
+    // 1. Daily Sales Report
+    function renderDailySalesReport(container) {
+      let cashTotal = 0;
+      let creditTotal = 0;
+      let grandTotal = 0;
+
+      invoices.forEach(inv => {
+        if (inv.billType === 'રોકડ') cashTotal += inv.grandTotal;
+        if (inv.billType === 'ઉધાર') creditTotal += inv.grandTotal;
+        grandTotal += inv.grandTotal;
+      });
+
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div class="border-b pb-3 flex justify-between items-center">
+            <div>
+              <h3 class="font-bold text-base text-slate-800">રોજિંદો વેચાણ રિપોર્ટ (Daily Sales Report)</h3>
+              <p class="text-xs text-slate-500">બહુચર એગ્રો સેન્ટર - કુલ તમામ વેચાણ આંકડા</p>
+            </div>
+            <div class="text-xs bg-slate-100 p-2 rounded-lg font-medium">કુલ બિલો: ${invoices.length}</div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 text-center">
+            <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+              <span class="text-xs text-green-700 font-semibold block">કુલ રોકડ વેચાણ</span>
+              <span class="text-lg font-bold text-green-800">₹ ${cashTotal.toFixed(2)}</span>
+            </div>
+            <div class="bg-red-50 p-3 rounded-lg border border-red-200">
+              <span class="text-xs text-red-700 font-semibold block">કુલ ઉધાર વેચાણ</span>
+              <span class="text-lg font-bold text-red-800">₹ ${creditTotal.toFixed(2)}</span>
+            </div>
+            <div class="bg-agro-50 p-3 rounded-lg border border-agro-300">
+              <span class="text-xs text-agro-800 font-semibold block">કુલ ટર્નઓવર</span>
+              <span class="text-lg font-black text-agro-900">₹ ${grandTotal.toFixed(2)}</span>
+            </div>
+          </div>
+
+          <table class="w-full text-xs text-left border mt-4">
+            <thead class="bg-slate-100 font-bold border-b">
+              <tr>
+                <th class="p-2">બિલ નં</th>
+                <th class="p-2">તારીખ</th>
+                <th class="p-2">ખેડૂતનું નામ</th>
+                <th class="p-2">ગામ</th>
+                <th class="p-2">પ્રકાર</th>
+                <th class="p-2 text-right">રકમ (₹)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y">
+              ${invoices.map(i => `
+                <tr>
+                  <td class="p-2 font-bold">${i.billNo}</td>
+                  <td class="p-2">${i.date}</td>
+                  <td class="p-2 font-medium">${i.farmerName}</td>
+                  <td class="p-2">${i.village}</td>
+                  <td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] ${i.billType === 'રોકડ' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} font-semibold">${i.billType}</span></td>
+                  <td class="p-2 text-right font-bold">₹ ${i.grandTotal.toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // 2. Stock Register Report (Expiring Highlighted in Red)
+    function renderStockRegisterReport(container) {
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div class="border-b pb-2 flex justify-between items-center">
+            <div>
+              <h3 class="font-bold text-base text-slate-800">બિયારણ, ખાતર & જંતુનાશક દવા સ્ટોક રજિસ્ટર</h3>
+              <p class="text-xs text-slate-500">લાલ હાઇલાઇટ = ૯૦ દિવસમાં એક્સપાયર થતી દવાઓ</p>
+            </div>
+            <span class="text-xs bg-slate-100 px-2.5 py-1 rounded">કુલ આઇટમ્સ: ${products.length}</span>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left border">
+              <thead class="bg-slate-100 font-bold border-b">
+                <tr>
+                  <th class="p-2">પ્રોડક્ટનું નામ</th>
+                  <th class="p-2">કેટેગરી</th>
+                  <th class="p-2">બેચ નંબર</th>
+                  <th class="p-2">એક્સપાયરી તારીખ</th>
+                  <th class="p-2 text-center">હાલનો સ્ટોક</th>
+                  <th class="p-2 text-right">ખરીદ દર (₹)</th>
+                  <th class="p-2 text-right">વેચાણ દર (₹)</th>
+                  <th class="p-2 text-right">કુલ સ્ટોક મૂલ્ય</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y">
+                ${products.map(p => {
+                  const isExp = checkIsExpiringSoon(p.expiry);
+                  const stockVal = p.stock * p.price;
+                  return `
+                    <tr class="${isExp ? 'bg-rose-50 text-rose-900 font-semibold' : ''}">
+                      <td class="p-2"><strong>${p.name}</strong> <span class="text-[10px] opacity-75">(${p.unit})</span></td>
+                      <td class="p-2">${p.category}</td>
+                      <td class="p-2 font-mono">${p.batch || '-'}</td>
+                      <td class="p-2 ${isExp ? 'text-red-700 font-bold' : ''}">${p.expiry || '-'} ${isExp ? '⚠️' : ''}</td>
+                      <td class="p-2 text-center font-bold">${p.stock}</td>
+                      <td class="p-2 text-right">₹ ${p.costPrice || 0}</td>
+                      <td class="p-2 text-right font-bold">₹ ${p.price}</td>
+                      <td class="p-2 text-right font-black">₹ ${stockVal.toFixed(2)}</td>
+                    </tr>
+                  `;
+                }).join('')}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    // 3. Profit & Margin Report
+    function renderProfitMarginReport(container) {
+      let totalSales = 0;
+      let totalCost = 0;
+      let totalProfit = 0;
+
+      invoices.forEach(inv => {
+        totalSales += inv.grandTotal;
+        totalCost += (inv.totalCost || 0);
+        totalProfit += (inv.profit || (inv.grandTotal - (inv.totalCost || 0)));
+      });
+
+      const marginPct = totalSales > 0 ? ((totalProfit / totalSales) * 100).toFixed(1) : 0;
+
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div class="border-b pb-2">
+            <h3 class="font-bold text-base text-slate-800">નફો-નુકસાન અને માર્જિન રિપોર્ટ (Profit & Margin)</h3>
+            <p class="text-xs text-slate-500">ખરીદ કિંમત અને વેચાણ કિંમતના આધારે અંદાજિત ચોખ્ખો નફો</p>
+          </div>
+
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-center">
+            <div class="bg-slate-50 p-3 rounded-lg border">
+              <span class="text-xs text-slate-500 font-medium block">કુલ વેચાણ (Revenue)</span>
+              <span class="text-base font-bold text-slate-800">₹ ${totalSales.toFixed(2)}</span>
+            </div>
+            <div class="bg-amber-50 p-3 rounded-lg border border-amber-200">
+              <span class="text-xs text-amber-700 font-medium block">માલની ખરીદ પડતર</span>
+              <span class="text-base font-bold text-amber-800">₹ ${totalCost.toFixed(2)}</span>
+            </div>
+            <div class="bg-green-50 p-3 rounded-lg border border-green-200">
+              <span class="text-xs text-green-700 font-bold block">અંદાજિત કુલ નફો</span>
+              <span class="text-xl font-black text-green-800">₹ ${totalProfit.toFixed(2)}</span>
+            </div>
+            <div class="bg-agro-50 p-3 rounded-lg border border-agro-200">
+              <span class="text-xs text-agro-700 font-bold block">સરેરાશ માર્જિન %</span>
+              <span class="text-xl font-black text-agro-800">${marginPct}%</span>
+            </div>
+          </div>
+
+          <table class="w-full text-xs text-left border mt-2">
+            <thead class="bg-slate-100 font-bold border-b">
+              <tr>
+                <th class="p-2">બિલ નં</th>
+                <th class="p-2">તારીખ</th>
+                <th class="p-2">ખેડૂત</th>
+                <th class="p-2 text-right">વેચાણ રકમ</th>
+                <th class="p-2 text-right">ખરીદ પડતર</th>
+                <th class="p-2 text-right">નફો (₹)</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y">
+              ${invoices.map(i => `
+                <tr>
+                  <td class="p-2 font-bold">${i.billNo}</td>
+                  <td class="p-2">${i.date}</td>
+                  <td class="p-2">${i.farmerName}</td>
+                  <td class="p-2 text-right font-medium">₹ ${i.grandTotal.toFixed(2)}</td>
+                  <td class="p-2 text-right text-slate-500">₹ ${(i.totalCost || 0).toFixed(2)}</td>
+                  <td class="p-2 text-right font-bold text-green-700">₹ ${(i.profit || 0).toFixed(2)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+      `;
+    }
+
+    // 4. GST Sales Summary Report
+    function renderGstSummaryReport(container) {
+      let slab0 = 0, slab5 = 0, slab12 = 0, slab18 = 0;
+      let tax0 = 0, tax5 = 0, tax12 = 0, tax18 = 0;
+
+      invoices.forEach(inv => {
+        inv.items.forEach(it => {
+          const rate = it.gstPercent || 0;
+          if (rate === 0) { slab0 += it.total; }
+          else if (rate === 5) { slab5 += it.total; tax5 += it.gstAmount; }
+          else if (rate === 12) { slab12 += it.total; tax12 += it.gstAmount; }
+          else if (rate === 18) { slab18 += it.total; tax18 += it.gstAmount; }
+        });
+      });
+
+      const totalTax = tax5 + tax12 + tax18;
+
+      container.innerHTML = `
+        <div class="space-y-4">
+          <div class="border-b pb-2">
+            <h3 class="font-bold text-base text-slate-800">વેચાણનો આંતરિક સારાંશ (Composition Scheme — ફાઇલિંગ માટે નહીં)</h3>
+            <p class="text-xs text-slate-500">આ રિપોર્ટ માત્ર આંતરિક અંદાજ માટે છે; GST રિટર્ન માટે ઉપયોગ કરતા પહેલાં એકાઉન્ટન્ટથી ચકાસો.</p>
+          </div>
+
+          <div class="overflow-x-auto">
+            <table class="w-full text-xs text-left border">
+              <thead class="bg-slate-100 font-bold border-b">
+                <tr>
+                  <th class="p-2.5">GST ટેક્સ સ્લેબ</th>
+                  <th class="p-2.5">મુખ્ય આઇટમ્સ ઉદાહરણ</th>
+                  <th class="p-2.5 text-right">કરપાત્ર વેચાણ મૂલ્ય (₹)</th>
+                  <th class="p-2.5 text-right">CGST (₹)</th>
+                  <th class="p-2.5 text-right">SGST (₹)</th>
+                  <th class="p-2.5 text-right">કુલ ટેક્સ રકમ (₹)</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y">
+                <tr>
+                  <td class="p-2.5 font-bold">૦% સ્લેબ (Exempt)</td>
+                  <td class="p-2.5 text-slate-500">બિયારણ (કપાસ, જીરૂ વગેરે)</td>
+                  <td class="p-2.5 text-right font-medium">₹ ${slab0.toFixed(2)}</td>
+                  <td class="p-2.5 text-right">₹ 0.00</td>
+                  <td class="p-2.5 text-right">₹ 0.00</td>
+                  <td class="p-2.5 text-right font-bold">₹ 0.00</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold">૫% સ્લેબ</td>
+                  <td class="p-2.5 text-slate-500">યુરિયા, DAP, રાસાયણિક ખાતર</td>
+                  <td class="p-2.5 text-right font-medium">₹ ${slab5.toFixed(2)}</td>
+                  <td class="p-2.5 text-right">₹ ${(tax5 / 2).toFixed(2)}</td>
+                  <td class="p-2.5 text-right">₹ ${(tax5 / 2).toFixed(2)}</td>
+                  <td class="p-2.5 text-right font-bold text-agro-800">₹ ${tax5.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold">૧૨% સ્લેબ</td>
+                  <td class="p-2.5 text-slate-500">કેટલીક ફૂગનાશક દવાઓ / સૂક્ષ્મ તત્ત્વો</td>
+                  <td class="p-2.5 text-right font-medium">₹ ${slab12.toFixed(2)}</td>
+                  <td class="p-2.5 text-right">₹ ${(tax12 / 2).toFixed(2)}</td>
+                  <td class="p-2.5 text-right">₹ ${(tax12 / 2).toFixed(2)}</td>
+                  <td class="p-2.5 text-right font-bold text-agro-800">₹ ${tax12.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td class="p-2.5 font-bold">૧૮% સ્લેબ</td>
+                  <td class="p-2.5 text-slate-500">જંતુનાશક દવાઓ (Insecticides)</td>
+                  <td class="p-2.5 text-right font-medium">₹ ${slab18.toFixed(2)}</td>
+                  <td class="p-2.5 text-right">₹ ${(tax18 / 2).toFixed(2)}</td>
+                  <td class="p-2.5 text-right">₹ ${(tax18 / 2).toFixed(2)}</td>
+                  <td class="p-2.5 text-right font-bold text-agro-800">₹ ${tax18.toFixed(2)}</td>
+                </tr>
+              </tbody>
+              <tfoot class="bg-slate-50 font-bold border-t-2">
+                <tr>
+                  <td colspan="5" class="p-2 text-right">કુલ એકત્રિત થયેલ GST:</td>
+                  <td class="p-2 text-right text-sm font-black text-slate-900">₹ ${totalTax.toFixed(2)}</td>
+                </tr>
+              </tfoot>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function printReport() {
+      document.body.classList.add('printing-report');
+      window.addEventListener('afterprint', function clearReportPrintMode() {
+        document.body.classList.remove('printing-report');
+      }, { once: true });
+      window.print();
+      // Fallback for browsers that do not fire afterprint reliably.
+      setTimeout(() => document.body.classList.remove('printing-report'), 2000);
+    }
+
+    function csvCell(value) {
+      let text = String(value ?? '');
+      if (/^[\s]*[=+\-@]/.test(text)) text = "'" + text;
+      return '"' + text.replace(/"/g, '""') + '"';
+    }
+
+    function downloadCSV(filename, rows) {
+      const csv = '\uFEFF' + rows.map(row => row.map(csvCell).join(',')).join('\r\n');
+      const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+    }
+
+    function exportReportCSV() {
+      const type = document.getElementById('activeReportType').value;
+      let rows = [];
+      const suffix = type;
+
+      if (type === 'dailySales') {
+        rows = [['બિલ નં.', 'તારીખ', 'ખેડૂત', 'ગામ', 'પ્રકાર', 'રકમ (₹)']];
+        invoices.forEach(i => rows.push([i.billNo, i.date, i.farmerName, i.village, i.billType, Number(i.grandTotal || 0).toFixed(2)]));
+      } else if (type === 'stockRegister') {
+        rows = [['પ્રોડક્ટ', 'કેટેગરી', 'બેચ', 'એક્સપાયરી', 'સ્ટોક', 'ખરીદ ભાવ (₹)', 'વેચાણ ભાવ (₹)', 'સ્ટોક મૂલ્ય (₹)']];
+        products.forEach(p => rows.push([p.name, p.category, p.batch, p.expiry, p.stock, p.costPrice, p.price, (Number(p.stock || 0) * Number(p.price || 0)).toFixed(2)]));
+      } else if (type === 'profitMargin') {
+        rows = [['બિલ નં.', 'તારીખ', 'ખેડૂત', 'વેચાણ (₹)', 'ખરીદ પડતર (₹)', 'નફો (₹)']];
+        invoices.forEach(i => {
+          const cost = Number(i.totalCost || 0);
+          const profit = Number(i.profit ?? (Number(i.grandTotal || 0) - cost));
+          rows.push([i.billNo, i.date, i.farmerName, Number(i.grandTotal || 0).toFixed(2), cost.toFixed(2), profit.toFixed(2)]);
+        });
+      } else if (type === 'gstSummary') {
+        rows = [['GST દર (%)', 'વેચાણ મૂલ્ય (₹)', 'GST (₹)', 'CGST (₹)', 'SGST (₹)']];
+        [0, 5, 12, 18].forEach(rate => {
+          let sales = 0, tax = 0;
+          invoices.forEach(inv => (inv.items || []).forEach(it => {
+            if (Number(it.gstPercent || 0) === rate) {
+              sales += Number(it.total || 0);
+              tax += Number(it.gstAmount || 0);
+            }
+          }));
+          rows.push([rate, sales.toFixed(2), tax.toFixed(2), (tax / 2).toFixed(2), (tax / 2).toFixed(2)]);
+        });
+      } else {
+        showToast('આ રિપોર્ટ માટે CSV ઉપલબ્ધ નથી.', 'error');
+        return;
+      }
+
+      downloadCSV(`Bahuchar_Agro_${suffix}_Report.csv`, rows);
+      showToast('રિપોર્ટ CSV તરીકે ડાઉનલોડ થઈ ગયો!', 'success');
+    }
+
+    // --- INVOICE HISTORY TAB ---
+    function renderInvoiceHistory() {
+      const tbody = document.getElementById('historyTableBody');
+      tbody.innerHTML = '';
+      const q = (document.getElementById('historySearch')?.value || '').toLowerCase();
+
+      const filtered = invoices.filter(inv => 
+        String(inv.billNo || '').toLowerCase().includes(q) ||
+        String(inv.farmerName || '').toLowerCase().includes(q) ||
+        String(inv.village || '').toLowerCase().includes(q)
+      );
+
+      document.getElementById('historyCount').innerText = filtered.length;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="6" class="text-center py-6 text-slate-400">કોઈ બિલ મળ્યું નથી</td></tr>`;
+        return;
+      }
+
+      filtered.forEach(inv => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-slate-50 border-b text-xs';
+        tr.innerHTML = `
+          <td class="p-2.5 font-bold text-agro-800">${inv.billNo}</td>
+          <td class="p-2.5 text-slate-600">${inv.date}</td>
+          <td class="p-2.5">
+            <span class="font-semibold text-slate-900">${inv.farmerName}</span>
+            <span class="block text-[10px] text-slate-500">${inv.village}</span>
+          </td>
+          <td class="p-2.5">
+            <span class="px-2 py-0.5 rounded text-[10px] font-semibold ${inv.billType === 'રોકડ' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}">
+              ${inv.billType}
+            </span>
+          </td>
+          <td class="p-2.5 text-right font-black text-slate-900">₹ ${inv.grandTotal.toFixed(2)}</td>
+          <td class="p-2.5 text-center">
+            <button onclick='viewSpecificInvoice("${inv.billNo}")' class="text-agro-700 hover:text-agro-900 font-bold text-xs">
+              <i class="fa-solid fa-eye"></i> બિલ જુઓ
+            </button>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function viewSpecificInvoice(billNo) {
+      const inv = invoices.find(x => x.billNo === billNo);
+      if (inv) {
+        lastGeneratedInvoice = inv;
+        openInvoiceModal(inv);
+      }
+    }
+
+    // --- DASHBOARD COUNTERS ---
+    function updateDashboardStats() {
+      const today = new Date().toLocaleDateString('gu-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
+      let todayTotal = 0;
+      invoices.forEach(inv => {
+        if (inv.date === today) todayTotal += inv.grandTotal;
+      });
+      document.getElementById('statTodaySale').innerText = `₹ ${todayTotal.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+      let totalUdhar = 0;
+      farmers.forEach(f => totalUdhar += (f.balance || 0));
+      document.getElementById('statTotalUdhar').innerText = `₹ ${totalUdhar.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+
+      const lowStockCount = products.filter(p => p.stock <= 5).length;
+      document.getElementById('statLowStock').innerText = `${lowStockCount} વસ્તુ`;
+
+      let totalSupPayable = 0;
+      suppliers.forEach(s => totalSupPayable += (s.balance || 0));
+      document.getElementById('statSupplierPayable').innerText = `₹ ${totalSupPayable.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
+    }
+
+    // Composition Scheme: do not represent this as a GST Tax Invoice or collect GST separately.
+    // This local HTML version stores data on this device only; it does not provide cloud sync.
+    function exportAgroBackup() {
+      try {
+        const backup = {
+          app: 'Shree Bahuchar Agro', schemaVersion: 1, gstScheme: 'composition',
+          exportedAt: new Date().toISOString(),
+          data: {
+            products: products, suppliers: suppliers, supplierLedger: supplierLedger,
+            farmers: farmers, khataLedger: khataLedger, invoices: invoices,
+            localStorage: Object.fromEntries(Object.keys(localStorage).filter(k => k.startsWith('bahuchar_')).map(k => [k, localStorage.getItem(k)]))
+          }
+        };
+        const blob = new Blob([JSON.stringify(backup, null, 2)], {type:'application/json'});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url;
+        a.download = 'Shree-Bahuchar-Agro-Backup-' + new Date().toISOString().slice(0,10) + '.json';
+        document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        showToast('બેકઅપ ફાઇલ ડાઉનલોડ થઈ.', 'success');
+      } catch (e) { showToast('બેકઅપ નિષ્ફળ: ' + e.message, 'error'); }
+    }
+    function importAgroBackup(event) {
+      const file = event.target.files && event.target.files[0]; if (!file) return;
+      const reader = new FileReader();
+      reader.onload = () => {
+        try {
+          const backup = JSON.parse(reader.result);
+          if (!backup || backup.app !== 'Shree Bahuchar Agro' || !backup.data || !backup.data.localStorage) throw new Error('આ માન્ય શ્રી બહુચર એગ્રો બેકઅપ નથી.');
+          if (!confirm('ચેતવણી: હાલના આ ડિવાઇસનો ડેટા બેકઅપથી બદલાઈ શકે છે. પહેલાં હાલનો બેકઅપ લો. આગળ વધવું છે?')) return;
+          Object.keys(localStorage).filter(k => k.startsWith('bahuchar_')).forEach(k => localStorage.removeItem(k));
+          Object.entries(backup.data.localStorage).forEach(([k,v]) => { if (k.startsWith('bahuchar_') && typeof v === 'string') localStorage.setItem(k,v); });
+          alert('બેકઅપ રિસ્ટોર થયો. એપ ફરી લોડ થશે.'); location.reload();
+        } catch (e) { alert('રીસ્ટોર થઈ શક્યો નહીં: ' + e.message); }
+        finally { event.target.value = ''; }
+      };
+      reader.onerror = () => alert('ફાઇલ વાંચી શકાઈ નથી.');
+      reader.readAsText(file);
+    }
+
+    function showInstallModal() {
+      document.getElementById('installModal').classList.remove('hidden');
+    }
+    function closeInstallModal() {
+      document.getElementById('installModal').classList.add('hidden');
+    }
+  </script>
+
+<!-- Firebase Cloud Sync (single-document snapshot; manual push/pull) -->
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+<style>
+#bahucharCloudPanel{position:fixed;right:12px;bottom:12px;z-index:99999;width:min(360px,calc(100vw - 24px));background:#fff;border:1px solid #d1d5db;border-radius:16px;box-shadow:0 10px 35px #0002;padding:14px;color:#111827;font-family:'Noto Sans Gujarati',sans-serif}
+#bahucharCloudPanel input{width:100%;border:1px solid #d1d5db;border-radius:9px;padding:10px;margin-top:6px;box-sizing:border-box}
+#bahucharCloudPanel button{border-radius:9px;padding:9px 10px;font-weight:700;font-size:13px}
+#bahucharCloudPanel .bc-primary{background:#15803d;color:white} #bahucharCloudPanel .bc-secondary{background:#f3f4f6;color:#111827}
+#bahucharCloudPanel .bc-row{display:flex;gap:7px;flex-wrap:wrap;margin-top:9px} #bahucharCloudPanel .bc-status{font-size:12px;margin-top:8px;white-space:pre-wrap}
+</style>
+<div id="bahucharCloudPanel">
+  <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+    <strong>☁️ શ્રી બહુચર એગ્રો — Cloud Sync</strong>
+    <button class="bc-secondary" type="button" onclick="document.getElementById('bahucharCloudPanel').style.display='none'" aria-label="બંધ કરો">✕</button>
+  </div>
+  <div id="bcLoginArea">
+    <p style="font-size:12px;margin-top:6px">Firebase લોગિન કરો. આ HTMLમાં નવો એકાઉન્ટ બનાવવાની સુવિધા નથી; એકાઉન્ટ Firebase Console માં બનાવવો.</p>
+    <label style="display:block;font-size:13px;margin-top:8px">ઈમેલ<input id="bcEmail" type="email" autocomplete="username" placeholder="તમારો Firebase ઈમેલ"></label>
+    <label style="display:block;font-size:13px;margin-top:8px">પાસવર્ડ<input id="bcPassword" type="password" autocomplete="current-password" placeholder="Firebase પાસવર્ડ"></label>
+    <div class="bc-row"><button class="bc-primary" type="button" onclick="bcLogin()">લોગિન</button></div>
+  </div>
+  <div id="bcSyncArea" style="display:none">
+    <div id="bcUser" style="font-size:12px;margin-top:6px"></div>
+    <p style="font-size:12px;margin-top:7px">પહેલા ડિવાઇસમાં <b>ક્લાઉડમાં મોકલો</b>. બીજા ડિવાઇસમાં <b>ક્લાઉડમાંથી લાવો</b>. ખેંચતી વખતે આ ડિવાઇસનો હાલનો ડેટા બદલાઈ જશે.</p>
+    <div class="bc-row">
+      <button class="bc-primary" type="button" onclick="bcPush()">ક્લાઉડમાં મોકલો</button>
+      <button class="bc-secondary" type="button" onclick="bcPull()">ક્લાઉડમાંથી લાવો</button>
+      <button class="bc-secondary" type="button" onclick="bcLogout()">લોગઆઉટ</button>
+    </div>
+  </div>
+  <div id="bcStatus" class="bc-status" role="status">Firebase તૈયાર થઈ રહ્યું છે…</div>
+</div>
+<script>
+(function(){
+  const firebaseConfig = {
+    apiKey: "AIzaSyDiRuf6cbRV5UCCxGtgPRj_WiVuDEJifj4",
+    authDomain: "bahuchar-agro-web.firebaseapp.com",
+    projectId: "bahuchar-agro-web",
+    storageBucket: "bahuchar-agro-web.firebasestorage.app",
+    messagingSenderId: "630215271153",
+    appId: "1:630215271153:web:a2cd2cd32f86dcf33d7f50",
+    measurementId: "G-YGKJSCH65B"
+  };
+  const STORE_ID = 'bahuchar-agro';
+  const DOC_PATH = ['stores', STORE_ID, 'data', 'main'];
+  const KEYS = ['bahuchar_products','bahuchar_suppliers','bahuchar_sup_ledger','bahuchar_farmers','bahuchar_ledger','bahuchar_invoices'];
+  let auth, db, user;
+  const status = (s)=>{ const el=document.getElementById('bcStatus'); if(el) el.textContent=s; };
+  const localSnapshot = ()=>{ const o={}; KEYS.forEach(k=>{const v=localStorage.getItem(k); if(v!==null)o[k]=v;}); return o; };
+  const setArea = (loggedIn)=>{ document.getElementById('bcLoginArea').style.display=loggedIn?'none':'block'; document.getElementById('bcSyncArea').style.display=loggedIn?'block':'none'; if(loggedIn) document.getElementById('bcUser').textContent='લોગિન: '+(user.email||'Firebase વપરાશકર્તા'); };
+  window.bcLogin = async function(){
+    const email=document.getElementById('bcEmail').value.trim(), password=document.getElementById('bcPassword').value;
+    if(!email||!password){status('ઈમેલ અને પાસવર્ડ ભરો.');return;}
+    status('લોગિન થઈ રહ્યું છે…');
+    try{await auth.signInWithEmailAndPassword(email,password); document.getElementById('bcPassword').value='';}
+    catch(e){status('લોગિન ન થયું: '+(e.code||e.message)+'\nFirebase Authentication માં Email/Password ચાલુ છે અને આ ઈમેલનો account બનાવેલો છે તે તપાસો.');}
+  };
+  window.bcLogout = async function(){try{await auth.signOut();status('લોગઆઉટ થયું.');}catch(e){status('લોગઆઉટ સમસ્યા: '+e.message);}};
+  window.bcPush = async function(){
+    if(!user){status('પહેલા લોગિન કરો.');return;}
+    if(!confirm('આ ડિવાઇસનો હાલનો ડેટા ક્લાઉડમાં મોકલવો? ક્લાઉડનો જૂનો ડેટા બદલાઈ શકે છે.'))return;
+    status('ક્લાઉડમાં ડેટા મોકલાઈ રહ્યો છે…');
+    try{const data=localSnapshot(); await db.doc(DOC_PATH.join('/')).set({data,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:user.uid},{merge:false}); status('સફળતા: ડેટા ક્લાઉડમાં મોકલાયો. બીજા ડિવાઇસમાં “ક્લાઉડમાંથી લાવો” દબાવો.');}
+    catch(e){status('ક્લાઉડમાં મોકલી શકાયો નહીં: '+(e.code||e.message)+'\nFirestore Security Rules અને ઇન્ટરનેટ તપાસો.');}
+  };
+  window.bcPull = async function(){
+    if(!user){status('પહેલા લોગિન કરો.');return;}
+    if(!confirm('ચેતવણી: ક્લાઉડમાંથી ડેટા લાવવાથી આ ડિવાઇસના હાલના શ્રી બહુચર એગ્રો ડેટાની જગ્યાએ ક્લાઉડનો ડેટા આવશે. પહેલાં બેકઅપ રાખ્યો છે?'))return;
+    status('ક્લાઉડનો ડેટા વાંચાઈ રહ્યો છે…');
+    try{const snap=await db.doc(DOC_PATH.join('/')).get(); if(!snap.exists||!snap.data().data){status('ક્લાઉડમાં હજી ડેટા નથી. પહેલા મૂળ ડિવાઇસ પર “ક્લાઉડમાં મોકલો” દબાવો.');return;}
+      const data=snap.data().data; if(!data||typeof data!=='object')throw new Error('ડેટા ફોર્મેટ ખોટું છે.');
+      if(!confirm('ક્લાઉડમાં ડેટા મળ્યો. આ ડિવાઇસનો હાલનો ડેટા બદલીને ક્લાઉડનો ડેટા લાવવો છે?'))return;
+      KEYS.forEach(k=>localStorage.removeItem(k)); Object.entries(data).forEach(([k,v])=>{if(KEYS.includes(k)&&typeof v==='string')localStorage.setItem(k,v);});
+      status('ડેટા લાવવામાં આવ્યો. એપ ફરીથી ખૂલશે…'); setTimeout(()=>location.reload(),700);
+    }catch(e){status('ક્લાઉડમાંથી ડેટા ન આવ્યો: '+(e.code||e.message)+'\nFirestore Security Rules અને ઇન્ટરનેટ તપાસો.');}
+  };
+  try{
+    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+    auth=firebase.auth(); db=firebase.firestore();
+    auth.onAuthStateChanged(u=>{user=u;setArea(!!u);status(u?'લોગિન સફળ. જરૂર મુજબ ક્લાઉડમાં મોકલો અથવા ક્લાઉડમાંથી લાવો.':'Firebase લોગિન માટે ઈમેલ અને પાસવર્ડ ભરો.');});
+  }catch(e){status('Firebase શરૂ ન થયું: '+e.message);}
+})();
+</script>
+
+
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('./service-worker.js').catch(err => console.warn('Service worker registration failed:', err));
+  });
+}
+</script>
+</body>
+</html>
