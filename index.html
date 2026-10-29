@@ -781,9 +781,9 @@
   <!-- MODALS SECTION -->
 
   <!-- 1. PRODUCT ADD / EDIT MODAL -->
-  <div id="productModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-center justify-center p-3 no-print">
-    <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden">
-      <div class="bg-agro-800 text-white px-5 py-3 flex justify-between items-center">
+  <div id="productModal" class="fixed inset-0 bg-black/60 z-50 hidden flex items-start sm:items-center justify-center p-2 sm:p-3 overflow-y-auto overscroll-contain no-print" style="height:100vh;height:100dvh;">
+    <div class="bg-white rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col my-auto" style="max-height:calc(100vh - 1rem);max-height:calc(100dvh - 1rem);">
+      <div class="bg-agro-800 text-white px-5 py-3 flex justify-between items-center shrink-0">
         <h3 id="modalProdTitle" class="font-bold text-sm md:text-base flex items-center gap-2">
           <i class="fa-solid fa-box-open"></i> નવી પ્રોડક્ટ ઉમેરો
         </h3>
@@ -791,7 +791,7 @@
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
-      <form id="productForm" onsubmit="saveProduct(event)" class="p-5 space-y-3">
+      <form id="productForm" onsubmit="saveProduct(event)" class="p-4 sm:p-5 space-y-3 overflow-y-auto overscroll-contain min-h-0" style="-webkit-overflow-scrolling:touch;">
         <input type="hidden" id="modalProdId">
         
         <div>
@@ -1179,6 +1179,7 @@
     let activeSupplierForDetails = null;
     let activeFarmerForKhata = null;
     let lastGeneratedInvoice = null;
+    let editingInvoiceBillNo = null;
 
     // --- On Application Load ---
     window.addEventListener('DOMContentLoaded', () => {
@@ -1470,6 +1471,8 @@
     }
 
     function clearCurrentBill() {
+      if (editingInvoiceBillNo && !confirm('Edit રદ કરીને નવું બિલ શરૂ કરવું છે?')) return;
+      editingInvoiceBillNo = null;
       currentBillItems = [];
       document.getElementById('custName').value = '';
       document.getElementById('custVillage').value = '';
@@ -1545,6 +1548,7 @@
     function addDaysISO(days) { const d=new Date(); d.setDate(d.getDate()+Number(days)); return d.toISOString().slice(0,10); }
     function categoryForItem(item) { const p=products.find(x=>x.id===item.productId)||{}; const raw=String(item.category||p.category||p.type||p.name||item.name||'').toLowerCase(); if(raw.includes('fert')||raw.includes('ખાતર')||raw.includes('urea')||raw.includes('dap')) return 'ખાતર'; if(raw.includes('seed')||raw.includes('બીજ')) return 'બિયારણ'; return 'દવા/પેસ્ટિસાઇડ'; }
     function saveAndPreviewBill() {
+      const editingInvoice = editingInvoiceBillNo ? invoices.find(x => String(x.billNo) === String(editingInvoiceBillNo)) : null;
       const custName = document.getElementById('custName').value.trim();
       const village = document.getElementById('custVillage').value.trim();
       const phone = document.getElementById('custPhone').value.trim() || 'N/A';
@@ -1569,13 +1573,14 @@
       });
       for (const [productId, requestedQty] of Object.entries(qtyByProduct)) {
         const product = products.find(p => p.id === productId);
-        if (!product || requestedQty > Number(product.stock || 0)) {
+        const oldQty = editingInvoice ? (editingInvoice.items || []).filter(i => String(i.productId) === String(productId)).reduce((n,i)=>n+Number(i.qty||0),0) : 0;
+        if (!product || requestedQty > Number(product.stock || 0) + oldQty) {
           showToast(`સ્ટોક બદલાયો છે અથવા પૂરતો નથી: ${product?.name || 'પ્રોડક્ટ'}. બિલ પાકું કરતાં પહેલાં આઇટમ તપાસો.`, 'error');
           return;
         }
       }
 
-      const billNo = generateNextBillNumber();
+      const billNo = editingInvoice ? editingInvoice.billNo : generateNextBillNumber();
       const todayISO = new Date().toISOString().slice(0,10);
       const today = new Date().toLocaleDateString('gu-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
       
@@ -1614,7 +1619,7 @@
       let existingParty = farmers.find(f => f.name.toLowerCase() === custName.toLowerCase());
       let accountParty = existingParty?.mainAccountId ? (farmers.find(f=>String(f.id)===String(existingParty.mainAccountId)) || existingParty) : existingParty;
       let creditLimit = Number(accountParty?.creditLimit || existingParty?.creditLimit || 0);
-      const oldBalance = Number(accountParty?.balance || existingParty?.balance || 0);
+      const oldBalance = Math.max(0, Number(accountParty?.balance || existingParty?.balance || 0) - (editingInvoice && String(editingInvoice.accountName||editingInvoice.farmerName||'').toLowerCase() === String(accountParty?.name||existingParty?.name||'').toLowerCase() ? Number(editingInvoice.dueAmount||0) : 0));
       if (existingParty && getFarmerRisk(existingParty).level === 'red') {
         const okRisk = window.confirm(`🔴 ઊંચું ચુકવણી જોખમ!\nઆ ખાતામાં જૂની બાકી હજુ આવી નથી, માલિકની મંજૂરી લો.\nબાકી: ₹${oldBalance.toFixed(2)}\n\nમાલિક તરીકે આ બિલ મંજૂર કરો છો?`);
         if (!okRisk) { showToast('જોખમ એલર્ટને કારણે બિલ રોક્યું.','error'); return; }
@@ -1629,6 +1634,17 @@
         const excess = oldBalance + dueAmount - creditLimit;
         const approved = window.confirm(`ક્રેડિટ લિમિટ ચેતવણી!\nપાર્ટી: ${custName}\nહાલની બાકી: ₹${oldBalance.toFixed(2)}\nનવું બિલ: ₹${grandTotal.toFixed(2)}\nલિમિટ: ₹${creditLimit.toFixed(2)}\nલિમિટથી વધુ: ₹${excess.toFixed(2)}\n\nમાલિક તરીકે તમે મંજૂરી આપો છો? OK = મંજૂરી, Cancel = બિલ રોકો.`);
         if (!approved) { showToast('માલિકની મંજૂરી ન મળતાં બિલ બનાવ્યું નથી.', 'error'); return; }
+      }
+
+      // When editing, reverse the old bill's stock and outstanding ledger before applying the replacement.
+      if (editingInvoice) {
+        (editingInvoice.items || []).forEach(oldItem => {
+          const prod = products.find(p => String(p.id) === String(oldItem.productId));
+          if (prod) { prod.shopStock = Number(prod.shopStock ?? prod.stock ?? 0) + Number(oldItem.qty || 0); prod.stock = Number(prod.shopStock || 0) + Number(prod.godownStock || 0); }
+        });
+        const oldParty = farmers.find(f => String(f.name||'').toLowerCase() === String(editingInvoice.accountName || editingInvoice.farmerName || '').toLowerCase()) || farmers.find(f => String(f.name||'').toLowerCase() === String(editingInvoice.farmerName||'').toLowerCase());
+        if (oldParty) oldParty.balance = Math.max(0, Number(oldParty.balance||0) - Number(editingInvoice.dueAmount||0));
+        khataLedger = khataLedger.filter(row => !String(row.note||'').includes('બિલ નં: '+editingInvoice.billNo));
       }
 
       // Deduct Stock
@@ -1703,7 +1719,7 @@
         items: currentBillItems.map(i=>({...i, category: categoryForItem(i)}))
       };
 
-      invoices.unshift(invoiceData);
+      if (editingInvoice) { const idx = invoices.findIndex(x => String(x.billNo) === String(editingInvoice.billNo)); if (idx >= 0) invoices[idx] = invoiceData; editingInvoiceBillNo = null; } else { invoices.unshift(invoiceData); }
       lastGeneratedInvoice = invoiceData;
 
       syncLocalStorage();
@@ -1717,7 +1733,8 @@
 
       openInvoiceModal(invoiceData);
       clearCurrentBill();
-      showToast(`બિલ ${billNo} પાકું થઈ ગયું!`, 'success');
+      document.getElementById('currentBillNo').innerText = `બિલ નં: ${generateNextBillNumber()}`;
+      showToast(`બિલ ${billNo} ${editingInvoice ? 'સુધારીને સેવ' : 'પાકું'} થઈ ગયું!`, 'success');
     }
 
     function openInvoiceModal(inv) {
@@ -1890,6 +1907,9 @@
 
     function openProductModal(prod = null) {
       document.getElementById('productForm').reset();
+      // Keep the product form usable on short Android screens; scroll inside the form.
+      document.getElementById('productModal').scrollTop = 0;
+      document.getElementById('productForm').scrollTop = 0;
       if (prod) {
         document.getElementById('modalProdTitle').innerText = 'પ્રોડક્ટમાં સુધારો કરો';
         document.getElementById('modalProdId').value = prod.id;
@@ -2799,9 +2819,11 @@
           </td>
           <td class="p-2.5 text-right font-black text-slate-900">₹ ${inv.grandTotal.toFixed(2)}</td>
           <td class="p-2.5 text-center">
-            <button onclick='viewSpecificInvoice("${inv.billNo}")' class="text-agro-700 hover:text-agro-900 font-bold text-xs">
-              <i class="fa-solid fa-eye"></i> બિલ જુઓ
-            </button>
+            <div class="flex flex-wrap justify-center gap-2">
+              <button onclick='viewSpecificInvoice("${inv.billNo}")' class="text-agro-700 hover:text-agro-900 font-bold text-xs"><i class="fa-solid fa-eye"></i> જુઓ</button>
+              <button onclick='editSpecificInvoice("${inv.billNo}")' class="text-blue-700 hover:text-blue-900 font-bold text-xs"><i class="fa-solid fa-pen"></i> Edit</button>
+              <button onclick='deleteSpecificInvoice("${inv.billNo}")' class="text-red-700 hover:text-red-900 font-bold text-xs"><i class="fa-solid fa-trash"></i> Delete</button>
+            </div>
           </td>
         `;
         tbody.appendChild(tr);
@@ -2814,6 +2836,51 @@
         lastGeneratedInvoice = inv;
         openInvoiceModal(inv);
       }
+    }
+
+    function editSpecificInvoice(billNo) {
+      const inv = invoices.find(x => String(x.billNo) === String(billNo));
+      if (!inv) return showToast('બિલ મળ્યું નથી.', 'error');
+      const financeEntries = (typeof entries === 'function') ? entries() : [];
+      if (financeEntries.some(e => String(e.billNo||'') === String(billNo))) return alert('આ બિલ સાથે પેમેન્ટ/ફાઇનાન્સ એન્ટ્રી જોડાયેલી છે. પહેલાં તે પેમેન્ટની એન્ટ્રી સુધારો અથવા હટાવો; પછી બિલ Edit કરો.');
+      if (!confirm('બિલ '+billNo+' Edit કરશો? સેવ કરતાં જૂનો સ્ટોક અને બાકી હિસાબ એડજસ્ટ થશે.')) return;
+      editingInvoiceBillNo = inv.billNo;
+      document.getElementById('custName').value = inv.farmerName || '';
+      document.getElementById('custVillage').value = inv.village || '';
+      document.getElementById('custPhone').value = inv.phone === 'N/A' ? '' : (inv.phone || '');
+      if (document.getElementById('billCropSeason')) document.getElementById('billCropSeason').value = inv.cropSeason || 'all';
+      if (document.getElementById('billHamali')) document.getElementById('billHamali').value = Number(inv.hamaliAmount||0);
+      if (document.getElementById('billTransport')) document.getElementById('billTransport').value = Number(inv.transportAmount||0);
+      const method = inv.paymentMethod || (Number(inv.dueAmount||0)>0 ? 'credit' : 'cash');
+      if (document.getElementById('billPaymentMethod')) document.getElementById('billPaymentMethod').value = method;
+      if (document.getElementById('billPaidAmount')) document.getElementById('billPaidAmount').value = Number(inv.paidAmount||0);
+      const splitMap={cash:'splitCash',bank:'splitBank',upi:'splitUpi',cheque:'splitCheque'};
+      ['splitCash','splitBank','splitUpi','splitCheque'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='0';});
+      (inv.paymentDetails||[]).forEach(pd=>{const id=splitMap[pd.method];if(id&&document.getElementById(id))document.getElementById(id).value=Number(pd.amount||0);});
+      const typeRadio = document.querySelector(`input[name="billType"][value="${inv.billType}"]`); if(typeRadio) typeRadio.checked=true;
+      if (document.getElementById('creditDueDays')) document.getElementById('creditDueDays').value = Number(inv.dueDays||30);
+      if (document.getElementById('interestEnabled')) document.getElementById('interestEnabled').value = inv.interestEnabled ? 'yes' : 'no';
+      if (document.getElementById('interestRate')) document.getElementById('interestRate').value = Number(inv.interestRate||0);
+      currentBillItems = (inv.items||[]).map(i=>({...i}));
+      document.getElementById('currentBillNo').innerText = 'Edit બિલ નં: '+inv.billNo;
+      renderCurrentBillItems(); toggleSplitPayment(); switchTab('newBillTab');
+      showToast('બિલ Edit મોડમાં ખુલ્યું છે. ફેરફાર કરીને બિલ પાકું કરો.', 'success');
+    }
+
+    function deleteSpecificInvoice(billNo) {
+      const inv = invoices.find(x => String(x.billNo) === String(billNo));
+      if (!inv) return showToast('બિલ મળ્યું નથી.', 'error');
+      const financeEntries = (typeof entries === 'function') ? entries() : [];
+      if (financeEntries.some(e => String(e.billNo||'') === String(billNo))) return alert('આ બિલ સાથે પેમેન્ટ/ફાઇનાન્સ એન્ટ્રી જોડાયેલી છે. પહેલાં જોડાયેલી પેમેન્ટ એન્ટ્રીનું સમાધાન કરો; પછી બિલ Delete કરો.');
+      if (!confirm('ચેતવણી! બિલ '+billNo+' કાયમ માટે Delete કરવું છે? સ્ટોક પાછો ઉમેરાશે અને બાકી હિસાબ એડજસ્ટ થશે.')) return;
+      (inv.items||[]).forEach(item=>{const p=products.find(x=>String(x.id)===String(item.productId));if(p){p.shopStock=Number(p.shopStock??p.stock??0)+Number(item.qty||0);p.stock=Number(p.shopStock||0)+Number(p.godownStock||0);}});
+      const partyName=String(inv.accountName||inv.farmerName||'').toLowerCase();
+      const party=farmers.find(f=>String(f.name||'').toLowerCase()===partyName)||farmers.find(f=>String(f.name||'').toLowerCase()===String(inv.farmerName||'').toLowerCase());
+      if(party) party.balance=Math.max(0,Number(party.balance||0)-Number(inv.dueAmount||0));
+      invoices=invoices.filter(x=>String(x.billNo)!==String(billNo));
+      khataLedger=khataLedger.filter(row=>!String(row.note||'').includes('બિલ નં: '+billNo));
+      syncLocalStorage(); populateProductDropdowns(); renderInventoryTable(); renderFarmerKhataList(); renderInvoiceHistory(); updateDashboardStats(); generateNextBillNumber();
+      showToast('બિલ '+billNo+' Delete થયું અને સ્ટોક/બાકી એડજસ્ટ થયા.', 'success');
     }
 
     // --- DASHBOARD COUNTERS ---
@@ -3261,7 +3328,27 @@ window.fdSaveOut=function(){const s=(suppliers||[]).find(x=>String(x.id)===$('fd
 window.fdSaveNote=function(){const amt=Number($('fdNoteAmount').value),type=$('fdNoteType').value,prodId=$('fdReturnProduct').value,qty=Number($('fdReturnQty').value)||0,rate=Number($('fdReturnRate').value)||0;const prod=prodId?(products||[]).find(x=>String(x.id)===String(prodId)):null;const party=type==='CN'?(farmers||[]).find(x=>String(x.id)===$('fdNoteParty').value):(suppliers||[]).find(x=>String(x.id)===$('fdNoteParty').value);if(!party||!(amt>0)){alert('પાર્ટી અને માન્ય રકમ પસંદ કરો.');return}if(amt>Number(party.balance||0)){alert((type==='CN'?'Credit Note':'Debit Note')+' રકમ હાલની બાકી કરતાં વધારે છે.');return}if(prodId&&(!prod||!(qty>0)||!(rate>=0))){alert('પરત આઇટમ, જથ્થો અને ભાવ તપાસો.');return}if(type==='DN'&&prod&&qty>Number(prod.stock||0)){alert('સ્ટોકમાં માત્ર '+(Number(prod.stock)||0)+' જથ્થો છે; એટલો જ પરત આપી શકાય.');return}if(prod){if(type==='CN'){prod.shopStock=Number(prod.shopStock??prod.stock??0)+qty;prod.stock=Number(prod.shopStock||0)+Number(prod.godownStock||0);}else{let rem=qty,shop=Math.min(Number(prod.shopStock??prod.stock??0),rem);prod.shopStock=Math.max(0,Number(prod.shopStock??prod.stock??0)-shop);rem-=shop;prod.godownStock=Math.max(0,Number(prod.godownStock||0)-rem);prod.stock=Number(prod.shopStock||0)+Number(prod.godownStock||0);}}party.balance=Number(party.balance||0)-amt;const itemInfo=prod?`આઇટમ: ${prod.name}, જથ્થો: ${qty}, ભાવ: ${money(rate)}; `:'';const reason=$('fdNoteReason').value.trim();const e={id:'fin_'+Date.now(),kind:type,type:type==='CN'?'Credit Note':'Debit Note',partyId:party.id,partyName:party.name,partyType:type==='CN'?'customer':'supplier',amount:amt,mode:'',date:$('fdNoteDate').value||today(),note:itemInfo+reason,returnItems:prod?[{productId:prod.id,name:prod.name,qty,rate,stockEffect:type==='CN'?'in':'out'}]:[]};const a=entries();a.push(e);save(a);if(type==='CN'){khataLedger.push({id:'l_'+Date.now(),farmerName:party.name,date:e.date,type:e.type,debit:0,credit:amt,balance:party.balance,note:e.note||e.type});renderFarmerKhataList()}else{supplierLedger.push({id:'sl_'+Date.now(),supplierName:party.name,date:e.date,billNo:'DEBIT NOTE',purchase:-amt,payment:0,balance:party.balance,note:e.note||e.type});renderSuppliersList()}syncLocalStorage();$('fdNoteAmount').value='';$('fdNoteReason').value='';$('fdReturnProduct').value='';$('fdReturnQty').value='';$('fdReturnRate').value='';fdInit();updateDashboardStats();alert(e.type+' નોંધાયું.'+(prod?' સ્ટોક પણ એડજસ્ટ થયો.':''))};
 window.fdRenderReport=function(){const from=$('fdFrom').value,to=$('fdTo').value,type=$('fdReportType').value;const rows=entries().filter(e=>(!from||e.date>=from)&&(!to||e.date<=to)&&(type==='all'||e.kind===type));const ins=rows.filter(e=>e.kind==='in').reduce((s,e)=>s+e.amount,0),outs=rows.filter(e=>e.kind==='out').reduce((s,e)=>s+e.amount,0);const modeSum=m=>rows.filter(e=>e.mode===m&&(e.kind==='in'||e.kind==='out')).reduce((s,e)=>s+(e.kind==='in'?1:-1)*(Number(e.amount)||0),0);$('fdReportSummary').textContent=`જમા: ${money(ins)} | ચૂકવણી: ${money(outs)} | નેટ: ${money(ins-outs)} | રોકડ નેટ: ${money(modeSum('રોકડ'))} | બેંક નેટ: ${money(modeSum('બેંક'))} | UPI નેટ: ${money(modeSum('UPI'))} | ચેક નેટ: ${money(modeSum('ચેક'))} | નોંધો: ${rows.length}`;$('fdReportRows').innerHTML=rows.length?'<table style="width:100%;border-collapse:collapse;font-size:13px"><tr><th>તારીખ</th><th>પ્રકાર</th><th>પાર્ટી</th><th>બિલ/નોંધ</th><th>માધ્યમ</th><th>રકમ</th></tr>'+rows.map(e=>`<tr><td style="border-bottom:1px solid #ddd;padding:6px">${esc(e.date)}</td><td style="border-bottom:1px solid #ddd;padding:6px">${esc(e.type)}</td><td style="border-bottom:1px solid #ddd;padding:6px">${esc(e.partyName)}</td><td style="border-bottom:1px solid #ddd;padding:6px">${esc(e.billNo||e.note||'')}</td><td style="border-bottom:1px solid #ddd;padding:6px">${esc(e.mode||'-')}</td><td style="border-bottom:1px solid #ddd;padding:6px;text-align:right">${money(e.amount)}</td></tr>`).join('')+'</table>':'કોઈ વ્યવહાર નથી.'};
 window.fdExportReport=function(){const from=$('fdFrom').value,to=$('fdTo').value,type=$('fdReportType').value;const rows=[['Date','Type','Party','Bill/Note','Mode','Amount'],...entries().filter(e=>(!from||e.date>=from)&&(!to||e.date<=to)&&(type==='all'||e.kind===type)).map(e=>[e.date,e.type,e.partyName,e.billNo||e.note||'',e.mode||'',e.amount])];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download='Bahuchar_Agro_Payment_Report.csv';a.click();URL.revokeObjectURL(a.href)};
-window.deletePartyRecord=function(id){const f=(farmers||[]).find(x=>String(x.id)===String(id));if(!f)return;const hasLedger=(khataLedger||[]).some(x=>x.farmerName===f.name)||(invoices||[]).some(x=>x.farmerName===f.name);if(Number(f.balance||0)!==0||hasLedger){alert('આ પાર્ટીની બાકી રકમ અથવા જૂના બિલ/ખાતાવહી છે. હિસાબની સુરક્ષા માટે ડિલીટ ન કરી શકાય.');return}if(!confirm(f.name+' પાર્ટી કાઢી નાખવી છે? પહેલાં બેકઅપ રાખો.'))return;farmers=farmers.filter(x=>String(x.id)!==String(id));syncLocalStorage();renderPartyManager();renderFarmerSuggestions();renderFarmerKhataList();alert('પાર્ટી કાઢી નાખી.')};
+window.deletePartyRecord=function(id){
+ const f=(farmers||[]).find(x=>String(x.id)===String(id));if(!f)return;
+ const relatedInvoices=(invoices||[]).filter(x=>String(x.farmerName||'')===String(f.name||''));
+ const relatedLedger=(khataLedger||[]).filter(x=>String(x.farmerName||'')===String(f.name||''));
+ const hasTransactions=Number(f.balance||0)!==0||relatedLedger.length>0||relatedInvoices.length>0;
+ const warning=hasTransactions?`\n\nચેતવણી: આ ખાતામાં બાકી ₹${Number(f.balance||0).toFixed(2)}, બિલ ${relatedInvoices.length} અને ખાતાવહી એન્ટ્રી ${relatedLedger.length} છે. પાર્ટી પ્રોફાઇલ કાઢી નાખવામાં આવશે, પરંતુ જૂના બિલ/ખાતાવહી રેકોર્ડ ઇતિહાસ માટે રહેશે.`:'';
+ if(!confirm(`શું “${f.name}” પાર્ટી પ્રોફાઇલ કાઢી નાખવી છે?${warning}\n\nઆ પગલું પાછું ફેરવવું મુશ્કેલ હોઈ શકે છે. પહેલાં બેકઅપ રાખો.`))return;
+ const pin=prompt('માલિકનો PIN દાખલ કરો (4 થી 8 અંક):');if(pin===null)return;
+ if(!/^\d{4,8}$/.test(String(pin))){alert('PIN 4 થી 8 અંકનો હોવો જોઈએ.');return}
+ let users=[];try{users=JSON.parse(localStorage.getItem('bahuchar_staff_users')||'[]')}catch(e){}
+ const owner=users.find(u=>u&&u.role==='owner'&&u.pinHash);
+ if(!owner){alert('માલિકનો PIN સેટ થયેલો નથી. પહેલાં માલિકનો PIN બનાવો; પાર્ટી ડિલીટ થઈ નથી.');return}
+ let h=2166136261;for(let i=0;i<pin.length;i++){h^=pin.charCodeAt(i);h=Math.imul(h,16777619)}
+ if(owner.pinHash!==(h>>>0).toString(16)){alert('માલિકનો PIN ખોટો છે. પાર્ટી ડિલીટ થઈ નથી.');return}
+ farmers=farmers.filter(x=>String(x.id)!==String(id));
+ // Unlink family members from the deleted main account; preserve historical transactions.
+ farmers.forEach(x=>{if(String(x.mainAccountId||'')===String(id))x.mainAccountId=''});
+ if(typeof syncLocalStorage==='function')syncLocalStorage();
+ if(typeof renderPartyManager==='function')renderPartyManager();if(typeof renderFarmerSuggestions==='function')renderFarmerSuggestions();if(typeof renderFarmerKhataList==='function')renderFarmerKhataList();if(typeof renderInvoiceHistory==='function')renderInvoiceHistory();if(typeof updateDashboardStats==='function')updateDashboardStats();
+ alert('પાર્ટી પ્રોફાઇલ કાઢી નાખી. જૂના બિલ અને ખાતાવહીના રેકોર્ડ ઇતિહાસ માટે જાળવી રાખ્યા છે.');
+};
 })();
 </script>
 
