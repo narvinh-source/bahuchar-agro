@@ -3197,7 +3197,7 @@ function parseCSVImport(text){const lines=text.replace(/^\uFEFF/,'').split(/\r?\
   <label class="text-sm font-semibold">સ્ટાફનું નામ</label><input id="staffNewName" placeholder="કર્મચારીનું નામ">
   <label class="text-sm font-semibold">PIN</label><input id="staffNewPin" inputmode="numeric" type="password" maxlength="8" placeholder="4 થી 8 અંક">
   <label class="text-sm font-semibold">અધિકાર</label>
-  <select id="staffNewRole"><option value="cashier">બિલિંગ કર્મચારી — બિલિંગ/ખાતાવહી</option><option value="stock">સ્ટોક કર્મચારી — સ્ટોક/ખરીદી</option><option value="viewer">માત્ર જોવાનું — રિપોર્ટ/ખાતાવહી</option></select>
+  <select id="staffNewRole"><option value="cashier">બિલિંગ કર્મચારી — બિલિંગ/ખાતાવહી</option><option value="stock">સ્ટોક કર્મચારી — સ્ટોક/ખરીદી</option><option value="viewer">માત્ર જોવાનું — રિપોર્ટ/ખાતાવહી</option><option value="owner">માલિક — બધા અધિકાર</option></select>
   <button class="w-full bg-purple-700 text-white" onclick="addStaffUser()">સ્ટાફ ઉમેરો</button>
   <div id="staffUserList" class="mt-4 space-y-2"></div>
   <p class="text-xs text-slate-500 mt-3">અધિકાર આધારિત ટેબ છુપાવવામાં આવે છે; આ સર્વર-સ્તરનું પ્રતિબંધન નથી.</p>
@@ -3269,9 +3269,19 @@ function parseCSVImport(text){const lines=text.replace(/^\uFEFF/,'').split(/\r?\
   $('staffNewName').value='';$('staffNewPin').value='';renderUsers();alert('સ્ટાફ એકાઉન્ટ બનાવાયું.');
  };
  function renderUsers(){
-  $('staffUserList').innerHTML=users().map(u=>`<div class="border rounded-lg p-3 flex items-center justify-between gap-2"><div><b>${safe(u.name)}</b><div class="text-xs text-slate-500">${u.role==='owner'?'માલિક':u.role==='cashier'?'બિલિંગ':u.role==='stock'?'સ્ટોક':'માત્ર જોવાનું'}</div></div>${u.role==='owner'?'<span class="text-xs">માલિક</span>':`<button class="bg-red-100 text-red-800" onclick="removeStaffUser('${u.id}')">કાઢો</button>`}</div>`).join('');
+  $('staffUserList').innerHTML=users().map(u=>`<div class="border rounded-lg p-3 gap-2"><div class="flex items-center justify-between gap-2"><div><b>${safe(u.name)}</b><div class="text-xs text-slate-500">હાલનો અધિકાર: ${u.role==='owner'?'માલિક':u.role==='cashier'?'બિલિંગ':u.role==='stock'?'સ્ટોક':'માત્ર જોવાનું'}</div></div>${u.id===activeStaff.id?'<span class="text-xs">તમે</span>':`<button class="bg-red-100 text-red-800" onclick="removeStaffUser('${u.id}')">કાઢો</button>`}</div><label class="text-xs font-semibold block mt-2">અધિકાર બદલો</label><select class="w-full border rounded-lg p-2" onchange="changeStaffRole('${u.id}',this.value)" ${u.id===activeStaff.id?'disabled':''}><option value="cashier" ${u.role==='cashier'?'selected':''}>બિલિંગ કર્મચારી</option><option value="stock" ${u.role==='stock'?'selected':''}>સ્ટોક કર્મચારી</option><option value="viewer" ${u.role==='viewer'?'selected':''}>માત્ર જોવાનું</option><option value="owner" ${u.role==='owner'?'selected':''}>માલિક — બધા અધિકાર</option></select></div>`).join('');
  }
- window.removeStaffUser=function(id){if(!activeStaff||activeStaff.role!=='owner')return;if(!confirm('આ સ્ટાફ એકાઉન્ટ કાઢી નાખવું છે?'))return;saveUsers(users().filter(u=>u.id!==id));renderUsers()};
+ window.changeStaffRole=function(id,role){
+  if(!activeStaff||activeStaff.role!=='owner'){alert('માત્ર માલિક અધિકાર બદલી શકે છે.');return}
+  if(!['owner','cashier','stock','viewer'].includes(role)){alert('અમાન્ય અધિકાર.');renderUsers();return}
+  if(id===activeStaff.id){alert('તમે હાલમાં લૉગિન કરેલા માલિકનો અધિકાર અહીંથી બદલી શકતા નથી.');renderUsers();return}
+  const a=users(),u=a.find(x=>x.id===id);if(!u)return;
+  if(u.role===role)return;
+  const label={owner:'માલિક',cashier:'બિલિંગ કર્મચારી',stock:'સ્ટોક કર્મચારી',viewer:'માત્ર જોવાનું'}[role];
+  if(!confirm(`${u.name} નો અધિકાર “${label}” કરવો છે?`)){renderUsers();return}
+  u.role=role;saveUsers(a);renderUsers();alert('અધિકાર બદલાયો. આ વપરાશકર્તા ફરી લૉગિન કરશે ત્યારે નવો અધિકાર લાગુ પડશે.');
+ };
+ window.removeStaffUser=function(id){if(!activeStaff||activeStaff.role!=='owner')return;if(id===activeStaff.id){alert('હાલનું લૉગિન એકાઉન્ટ કાઢી શકાતું નથી.');return}if(!confirm('આ સ્ટાફ એકાઉન્ટ કાઢી નાખવું છે?'))return;saveUsers(users().filter(u=>u.id!==id));renderUsers()};
  window.addEventListener('DOMContentLoaded',initGate);
 })();
 </script>
