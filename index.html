@@ -108,23 +108,45 @@
       background: #94a3b8;
       border-radius: 4px;
     }
+
+    /* Cleaner, phone-first app header */
+    #appHeader .header-inner { align-items: center; }
+    #appHeader .brand-block { min-width: 0; }
+    #appHeader .header-actions { display:flex; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px; }
+    #appHeader .header-actions button { min-height:34px; white-space:nowrap; }
+    #appHeader .app-nav { scrollbar-width:thin; -webkit-overflow-scrolling:touch; }
+    #appHeader .app-nav button { min-height:42px; }
+    @media (max-width: 640px) {
+      #appHeader .header-inner { padding:10px 12px; gap:10px; }
+      #appHeader .brand-block { width:100%; gap:10px; }
+      #appHeader .brand-mark { width:40px; height:40px; flex-shrink:0; }
+      #appHeader .brand-title { font-size:16px; line-height:1.35; flex-wrap:wrap; }
+      #appHeader .brand-subtitle { font-size:11px; line-height:1.6; }
+      #appHeader .header-actions { width:100%; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:6px; }
+      #appHeader .header-actions button { width:100%; min-width:0; min-height:36px; padding:7px 5px; justify-content:center; font-size:11px; line-height:1.25; }
+      #appHeader .header-actions button span { white-space:normal; }
+      #appHeader .app-nav-wrap { padding-left:8px; padding-right:8px; }
+      #appHeader .app-nav { gap:4px; padding-top:5px; padding-bottom:5px; }
+      #appHeader .app-nav button { padding:9px 10px; font-size:12px; }
+      #toastBox { top: 10px !important; right: 8px !important; left: 8px !important; max-width:none !important; }
+    }
   </style>
 </head>
 <body class="bg-slate-100 text-slate-800 antialiased min-h-screen flex flex-col font-gujarati">
 
   <!-- TOP HEADER / BRANDING -->
-  <header class="bg-agro-800 text-white shadow-lg sticky top-0 z-40 no-print">
-    <div class="max-w-7xl mx-auto px-4 py-2.5 flex flex-wrap items-center justify-between gap-3">
-      <div class="flex items-center space-x-3 rtl:space-x-reverse">
-        <div class="w-11 h-11 bg-agro-500 rounded-full flex items-center justify-center text-white shadow-md border-2 border-white">
+  <header id="appHeader" class="bg-agro-800 text-white shadow-lg sticky top-0 z-40 no-print">
+    <div class="header-inner max-w-7xl mx-auto px-4 py-2.5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div class="brand-block flex items-center space-x-3 rtl:space-x-reverse">
+        <div class="brand-mark w-11 h-11 bg-agro-500 rounded-full flex items-center justify-center text-white shadow-md border-2 border-white">
           <i class="fa-solid fa-seedling text-xl"></i>
         </div>
         <div>
-          <h1 class="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
+          <h1 class="brand-title text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
             શ્રી બહુચર એગ્રો સેન્ટર
             <span class="text-[10px] font-semibold bg-agro-600 px-2 py-0.5 rounded-full border border-agro-400">હળવદ</span>
           </h1>
-          <p class="text-xs text-green-200">
+          <p class="brand-subtitle text-xs text-green-200">
             <i class="fa-solid fa-location-dot mr-1"></i> સુંદરી ભવાની, હળવદ &nbsp;|&nbsp; 
             <i class="fa-solid fa-phone mr-1"></i> <a href="tel:8000518843" class="hover:underline font-semibold">8000518843</a>
           </p>
@@ -132,7 +154,7 @@
       </div>
 
       <!-- Action Buttons -->
-      <div class="flex items-center gap-2">
+      <div class="header-actions flex items-center gap-2">
         <button onclick="showInstallModal()" class="flex items-center gap-1.5 bg-amber-500 hover:bg-amber-600 text-slate-900 px-3 py-1 rounded-lg text-xs font-bold shadow transition transform active:scale-95">
           <i class="fa-solid fa-mobile-screen-button"></i>
           <span>APK / એપ</span>
@@ -156,8 +178,8 @@
     </div>
 
     <!-- Navigation Tabs (With Supplier & Reports) -->
-    <div class="bg-agro-900 px-4 border-t border-agro-700/50">
-      <div class="max-w-7xl mx-auto flex space-x-1 md:space-x-2 overflow-x-auto py-1 text-xs md:text-sm">
+    <div class="app-nav-wrap bg-agro-900 px-4 border-t border-agro-700/50">
+      <div class="app-nav max-w-7xl mx-auto flex space-x-1 md:space-x-2 overflow-x-auto py-1 text-xs md:text-sm">
         <button onclick="switchTab('newBillTab')" id="tabBtn-newBillTab" class="tab-btn px-3 py-2 font-medium rounded-t-lg transition border-b-2 border-agro-400 text-white bg-agro-800 flex items-center gap-1.5 whitespace-nowrap">
           <i class="fa-solid fa-cart-shopping"></i> નવું બિલિંગ
         </button>
@@ -258,10 +280,26 @@
               </div>
             </div>
 
+            <div id="billPaymentOptions" class="mt-3 p-3 rounded-lg border bg-slate-50 space-y-3">
+              <div><label class="block text-xs font-semibold text-slate-700 mb-1">ચુકવણીનો પ્રકાર</label>
+                <select id="billPaymentMethod" class="w-full px-3 py-2 border rounded-lg text-sm" onchange="toggleSplitPayment()">
+                  <option value="cash">રોકડ (Cash)</option><option value="bank">બેંક (Bank)</option><option value="upi">UPI / QR</option><option value="cheque">ચેક (Cheque)</option><option value="split">Split Payment — બે કે વધુ માધ્યમ</option><option value="credit">સંપૂર્ણ ઉધાર</option>
+                </select>
+              </div>
+              <div id="singlePaymentBox"><label class="block text-xs font-semibold text-slate-700 mb-1">હમણાં મળેલી રકમ (₹)</label><input id="billPaidAmount" type="number" min="0" step="0.01" placeholder="બિલનો સંપૂર્ણ પેમેન્ટ હોય તો ખાલી રાખો" class="w-full px-3 py-2 border rounded-lg text-sm"></div>
+              <div id="splitPaymentBox" class="hidden grid grid-cols-2 gap-2">
+                <div><label class="block text-xs font-semibold mb-1">રોકડ ₹</label><input id="splitCash" type="number" min="0" step="0.01" value="0" class="w-full px-2 py-2 border rounded text-sm"></div>
+                <div><label class="block text-xs font-semibold mb-1">બેંક ₹</label><input id="splitBank" type="number" min="0" step="0.01" value="0" class="w-full px-2 py-2 border rounded text-sm"></div>
+                <div><label class="block text-xs font-semibold mb-1">UPI ₹</label><input id="splitUpi" type="number" min="0" step="0.01" value="0" class="w-full px-2 py-2 border rounded text-sm"></div>
+                <div><label class="block text-xs font-semibold mb-1">ચેક ₹</label><input id="splitCheque" type="number" min="0" step="0.01" value="0" class="w-full px-2 py-2 border rounded text-sm"></div>
+              </div>
+              <p class="text-[11px] text-slate-600">આંશિક ચુકવણી હોય તો બાકી રકમ આપમેળે ઉધારમાં ગણાશે. Split માં અલગ અલગ માધ્યમની રકમ દાખલ કરો.</p>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div>
                 <label class="block text-xs font-semibold text-slate-600 mb-1">ખેડૂતનું નામ *</label>
-                <input type="text" id="custName" list="customerSuggestions" placeholder="દા.ત. રમેશભાઈ પટેલ" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-agro-600 focus:outline-none" oninput="checkFarmerHistory()">
+                <input type="text" id="custName" list="customerSuggestions" placeholder="નામ અથવા મોબાઇલના છેલ્લા ૪ આંકડા" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-agro-600 focus:outline-none" oninput="quickPartyLookup();checkFarmerHistory()">
                 <datalist id="customerSuggestions"></datalist>
               </div>
               <div>
@@ -274,6 +312,7 @@
               </div>
             </div>
 
+            <div class="mt-3"><label class="block text-xs font-semibold mb-1">પાક / સીઝન ખાતાવહી</label><select id="billCropSeason" class="w-full px-3 py-2 border rounded-lg text-sm"><option value="monsoon">ચોમાસુ સીઝન</option><option value="winter">શિયાળુ સીઝન</option><option value="summer">ઉનાળુ સીઝન</option><option value="all">સામાન્ય ખાતું</option></select></div>
             <div id="creditTermsBox" class="hidden mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
               <div class="grid grid-cols-2 gap-3">
                 <div><label class="block text-xs font-semibold mb-1">ઉધારની મુદત</label><select id="creditDueDays" class="w-full px-2 py-2 border rounded text-sm"><option value="15">15 દિવસ</option><option value="30" selected>30 દિવસ</option><option value="45">45 દિવસ</option><option value="60">60 દિવસ</option></select></div>
@@ -298,6 +337,8 @@
 
             <div class="space-y-3">
               <div>
+                <label class="block text-xs font-semibold text-slate-600 mb-1">આઇટમ શોધો (નામ / Technical Name / કંપની)</label>
+                <input type="search" id="billProductSearch" placeholder="દા.ત. Chlorantraniliprole, Coragen, FMC..." class="w-full px-3 py-2 border border-agro-300 rounded-lg text-sm mb-2" oninput="filterBillProducts()">
                 <label class="block text-xs font-semibold text-slate-600 mb-1">પ્રોડક્ટ પસંદ કરો</label>
                 <select id="selectedProduct" class="w-full px-3 py-2 border rounded-lg text-sm focus:ring-2 focus:ring-agro-600 focus:outline-none bg-slate-50 font-medium" onchange="onProductSelect()">
                   <option value="">-- બિયારણ / ખાતર / દવા પસંદ કરો --</option>
@@ -386,6 +427,10 @@
               </div>
             </div>
 
+            <div class="grid grid-cols-2 gap-2 mb-3 no-print">
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">હમાલી / અનલોડિંગ ₹</label><input id="billHamali" type="number" min="0" step="0.01" value="0" class="w-full px-2 py-2 border rounded text-sm" oninput="updateBillTotals()"></div>
+              <div><label class="block text-xs font-semibold text-slate-600 mb-1">ટ્રેક્ટર / ટેમ્પો ભાડું ₹</label><input id="billTransport" type="number" min="0" step="0.01" value="0" class="w-full px-2 py-2 border rounded text-sm" oninput="updateBillTotals()"></div>
+            </div>
             <!-- Breakdown -->
             <div class="bg-slate-50 p-3 rounded-lg border space-y-1.5 text-xs">
               <div class="flex justify-between text-slate-600">
@@ -553,6 +598,7 @@
               </table>
             </div>
           </div>
+          <div class="border rounded-xl p-3 space-y-3 bg-slate-50"><h4 class="font-bold text-xs">ક્રેડિટ નોટ / GSTR-2B મેળવણી</h4><div class="grid grid-cols-2 md:grid-cols-5 gap-2"><input id="supReturnBillNo" class="border rounded p-2 text-xs" placeholder="મૂળ બિલ નં."><input id="supCreditNoteNo" class="border rounded p-2 text-xs" placeholder="ક્રેડિટ નોટ નં."><input id="supReturnQty" type="number" min="0" step="any" class="border rounded p-2 text-xs" placeholder="પરત Qty"><input id="supReturnAmount" type="number" min="0" step="any" class="border rounded p-2 text-xs" placeholder="રકમ ₹"><button onclick="saveSupplierReturnNote()" type="button" class="bg-rose-600 text-white rounded p-2 text-xs">રિટર્ન નોંધો</button></div><div class="grid grid-cols-2 md:grid-cols-3 gap-2"><input id="gstr2bInvoiceNo" class="border rounded p-2 text-xs" placeholder="GSTR-2B બિલ નં."><input id="gstr2bTaxable" type="number" min="0" step="any" class="border rounded p-2 text-xs" placeholder="ટેક્સેબલ ₹"><input id="gstr2bTax" type="number" min="0" step="any" class="border rounded p-2 text-xs" placeholder="GST ₹"><button onclick="reconcileGstr2b()" type="button" class="bg-indigo-600 text-white rounded p-2 text-xs">2B સાથે મેળવો</button><button onclick="exportPurchaseReconciliation()" type="button" class="bg-slate-700 text-white rounded p-2 text-xs">રિપોર્ટ CSV</button></div><div id="supplierComplianceReport" class="text-xs text-slate-600">GSTR-2B સાથે મેન્યુઅલ મેળવણી. સરકારી પોર્ટલ સાથે આપમેળે કનેક્શન નથી.</div></div>
         </div>
       </div>
     </div>
@@ -635,6 +681,11 @@
           <select id="activeReportType" onchange="generateSelectedReport()" class="px-3 py-1.5 border rounded-lg text-xs font-medium bg-white focus:outline-none">
             <option value="dailySales">૧. રોજિંદો વેચાણ રિપોર્ટ (Daily Sales Report)</option>
             <option value="stockRegister">૨. દવા & સ્ટોક રજિસ્ટર રિપોર્ટ (Stock Register)</option>
+            <option value="fertilizerRegister">૫. ખાતર બેગ વેચાણ રજિસ્ટર (ડ્રાફ્ટ CSV — સત્તાવાર ફોર્મેટ ચકાસો)</option>
+            <option value="deadStock6">૬. ૬ મહિનાથી ન વેચાયેલો સ્ટોક</option>
+            <option value="deadStock12">૭. ૧૨ મહિનાથી ન વેચાયેલો સ્ટોક</option>
+            <option value="riskFarmers">૮. ખેડૂત ચુકવણી જોખમ રેટિંગ</option>
+            <option value="companyReturns">૯. કંપની રિટર્ન ડેડલાઇન</option>
             <option value="profitMargin">૩. નફો-નુકસાન રિપોર્ટ (Profit & Margin Report)</option>
             <option value="gstSummary">૪. જીએસટી સમરી રિપોર્ટ (GST Sales Summary)</option>
           </select>
@@ -698,6 +749,13 @@
           <label class="text-sm">મોબાઇલ નંબર<input id="partyPhone" inputmode="tel" class="block w-full border rounded-lg p-2 mt-1" placeholder="મોબાઇલ નંબર"></label>
           <label class="text-sm">ગામ<input id="partyVillage" class="block w-full border rounded-lg p-2 mt-1" placeholder="ગામનું નામ"></label>
           <label class="text-sm">પ્રકાર<select id="partyType" class="block w-full border rounded-lg p-2 mt-1"><option>ખેડૂત</option><option>ડીલર</option><option>રિટેલર</option><option>અન્ય</option></select></label>
+          <label class="text-sm">જમીન / વીઘા<input id="partyLandSize" type="number" min="0" step="0.01" class="block w-full border rounded-lg p-2 mt-1" placeholder="જમીનનું માપ"></label>
+          <label class="text-sm">ક્રેડિટ લિમિટ (₹)<input id="partyCreditLimit" type="number" min="0" step="1" class="block w-full border rounded-lg p-2 mt-1" placeholder="ઉદા. 20000"></label>
+          <label class="text-sm">સીઝન / પાક ચક્ર<select id="partyCropSeason" class="block w-full border rounded-lg p-2 mt-1"><option value="all">બધા સીઝન</option><option value="monsoon">ચોમાસુ</option><option value="winter">શિયાળુ</option><option value="summer">ઉનાળુ</option></select></label>
+          <label class="text-sm">પરિવાર / મુખ્ય ખાતું<select id="partyMainAccount" class="block w-full border rounded-lg p-2 mt-1"><option value="">આ જ મુખ્ય ખાતું</option></select></label>
+          <label class="text-sm">આધાર નંબર (વૈકલ્પિક)<input id="partyAadhaar" inputmode="numeric" maxlength="12" class="block w-full border rounded-lg p-2 mt-1" placeholder="માત્ર જરૂરી હોય ત્યારે"></label>
+          <label class="text-sm">જમીન ખાતા / 7-12 નંબર<input id="partyLandAccount" class="block w-full border rounded-lg p-2 mt-1" placeholder="ખાતા નંબર"></label>
+          <label class="text-sm">ભાવ ગ્રૂપ<select id="partyPriceGroup" class="block w-full border rounded-lg p-2 mt-1"><option value="cash">રોકડિયા ખેડૂત — Cash Discount</option><option value="standard" selected>સ્ટાન્ડર્ડ / MRP</option><option value="dealer">સબ-ડીલર / હોલસેલ</option></select></label>
           <label class="text-sm sm:col-span-2">સરનામું / નોંધ<input id="partyAddress" class="block w-full border rounded-lg p-2 mt-1" placeholder="સરનામું અથવા ખાસ નોંધ"></label>
           <div class="sm:col-span-2 flex gap-2 flex-wrap"><button class="bg-green-700 text-white rounded-lg px-4 py-2 font-bold" type="submit">પાર્ટી સેવ કરો</button><button type="button" onclick="resetPartyForm()" class="border rounded-lg px-4 py-2">ફોર્મ સાફ કરો</button></div>
         </form>
@@ -713,7 +771,7 @@
         <div id="followSummary" class="text-sm mb-2"></div><div id="followList" class="space-y-2"></div>
       </div>
       <div class="bg-white rounded-xl border p-4 shadow-sm">
-        <div class="flex gap-2 items-center mb-3"><h2 class="font-bold text-lg text-green-800 flex-1">પાર્ટી યાદી</h2><input id="partySearch" oninput="renderPartyManager()" class="border rounded-lg p-2 text-sm w-40" placeholder="નામ / ગામ શોધો"></div>
+        <div class="flex gap-2 items-center mb-3 flex-wrap"><h2 class="font-bold text-lg text-green-800 flex-1">પાર્ટી યાદી</h2><select id="partyVillageFilter" onchange="renderPartyManager()" class="border rounded-lg p-2 text-sm"><option value="">બધાં ગામ</option></select><input id="partySearch" oninput="renderPartyManager()" class="border rounded-lg p-2 text-sm w-40" placeholder="નામ / ગામ / મોબાઇલ શોધો"></div>
         <div id="partyManagerList" class="space-y-2"></div>
       </div>
     </div>
@@ -739,6 +797,11 @@
         <div>
           <label class="block text-xs font-semibold text-slate-700 mb-1">પ્રોડક્ટનું નામ *</label>
           <input type="text" id="mProdName" required placeholder="દા.ત. કોરાજન ૬૦ મિલી અથવા કપાસ બિયારણ" class="w-full px-3 py-2 border rounded-lg text-xs md:text-sm focus:outline-none focus:ring-2 focus:ring-agro-600">
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div><label class="block text-xs font-semibold text-slate-700 mb-1">ટેકનિકલ નામ / Active Ingredient</label><input type="text" id="mProdTechnical" placeholder="દા.ત. Chlorantraniliprole 18.5% SC" class="w-full px-3 py-2 border rounded-lg text-xs md:text-sm"></div>
+          <div><label class="block text-xs font-semibold text-slate-700 mb-1">કંપની / Manufacturer</label><input type="text" id="mProdCompany" placeholder="દા.ત. FMC, IFFCO" class="w-full px-3 py-2 border rounded-lg text-xs md:text-sm"></div>
         </div>
 
         <div class="grid grid-cols-2 gap-3">
@@ -767,6 +830,16 @@
             <input type="date" id="mProdExpiry" class="w-full px-3 py-2 border rounded-lg text-xs md:text-sm">
           </div>
         </div>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div><label class="block text-xs font-semibold text-slate-700 mb-1">બિયારણ લોટ નંબર</label><input id="mProdLot" type="text" class="w-full px-3 py-2 border rounded-lg text-xs" placeholder="Lot / Lot No."></div>
+          <div><label class="block text-xs font-semibold text-slate-700 mb-1">સર્ટિફિકેટ / પ્રમાણપત્ર વિગત</label><input id="mProdCertificate" type="text" class="w-full px-3 py-2 border rounded-lg text-xs" placeholder="પ્રમાણપત્ર નંબર / વર્ગ"></div>
+          <div><label class="block text-xs font-semibold text-slate-700 mb-1">બારકોડ / SKU</label><input id="mProdBarcode" type="text" class="w-full px-3 py-2 border rounded-lg text-xs" placeholder="બારકોડ નંબર"></div>
+          <div><label class="block text-xs font-semibold text-slate-700 mb-1">ઓછા સ્ટોકની મર્યાદા</label><input id="mProdLowStock" type="number" min="0" step="any" value="5" class="w-full px-3 py-2 border rounded-lg text-xs"></div>
+          <div><label class="block text-xs font-semibold text-slate-700 mb-1">દુકાન સ્ટોક</label><input id="mProdShopStock" type="number" min="0" step="any" class="w-full px-3 py-2 border rounded-lg text-xs" placeholder="દુકાનમાં"></div>
+          <div><label class="block text-xs font-semibold text-slate-700 mb-1">ગોડાઉન સ્ટોક</label><input id="mProdGodownStock" type="number" min="0" step="any" class="w-full px-3 py-2 border rounded-lg text-xs" placeholder="ગોડાઉનમાં"></div>
+          <div><label class="block text-xs font-semibold text-slate-700 mb-1">ડોઝ પ્રતિ 16 લિટર પમ્પ</label><input id="mProdDosagePump" type="text" class="w-full px-3 py-2 border rounded-lg text-xs" placeholder="દા.ત. 15 મિલી"></div>
+          <div><label class="block text-xs font-semibold text-slate-700 mb-1">ડોઝ પ્રતિ એકર / વીઘા</label><input id="mProdDosageAcre" type="text" class="w-full px-3 py-2 border rounded-lg text-xs" placeholder="પેકેટ મુજબનો ડોઝ"></div>
+        </div>
 
         <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
           <div>
@@ -785,6 +858,8 @@
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">વેચાણ કિંમત (₹)</label>
             <input type="number" id="mProdPrice" min="0" step="any" required placeholder="₹ 0" class="w-full px-2 py-2 border rounded-lg text-xs font-bold text-agro-700">
+            <label class="block text-xs font-semibold text-slate-700 mb-1">રોકડિયા ભાવ (₹)</label><input type="number" id="mProdCashPrice" min="0" step="any" placeholder="ખાલી = વેચાણ ભાવ" class="w-full px-2 py-2 border rounded-lg text-xs">
+            <label class="block text-xs font-semibold text-slate-700 mb-1">ડીલર / હોલસેલ ભાવ (₹)</label><input type="number" id="mProdDealerPrice" min="0" step="any" placeholder="ખાલી = વેચાણ ભાવ" class="w-full px-2 py-2 border rounded-lg text-xs">
           </div>
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">શરૂઆતનો સ્ટોક</label>
@@ -828,6 +903,7 @@
           <label class="block text-xs font-semibold text-slate-700 mb-1">GSTIN નંબર</label>
           <input type="text" id="supGstin" placeholder="24AAACU..." class="w-full px-3 py-2 border rounded-lg text-xs md:text-sm uppercase">
         </div>
+        <div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold mb-1">Form O / ઑથોરાઇઝેશન સર્ટિફિકેટ</label><input id="supFormO" class="w-full px-3 py-2 border rounded-lg text-xs"></div><div><label class="block text-xs font-semibold mb-1">સીડ્સ / ફર્ટિલાઇઝર લાયસન્સ</label><input id="supLicense" class="w-full px-3 py-2 border rounded-lg text-xs"></div><div><label class="block text-xs font-semibold mb-1">ડિફોલ્ટ GST %</label><input type="number" id="supGstRate" value="5" min="0" max="100" class="w-full px-3 py-2 border rounded-lg text-xs"></div><div><label class="block text-xs font-semibold mb-1">ચુકવણી મુદત (દિવસ)</label><input type="number" id="supCreditDays" value="30" min="0" class="w-full px-3 py-2 border rounded-lg text-xs"></div></div>
         <div class="flex justify-end gap-2 pt-2 border-t">
           <button type="button" onclick="closeSupplierModal()" class="px-4 py-1.5 border rounded-lg text-xs font-semibold text-slate-600">રદ કરો</button>
           <button type="submit" class="px-4 py-1.5 bg-agro-700 hover:bg-agro-800 text-white rounded-lg text-xs font-bold shadow">સપ્લાયર સાચવો</button>
@@ -877,6 +953,7 @@
           </div>
         </div>
 
+        <div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold mb-1">મેન્યુફેક્ચરિંગ તારીખ</label><input type="date" id="pBillMfg" class="w-full px-3 py-1.5 border rounded-lg text-xs"></div><div><label class="block text-xs font-semibold mb-1">HSN કોડ</label><input id="pBillHsn" class="w-full px-3 py-1.5 border rounded-lg text-xs"></div></div>
         <div class="grid grid-cols-3 gap-3">
           <div>
             <label class="block text-xs font-semibold text-slate-700 mb-1">ખરીદેલ જથ્થો (Qty) *</label>
@@ -892,6 +969,8 @@
           </div>
         </div>
 
+        <div class="grid grid-cols-3 gap-3"><div><label class="block text-xs font-semibold mb-1">ફ્રી જથ્થો</label><input type="number" id="pBillFreeQty" min="0" value="0" step="any" oninput="calcPurchaseTotal()" class="w-full px-3 py-1.5 border rounded-lg text-xs"></div><div><label class="block text-xs font-semibold mb-1">GST %</label><input type="number" id="pBillGstRate" min="0" max="100" value="5" step="any" oninput="calcPurchaseTotal()" class="w-full px-3 py-1.5 border rounded-lg text-xs"></div><div><label class="block text-xs font-semibold mb-1">ટ્રાન્સપોર્ટ ₹</label><input type="number" id="pBillTransport" min="0" value="0" step="any" oninput="calcPurchaseTotal()" class="w-full px-3 py-1.5 border rounded-lg text-xs"></div></div>
+        <div class="grid grid-cols-2 gap-3"><div><label class="block text-xs font-semibold mb-1">ચુકવણી છેલ્લી તારીખ</label><input type="date" id="pBillDueDate" class="w-full px-3 py-1.5 border rounded-lg text-xs"></div><div><label class="block text-xs font-semibold mb-1">કંપની રિટર્ન છેલ્લી તારીખ</label><input type="date" id="pBillReturnDeadline" class="w-full px-3 py-1.5 border rounded-lg text-xs"></div></div>
         <div class="flex justify-end gap-2 pt-2 border-t">
           <button type="button" onclick="closePurchaseEntryModal()" class="px-4 py-1.5 border rounded-lg text-xs font-semibold text-slate-600">રદ કરો</button>
           <button type="submit" class="px-4 py-1.5 bg-agro-700 hover:bg-agro-800 text-white rounded-lg text-xs font-bold shadow">ખરીદી નોંધો & સ્ટોક વધારો</button>
@@ -1079,12 +1158,22 @@
       { id: 'sl1', supplierName: 'FMC ઇન્ડિયા પ્રાઇવેટ લિમિટેડ', date: '2026-10-15', billNo: 'FMC-8941', purchase: 25000, payment: 0, balance: 25000, note: 'કોરાજન સ્ટોક ખરીદી' },
       { id: 'sl2', supplierName: 'ઇફ્કો ફર્ટિલાઇઝર્સ (IFFCO કડી)', date: '2026-10-18', billNo: 'IFF-201', purchase: 12000, payment: 0, balance: 12000, note: 'યુરિયા અને DAP' }
     ];
+    let purchaseRecords = JSON.parse(localStorage.getItem('bahuchar_purchase_records')) || [];
+    let supplierReturns = JSON.parse(localStorage.getItem('bahuchar_supplier_returns')) || [];
+    let gstr2bMatches = JSON.parse(localStorage.getItem('bahuchar_gstr2b_matches')) || [];
     let farmers = JSON.parse(localStorage.getItem('bahuchar_farmers')) || DEFAULT_FARMERS;
     let khataLedger = JSON.parse(localStorage.getItem('bahuchar_ledger')) || [
       { id: 'l1', farmerName: 'રમેશભાઈ ગોવિંદભાઈ પટેલ', date: '2026-10-20', type: 'ઉધાર બિલ', debit: 3500, credit: 0, balance: 3500, note: 'બિલ BA-000' },
       { id: 'l2', farmerName: 'ભરતસિંહ ચાવડા', date: '2026-10-22', type: 'ઉધાર બિલ', debit: 8200, credit: 0, balance: 8200, note: 'બિલ BA-000' }
     ];
     let invoices = JSON.parse(localStorage.getItem('bahuchar_invoices')) || [];
+    // Additive product schema migration; preserves existing inventory quantities.
+    products.forEach(p => {
+      if (p.shopStock === undefined && p.godownStock === undefined) { p.shopStock = Number(p.stock || 0); p.godownStock = 0; }
+      if (p.shopStock === undefined) p.shopStock = Math.max(0, Number(p.stock || 0) - Number(p.godownStock || 0));
+      if (p.godownStock === undefined) p.godownStock = Math.max(0, Number(p.stock || 0) - Number(p.shopStock || 0));
+      if (p.lowStockLimit === undefined) p.lowStockLimit = 5;
+    });
 
     let currentBillItems = [];
     let activeSupplierForDetails = null;
@@ -1096,6 +1185,9 @@
       syncLocalStorage();
       populateProductDropdowns();
       renderInventoryTable();
+      showAgroStockAlerts();
+      showCompanyReturnAlerts();
+      showSupplierDueAlerts();
       renderSuppliersList();
       renderFarmerSuggestions();
       renderFarmerKhataList();
@@ -1108,6 +1200,9 @@
       localStorage.setItem('bahuchar_products', JSON.stringify(products));
       localStorage.setItem('bahuchar_suppliers', JSON.stringify(suppliers));
       localStorage.setItem('bahuchar_sup_ledger', JSON.stringify(supplierLedger));
+      localStorage.setItem('bahuchar_purchase_records', JSON.stringify(purchaseRecords));
+      localStorage.setItem('bahuchar_supplier_returns', JSON.stringify(supplierReturns));
+      localStorage.setItem('bahuchar_gstr2b_matches', JSON.stringify(gstr2bMatches));
       localStorage.setItem('bahuchar_farmers', JSON.stringify(farmers));
       localStorage.setItem('bahuchar_ledger', JSON.stringify(khataLedger));
       localStorage.setItem('bahuchar_invoices', JSON.stringify(invoices));
@@ -1175,7 +1270,7 @@
       products.forEach(p => {
         const opt = document.createElement('option');
         opt.value = p.id;
-        opt.textContent = `${p.name} (${p.unit}) - સ્ટોક: ${p.stock} - ભાવ: ₹${p.price}`;
+        opt.textContent = `${p.name} | ${p.technicalName || p.technical || p.activeIngredient || ''} | ${p.company || p.manufacturer || p.brand || ''} (${p.unit}) - સ્ટોક: ${p.stock} - ભાવ: ₹${p.price}`;
         select.appendChild(opt);
 
         const pOpt = document.createElement('option');
@@ -1183,6 +1278,29 @@
         pOpt.textContent = `${p.name} (${p.unit})`;
         purchaseSelect.appendChild(pOpt);
       });
+      if (document.getElementById('billProductSearch')?.value) filterBillProducts();
+    }
+
+    function filterBillProducts() {
+      const q = String(document.getElementById('billProductSearch')?.value || '').trim().toLowerCase();
+      const exactBarcode = products.find(p => String(p.barcode || '').trim().toLowerCase() === q && q);
+      const select = document.getElementById('selectedProduct');
+      const previous = select.value;
+      select.innerHTML = '<option value="">-- બિયારણ / ખાતર / દવા પસંદ કરો --</option>';
+      products.filter(p => {
+        const haystack = [p.name,p.technicalName,p.technical,p.activeIngredient,p.company,p.manufacturer,p.brand,p.batch,p.category,p.barcode,p.lotNumber,p.certificate].filter(Boolean).join(' ').toLowerCase();
+        return !q || haystack.includes(q);
+      }).forEach(p => { const o=document.createElement('option'); o.value=p.id; o.textContent=`${p.name} | ${p.technicalName || p.technical || p.activeIngredient || ''} | ${p.company || p.manufacturer || p.brand || ''} (${p.unit}) - સ્ટોક: ${p.stock} - ભાવ: ₹${p.price}`; select.appendChild(o); });
+      if (exactBarcode) { select.value=exactBarcode.id; onProductSelect(); } else if (previous && [...select.options].some(o=>o.value===previous)) select.value=previous;
+    }
+    function toggleSplitPayment() {
+      const method=document.getElementById('billPaymentMethod')?.value;
+      document.getElementById('splitPaymentBox')?.classList.toggle('hidden',method!=='split');
+      document.getElementById('singlePaymentBox')?.classList.toggle('hidden',method==='split'||method==='credit');
+      const creditRadio=document.querySelector('input[name="billType"][value="ઉધાર"]');
+      const cashRadio=document.querySelector('input[name="billType"][value="રોકડ"]');
+      if(method==='credit' && creditRadio){creditRadio.checked=true; document.getElementById('creditTermsBox')?.classList.remove('hidden');}
+      else if(method!=='credit' && cashRadio && document.querySelector('input[name="billType"]:checked')?.value==='ઉધાર'){cashRadio.checked=true; document.getElementById('creditTermsBox')?.classList.add('hidden');}
     }
 
     function onProductSelect() {
@@ -1201,10 +1319,13 @@
         infoBox.classList.remove('hidden');
         document.getElementById('quickBatch').innerText = p.batch || 'N/A';
         document.getElementById('quickExp').innerText = p.expiry || 'N/A';
-        document.getElementById('quickStock').innerText = `${p.stock} ${p.unit}`;
+        document.getElementById('quickStock').innerText = `${p.stock} ${p.unit} (દુકાન ${p.shopStock ?? p.stock} / ગોડાઉન ${p.godownStock ?? 0})`;
+        if (p.dosagePump || p.dosageAcre) showToast('ડોઝ: '+[p.dosagePump?'16L પમ્પ: '+p.dosagePump:'',p.dosageAcre?'એકર/વીઘા: '+p.dosageAcre:''].filter(Boolean).join(' • '),'info');
+        if (p.category === 'ખાતર') { setTimeout(()=>{if(confirm('આ ખાતર સાથે હ્યુમિક એસિડ અથવા માઇક્રોન્યુટ્રિઅન્ટ્સ ઉમેરવાનું સૂચન જુઓ?')) { const extras=products.filter(x=>x.id!==p.id && /હ્યુમિક|humic|micro.?nutrient|માઇક્રો/i.test([x.name,x.technicalName,x.category].join(' '))).slice(0,5); alert(extras.length?'ઉપલબ્ધ વિકલ્પો: '+extras.map(x=>x.name+' (સ્ટોક '+x.stock+')').join('、'):'આ નામની પ્રોડક્ટ સ્ટોકમાં નથી.');}},100); }
+        if (/ફૂગનાશક|fungicide|fungi/i.test(p.category+' '+p.name) && confirm('સ્ટીકર / સિલિકોન સ્પ્રેડર ઉમેરવું છે?')) { const extras=products.filter(x=>x.id!==p.id && /sticker|spreader|સિલિકોન|સ્ટીકર/i.test(x.name+' '+(x.technicalName||''))); if(extras.length) alert('વિકલ્પ: '+extras.map(x=>x.name).join('、')); else showToast('સ્ટોકમાં સ્ટીકર / સ્પ્રેડર પ્રોડક્ટ ઉમેરો.','info'); }
         document.getElementById('quickGst').innerText = `${p.gst}%`;
         
-        document.getElementById('itemRate').value = p.price;
+        document.getElementById('itemRate').value = getPriceForCurrentCustomer(p);
         document.getElementById('itemQty').value = 1;
         document.getElementById('itemDisc').value = 0;
         calculateItemTotalPreview();
@@ -1257,6 +1378,9 @@
         name: p.name,
         unit: p.unit,
         batch: p.batch || 'N/A',
+        lotNumber: p.lotNumber || (p.category==='બિયારણ' ? p.batch : ''),
+        certificate: p.certificate || '',
+        dosagePump: p.dosagePump || '', dosageAcre: p.dosageAcre || '',
         expiry: p.expiry || 'N/A',
         costPrice: p.costPrice || 0,
         gstPercent: p.gst || 0,
@@ -1307,7 +1431,7 @@
         tr.innerHTML = `
           <td class="p-2">
             <div class="font-semibold text-slate-800">${item.name}</div>
-            <div class="text-[10px] text-slate-400">બેચ: ${item.batch} | Exp: ${item.expiry}</div>
+            <div class="text-[10px] text-slate-400">બેચ: ${item.batch} | Exp: ${item.expiry}${item.lotNumber ? ' | લોટ: '+item.lotNumber : ''}${item.dosagePump ? ' | ડોઝ: '+item.dosagePump+'/16L પમ્પ' : ''}</div>
           </td>
           <td class="p-2 text-center font-bold">${item.qty}</td>
           <td class="p-2 text-right">₹${item.rate}</td>
@@ -1335,12 +1459,14 @@
         totalGst += item.gstAmount;
       });
 
-      const net = Math.max(0, gross - totalDisc);
+      const extras = Math.max(0, Number(document.getElementById('billHamali')?.value || 0)) + Math.max(0, Number(document.getElementById('billTransport')?.value || 0));
+      const net = Math.max(0, gross - totalDisc) + extras;
 
       document.getElementById('summaryGross').innerText = `₹ ${gross.toFixed(2)}`;
       document.getElementById('summaryDiscount').innerText = `- ₹ ${totalDisc.toFixed(2)}`;
       document.getElementById('summaryGst').innerText = `₹ ${totalGst.toFixed(2)}`;
       document.getElementById('summaryNet').innerText = `₹ ${net.toFixed(2)}`;
+      if (document.getElementById('summaryGross')) document.getElementById('summaryGross').innerText = `₹ ${(gross + extras).toFixed(2)}`;
     }
 
     function clearCurrentBill() {
@@ -1348,8 +1474,38 @@
       document.getElementById('custName').value = '';
       document.getElementById('custVillage').value = '';
       document.getElementById('custPhone').value = '';
+      if(document.getElementById('billHamali')) document.getElementById('billHamali').value='0';
+      if(document.getElementById('billTransport')) document.getElementById('billTransport').value='0';
+      if(document.getElementById('billPaymentMethod')) document.getElementById('billPaymentMethod').value='cash';
+      if(document.getElementById('billPaidAmount')) document.getElementById('billPaidAmount').value='';
+      ['splitCash','splitBank','splitUpi','splitCheque'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='0';});
+      toggleSplitPayment();
+      document.getElementById('billProductSearch') && (document.getElementById('billProductSearch').value='');
       document.getElementById('farmerOldBalanceBanner').classList.add('hidden');
       renderCurrentBillItems();
+    }
+
+    function getPriceForCurrentCustomer(product) {
+      const name = (document.getElementById('custName')?.value || '').trim().toLowerCase();
+      const farmer = farmers.find(f => String(f.name||'').trim().toLowerCase() === name);
+      const group = farmer?.priceGroup || ((farmer?.type==='ડીલર'||farmer?.type==='રિટેલર')?'dealer':'standard');
+      if (group === 'cash') return Number(product.cashPrice ?? product.price ?? 0);
+      if (group === 'dealer') return Number(product.dealerPrice ?? product.price ?? 0);
+      return Number(product.price || 0);
+    }
+    function getFarmerRisk(farmer) {
+      const now = new Date(); const fiveYearsAgo = new Date(now); fiveYearsAgo.setFullYear(now.getFullYear()-5);
+      const history = (invoices||[]).filter(i=>String(i.farmerName||'').toLowerCase()===String(farmer.name||'').toLowerCase() && new Date(i.date||i.timestamp||0)>=fiveYearsAgo);
+      const overdue = Number(farmer.balance||0)>0;
+      const lateBills = history.filter(i=>Number(i.dueAmount||0)>0 && i.dueDate && new Date(i.dueDate)<now).length;
+      if (overdue && (Number(farmer.balance||0)>=10000 || lateBills>=2)) return {level:'red',label:'🔴 લાલ — ઊંચું જોખમ'};
+      if (overdue || lateBills>0) return {level:'yellow',label:'🟡 પીળું — ચુકવણી મોડું'};
+      return {level:'green',label:'🟢 લીલું — બાકી નથી'};
+    }
+    function showCompanyReturnAlerts() {
+      const now = new Date(); const limit = new Date(now); limit.setDate(limit.getDate()+60);
+      const due = (products||[]).filter(p=>p.returnDeadline && new Date(p.returnDeadline+'T23:59:59')<=limit);
+      if(due.length) setTimeout(()=>showToast('કંપની રિટર્ન ડેડલાઇન નજીક/પસાર: '+due.slice(0,3).map(p=>p.name+' ('+p.returnDeadline+')').join(' • '),'error'),900);
     }
 
     function checkFarmerHistory() {
@@ -1362,13 +1518,15 @@
         document.getElementById('custPhone').value = match.phone;
         if (match.balance > 0) {
           banner.classList.remove('hidden');
-          document.getElementById('farmerOldBalVal').innerText = `₹ ${match.balance.toFixed(2)}`;
+          document.getElementById('farmerOldBalVal').innerText = `₹ ${match.balance.toFixed(2)} • ${getFarmerRisk(match).label}`;
+          if(getFarmerRisk(match).level==='red') showToast('⚠️ આ ખાતામાં જૂની બાકી હજુ આવી નથી, માલિકની મંજૂરી લો.','error');
         } else {
           banner.classList.add('hidden');
         }
       } else {
         banner.classList.add('hidden');
       }
+      if (document.getElementById('selectedProduct')?.value) onProductSelect();
     }
 
     function renderFarmerSuggestions() {
@@ -1390,7 +1548,7 @@
       const custName = document.getElementById('custName').value.trim();
       const village = document.getElementById('custVillage').value.trim();
       const phone = document.getElementById('custPhone').value.trim() || 'N/A';
-      const billType = document.querySelector('input[name="billType"]:checked').value;
+      let billType = document.querySelector('input[name="billType"]:checked').value;
 
       if (!custName) {
         showToast('ખેડૂતનું નામ દાખલ કરો!', 'error');
@@ -1417,34 +1575,58 @@
         }
       }
 
-      const dueDays = Number(document.getElementById('creditDueDays')?.value || 30);
-      const interestEnabled = billType === 'ઉધાર' && document.getElementById('interestEnabled')?.value === 'yes';
-      const interestRate = interestEnabled ? Number(document.getElementById('interestRate')?.value || 0) : 0;
-      if (interestEnabled && (!Number.isFinite(interestRate) || interestRate <= 0)) { showToast('યોગ્ય વાર્ષિક વ્યાજ દર દાખલ કરો.', 'error'); return; }
       const billNo = generateNextBillNumber();
       const todayISO = new Date().toISOString().slice(0,10);
       const today = new Date().toLocaleDateString('gu-IN', { day: '2-digit', month: '2-digit', year: 'numeric' });
-      const dueDateISO = billType === 'ઉધાર' ? addDaysISO(dueDays) : '';
       
       let grandTotal = 0;
       let totalCost = 0;
-      currentBillItems.forEach(i => {
-        grandTotal += i.total;
-        totalCost += (i.qty * i.costPrice);
-      });
+      currentBillItems.forEach(i => { grandTotal += i.total; totalCost += (i.qty * i.costPrice); });
+      const hamaliAmount = Math.max(0, Number(document.getElementById('billHamali')?.value || 0));
+      const transportAmount = Math.max(0, Number(document.getElementById('billTransport')?.value || 0));
+      grandTotal += hamaliAmount + transportAmount;
+
+      // Payment allocation for cash, bank, UPI, cheque and split payments.
+      const paymentMethod = document.getElementById('billPaymentMethod')?.value || 'cash';
+      let paymentDetails = [];
+      let paidAmount = 0;
+      if (paymentMethod === 'split') {
+        const methods = [['cash','splitCash'],['bank','splitBank'],['upi','splitUpi'],['cheque','splitCheque']];
+        paymentDetails = methods.map(([method,id])=>({method,amount:Number(document.getElementById(id)?.value||0)})).filter(x=>x.amount>0);
+        if(paymentDetails.some(x=>!Number.isFinite(x.amount)||x.amount<0)){showToast('Split ચુકવણીની રકમ તપાસો.','error');return;}
+        paidAmount=paymentDetails.reduce((a,x)=>a+x.amount,0);
+      } else if (paymentMethod !== 'credit') {
+        const entered=document.getElementById('billPaidAmount')?.value;
+        paidAmount=entered===''||entered==null?grandTotal:Number(entered);
+        if(!Number.isFinite(paidAmount)||paidAmount<0){showToast('ચુકવણીની રકમ યોગ્ય દાખલ કરો.','error');return;}
+        paymentDetails=paidAmount>0?[{method:paymentMethod,amount:paidAmount}]:[];
+      }
+      if(paidAmount>grandTotal+0.009){showToast('ચુકવણી બિલની કુલ રકમથી વધારે ન હોઈ શકે.','error');return;}
+      const dueAmount=Math.max(0,grandTotal-paidAmount);
+      billType=dueAmount>0.009?'ઉધાર':'રોકડ';
+      const dueDays = Number(document.getElementById('creditDueDays')?.value || 30);
+      const interestEnabled = dueAmount>0.009 && document.getElementById('interestEnabled')?.value === 'yes';
+      const interestRate = interestEnabled ? Number(document.getElementById('interestRate')?.value || 0) : 0;
+      if (interestEnabled && (!Number.isFinite(interestRate) || interestRate <= 0)) { showToast('યોગ્ય વાર્ષિક વ્યાજ દર દાખલ કરો.', 'error'); return; }
+      const dueDateISO = dueAmount>0.009 ? addDaysISO(dueDays) : '';
 
       // Credit limit guard: default ₹20,000; owner must explicitly approve any excess.
       let existingParty = farmers.find(f => f.name.toLowerCase() === custName.toLowerCase());
-      let creditLimit = Number(existingParty?.creditLimit || 0);
-      const oldBalance = Number(existingParty?.balance || 0);
+      let accountParty = existingParty?.mainAccountId ? (farmers.find(f=>String(f.id)===String(existingParty.mainAccountId)) || existingParty) : existingParty;
+      let creditLimit = Number(accountParty?.creditLimit || existingParty?.creditLimit || 0);
+      const oldBalance = Number(accountParty?.balance || existingParty?.balance || 0);
+      if (existingParty && getFarmerRisk(existingParty).level === 'red') {
+        const okRisk = window.confirm(`🔴 ઊંચું ચુકવણી જોખમ!\nઆ ખાતામાં જૂની બાકી હજુ આવી નથી, માલિકની મંજૂરી લો.\nબાકી: ₹${oldBalance.toFixed(2)}\n\nમાલિક તરીકે આ બિલ મંજૂર કરો છો?`);
+        if (!okRisk) { showToast('જોખમ એલર્ટને કારણે બિલ રોક્યું.','error'); return; }
+      }
       if (billType === 'ઉધાર' && !(creditLimit > 0)) {
         const limitInput = window.prompt(`પાર્ટી ${custName} માટે ક્રેડિટ લિમિટ કેટલી રાખવી? (₹ માં)`, '20000');
         if (limitInput === null) { showToast('ક્રેડિટ લિમિટ નક્કી ન થતાં બિલ રોક્યું.', 'error'); return; }
         creditLimit = Number(limitInput);
         if (!Number.isFinite(creditLimit) || creditLimit <= 0) { showToast('યોગ્ય ક્રેડિટ લિમિટ દાખલ કરો.', 'error'); return; }
       }
-      if (billType === 'ઉધાર' && oldBalance + grandTotal > creditLimit) {
-        const excess = oldBalance + grandTotal - creditLimit;
+      if (billType === 'ઉધાર' && oldBalance + dueAmount > creditLimit) {
+        const excess = oldBalance + dueAmount - creditLimit;
         const approved = window.confirm(`ક્રેડિટ લિમિટ ચેતવણી!\nપાર્ટી: ${custName}\nહાલની બાકી: ₹${oldBalance.toFixed(2)}\nનવું બિલ: ₹${grandTotal.toFixed(2)}\nલિમિટ: ₹${creditLimit.toFixed(2)}\nલિમિટથી વધુ: ₹${excess.toFixed(2)}\n\nમાલિક તરીકે તમે મંજૂરી આપો છો? OK = મંજૂરી, Cancel = બિલ રોકો.`);
         if (!approved) { showToast('માલિકની મંજૂરી ન મળતાં બિલ બનાવ્યું નથી.', 'error'); return; }
       }
@@ -1453,12 +1635,17 @@
       currentBillItems.forEach(item => {
         const prod = products.find(p => p.id === item.productId);
         if (prod) {
-          prod.stock = Math.max(0, prod.stock - item.qty);
+          let toDeduct = Number(item.qty || 0);
+          const shopAvail = Number(prod.shopStock ?? prod.stock ?? 0);
+          const fromShop = Math.min(shopAvail, toDeduct);
+          prod.shopStock = Math.max(0, shopAvail - fromShop); toDeduct -= fromShop;
+          prod.godownStock = Math.max(0, Number(prod.godownStock || 0) - toDeduct);
+          prod.stock = Number(prod.shopStock || 0) + Number(prod.godownStock || 0);
         }
       });
 
       // Handle Farmer Credit
-      let farmerObj = farmers.find(f => f.name.toLowerCase() === custName.toLowerCase());
+      let farmerObj = accountParty || farmers.find(f => f.name.toLowerCase() === custName.toLowerCase());
       if (!farmerObj) {
         farmerObj = {
           id: 'f_' + Date.now(),
@@ -1476,16 +1663,16 @@
       }
 
       if (billType === 'ઉધાર') {
-        farmerObj.balance += grandTotal;
+        farmerObj.balance += dueAmount;
         khataLedger.push({
           id: 'l_' + Date.now(),
-          farmerName: custName,
+          farmerName: farmerObj.name,
           date: today,
-          type: 'ઉધાર બિલ',
-          debit: grandTotal,
+          type: paidAmount>0 ? 'આંશિક ચુકવણીવાળું બિલ' : 'ઉધાર બિલ',
+          debit: dueAmount,
           credit: 0,
           balance: farmerObj.balance,
-          note: `બિલ નં: ${billNo}; મુદત: ${dueDays} દિવસ; છેલ્લી તારીખ: ${dueDateISO}; વસ્તુઓ: ${currentBillItems.map(i => `${i.name} (${categoryForItem(i)} x${i.qty})`).join(', ')}`,
+          note: `સીઝન: ${({monsoon:'ચોમાસુ',winter:'શિયાળુ',summer:'ઉનાળુ',all:'સામાન્ય'})[document.getElementById('billCropSeason')?.value||'all']}; બિલ નં: ${billNo}; મળેલ ચુકવણી ₹${paidAmount.toFixed(2)}; બાકી ₹${dueAmount.toFixed(2)}; મુદત: ${dueDays} દિવસ; છેલ્લી તારીખ: ${dueDateISO}; વસ્તુઓ: ${currentBillItems.map(i => `${i.name} (${categoryForItem(i)} x${i.qty})`).join(', ')}`,
           dueDate: dueDateISO, interestEnabled: interestEnabled, interestRate: interestRate, items: currentBillItems.map(i=>({name:i.name,qty:i.qty,unit:i.unit,total:i.total,category:categoryForItem(i)}))
         });
       }
@@ -1495,13 +1682,20 @@
         date: today,
         timestamp: Date.now(),
         farmerName: custName,
+        accountName: farmerObj?.name || custName,
         village: village,
         phone: phone,
+        cropSeason: document.getElementById('billCropSeason')?.value || 'all',
         billType: billType,
+        paymentMethod: paymentMethod,
+        paymentDetails: paymentDetails,
+        paidAmount: paidAmount,
+        dueAmount: dueAmount,
         items: [...currentBillItems],
         grandTotal: grandTotal,
         totalCost: totalCost,
-        profit: grandTotal - totalCost,
+        hamaliAmount, transportAmount,
+        profit: grandTotal - totalCost - hamaliAmount - transportAmount,
         dueDays: billType === 'ઉધાર' ? dueDays : 0,
         dueDate: dueDateISO,
         interestEnabled: interestEnabled,
@@ -1518,6 +1712,8 @@
       renderFarmerSuggestions();
       renderInvoiceHistory();
       updateDashboardStats();
+      const lowAfterSale = [...new Set(currentBillItems.map(i=>i.productId))].map(id=>products.find(p=>String(p.id)===String(id))).filter(p=>p && Number(p.stock||0)<=Number(p.lowStockLimit??5));
+      if (lowAfterSale.length) showToast('ઓર્ડર માટે ઓછો સ્ટોક: '+lowAfterSale.map(p=>p.name+' ('+p.stock+')').join(' • '),'error');
 
       openInvoiceModal(invoiceData);
       clearCurrentBill();
@@ -1530,7 +1726,7 @@
       document.getElementById('pCustPhone').innerText = inv.phone;
       document.getElementById('pBillNo').innerText = inv.billNo;
       document.getElementById('pBillDate').innerText = inv.date;
-      document.getElementById('pBillType').innerText = inv.billType + (inv.billType === 'ઉધાર' ? ` | મુદત ${inv.dueDays || 30} દિવસ | છેલ્લી તારીખ ${inv.dueDate || '-'}` + (inv.interestEnabled ? ` | વ્યાજ ${inv.interestRate}% વાર્ષિક` : '') : '');
+      document.getElementById('pBillType').innerText = (inv.billType + (inv.paidAmount>0 ? ` | મળેલ ₹${Number(inv.paidAmount).toFixed(2)} (${(inv.paymentDetails||[]).map(x=>({cash:'રોકડ',bank:'બેંક',upi:'UPI',cheque:'ચેક'}[x.method]||x.method).concat(' ₹'+Number(x.amount).toFixed(2))).join(', ')}) | બાકી ₹${Number(inv.dueAmount||0).toFixed(2)}` : '') ) + (inv.billType === 'ઉધાર' ? ` | મુદત ${inv.dueDays || 30} દિવસ | છેલ્લી તારીખ ${inv.dueDate || '-'}` + (inv.interestEnabled ? ` | વ્યાજ ${inv.interestRate}% વાર્ષિક` : '') : '');
       document.getElementById('previewBillTag').innerText = `${inv.billType} બિલ`;
 
       const tbody = document.getElementById('pItemsBody');
@@ -1546,7 +1742,7 @@
           <td class="p-1.5 border border-slate-300">
             <strong>${item.name}</strong> <span class="text-[9px] text-slate-500">(${item.unit})</span>
           </td>
-          <td class="p-1.5 border border-slate-300">${item.batch}</td>
+          <td class="p-1.5 border border-slate-300">${item.batch}${item.lotNumber ? '<div class="text-[9px]">લોટ: '+item.lotNumber+'</div>' : ''}${item.certificate ? '<div class="text-[9px]">સર્ટિ.: '+item.certificate+'</div>' : ''}${item.dosagePump ? '<div class="text-[9px]">ડોઝ: '+item.dosagePump+'/16L પમ્પ</div>' : ''}</td>
           <td class="p-1.5 border border-slate-300 text-center">${item.expiry}</td>
           <td class="p-1.5 border border-slate-300 text-center font-bold">${item.qty}</td>
           <td class="p-1.5 border border-slate-300 text-right">₹${item.rate}</td>
@@ -1555,6 +1751,8 @@
         tbody.appendChild(tr);
       });
 
+      if (Number(inv.hamaliAmount || 0) > 0) { const tr=document.createElement('tr'); tr.className='border-b border-slate-200'; tr.innerHTML=`<td class="p-1 border border-slate-300 text-center">—</td><td colspan="4" class="p-1.5 border border-slate-300">હમાલી / અનલોડિંગ</td><td class="p-1 border border-slate-300 text-right">—</td><td class="p-1.5 border border-slate-300 text-right font-bold">₹${Number(inv.hamaliAmount).toFixed(2)}</td>`; tbody.appendChild(tr); }
+      if (Number(inv.transportAmount || 0) > 0) { const tr=document.createElement('tr'); tr.className='border-b border-slate-200'; tr.innerHTML=`<td class="p-1 border border-slate-300 text-center">—</td><td colspan="4" class="p-1.5 border border-slate-300">ટ્રેક્ટર / ટેમ્પો ભાડું</td><td class="p-1 border border-slate-300 text-right">—</td><td class="p-1.5 border border-slate-300 text-right font-bold">₹${Number(inv.transportAmount).toFixed(2)}</td>`; tbody.appendChild(tr); }
       document.getElementById('pTotalQty').innerText = totalQty;
       document.getElementById('pGrandTotal').innerText = `₹ ${inv.grandTotal.toFixed(2)}`;
       document.getElementById('pAmountInWords').innerText = `₹ ${inv.grandTotal.toFixed(2)} પૂરા (અંકે)`;
@@ -1618,7 +1816,7 @@
       const cat = document.getElementById('categoryFilter')?.value || 'ALL';
 
       const filtered = products.filter(p => {
-        const matchSearch = p.name.toLowerCase().includes(search) || (p.batch && p.batch.toLowerCase().includes(search));
+        const matchSearch = [p.name,p.technicalName,p.technical,p.activeIngredient,p.company,p.manufacturer,p.brand,p.batch].filter(Boolean).join(' ').toLowerCase().includes(search);
         const matchCat = (cat === 'ALL') || (p.category === cat);
         return matchSearch && matchCat;
       });
@@ -1629,7 +1827,7 @@
       }
 
       filtered.forEach(p => {
-        const isLow = p.stock <= 5;
+        const isLow = Number(p.stock || 0) <= Number(p.lowStockLimit ?? 5);
         const isExpiring = checkIsExpiringSoon(p.expiry);
 
         const tr = document.createElement('tr');
@@ -1637,12 +1835,12 @@
         tr.innerHTML = `
           <td class="p-2.5">
             <div class="font-bold text-slate-900">${p.name}</div>
-            <div class="text-[10px] text-slate-500">${p.unit}</div>
+            <div class="text-[10px] text-slate-500">${p.unit} • દુકાન ${p.shopStock ?? p.stock} / ગોડાઉન ${p.godownStock ?? 0}</div><div class="text-[10px] text-slate-500">${p.technicalName || ''} ${p.company ? '• '+p.company : ''} ${p.barcode ? '• SKU '+p.barcode : ''}</div>
           </td>
           <td class="p-2.5">
             <span class="px-2 py-0.5 rounded text-[11px] font-semibold ${getCategoryBadge(p.category)}">${p.category}</span>
           </td>
-          <td class="p-2.5 font-mono text-xs">${p.batch || '-'}</td>
+          <td class="p-2.5 font-mono text-xs">${p.batch || '-'}<div class="text-[10px]">લોટ: ${p.lotNumber || '-'}</div><div class="text-[10px]">સર્ટિ.: ${p.certificate || '-'}</div></td>
           <td class="p-2.5">
             <span class="${isExpiring ? 'text-red-600 font-bold' : 'text-slate-600'}">${p.expiry || '-'}</span>
             ${isExpiring ? '<span class="block text-[9px] text-red-500 font-bold">નજીક છે!</span>' : ''}
@@ -1675,12 +1873,19 @@
       return 'bg-slate-100 text-slate-800';
     }
 
+    function showAgroStockAlerts() {
+      const low = products.filter(p => Number(p.stock || 0) <= Number(p.lowStockLimit ?? 5));
+      const exp = products.filter(p => checkIsExpiringSoon(p.expiry));
+      if (low.length) showToast('ઓછો સ્ટોક: '+low.slice(0,4).map(p=>p.name+' ('+p.stock+')').join(' • ')+(low.length>4?' વગેરે':''),'error');
+      if (exp.length) setTimeout(()=>showToast('એક્સપાયરી નજીક: '+exp.slice(0,3).map(p=>p.name+' ('+p.expiry+')').join(' • '),'error'),500);
+    }
+
     function checkIsExpiringSoon(expiryDateStr) {
       if (!expiryDateStr) return false;
       const exp = new Date(expiryDateStr);
       const now = new Date();
       const diffDays = (exp - now) / (1000 * 60 * 60 * 24);
-      return diffDays <= 90 && diffDays >= 0;
+      return diffDays <= 90; // includes already-expired items as urgent alerts
     }
 
     function openProductModal(prod = null) {
@@ -1689,10 +1894,23 @@
         document.getElementById('modalProdTitle').innerText = 'પ્રોડક્ટમાં સુધારો કરો';
         document.getElementById('modalProdId').value = prod.id;
         document.getElementById('mProdName').value = prod.name;
+        document.getElementById('mProdTechnical').value = prod.technicalName || prod.technical || prod.activeIngredient || '';
+        document.getElementById('mProdCompany').value = prod.company || prod.manufacturer || prod.brand || '';
         document.getElementById('mProdCategory').value = prod.category;
         document.getElementById('mProdUnit').value = prod.unit;
         document.getElementById('mProdBatch').value = prod.batch || '';
         document.getElementById('mProdExpiry').value = prod.expiry || '';
+        document.getElementById('mProdReturnDeadline').value = prod.returnDeadline || '';
+        document.getElementById('mProdCashPrice').value = prod.cashPrice ?? '';
+        document.getElementById('mProdDealerPrice').value = prod.dealerPrice ?? '';
+        document.getElementById('mProdLot').value = prod.lotNumber || '';
+        document.getElementById('mProdCertificate').value = prod.certificate || '';
+        document.getElementById('mProdBarcode').value = prod.barcode || '';
+        document.getElementById('mProdLowStock').value = prod.lowStockLimit ?? 5;
+        document.getElementById('mProdShopStock').value = prod.shopStock ?? prod.stock ?? 0;
+        document.getElementById('mProdGodownStock').value = prod.godownStock ?? 0;
+        document.getElementById('mProdDosagePump').value = prod.dosagePump || '';
+        document.getElementById('mProdDosageAcre').value = prod.dosageAcre || '';
         document.getElementById('mProdGst').value = prod.gst;
         document.getElementById('mProdCost').value = prod.costPrice || 0;
         document.getElementById('mProdPrice').value = prod.price;
@@ -1700,6 +1918,8 @@
       } else {
         document.getElementById('modalProdTitle').innerText = 'નવી પ્રોડક્ટ ઉમેરો';
         document.getElementById('modalProdId').value = '';
+        document.getElementById('mProdShopStock').value = document.getElementById('mProdStock').value || 10;
+        document.getElementById('mProdGodownStock').value = 0;
       }
       document.getElementById('productModal').classList.remove('hidden');
     }
@@ -1712,27 +1932,42 @@
       e.preventDefault();
       const id = document.getElementById('modalProdId').value;
       const name = document.getElementById('mProdName').value.trim();
+      const technicalName = document.getElementById('mProdTechnical').value.trim();
+      const company = document.getElementById('mProdCompany').value.trim();
       const category = document.getElementById('mProdCategory').value;
       const unit = document.getElementById('mProdUnit').value.trim();
       const batch = document.getElementById('mProdBatch').value.trim();
       const expiry = document.getElementById('mProdExpiry').value;
+      const returnDeadline = document.getElementById('mProdReturnDeadline').value;
+      const cashPriceRaw = document.getElementById('mProdCashPrice').value;
+      const dealerPriceRaw = document.getElementById('mProdDealerPrice').value;
+      const lotNumber = document.getElementById('mProdLot').value.trim();
+      const certificate = document.getElementById('mProdCertificate').value.trim();
+      const barcode = document.getElementById('mProdBarcode').value.trim();
+      const lowStockLimit = Math.max(0, Number(document.getElementById('mProdLowStock').value || 0));
+      const shopStock = Math.max(0, Number(document.getElementById('mProdShopStock').value || 0));
+      const godownStock = Math.max(0, Number(document.getElementById('mProdGodownStock').value || 0));
+      const dosagePump = document.getElementById('mProdDosagePump').value.trim();
+      const dosageAcre = document.getElementById('mProdDosageAcre').value.trim();
       const gst = parseFloat(document.getElementById('mProdGst').value) || 0;
       const costPrice = parseFloat(document.getElementById('mProdCost').value) || 0;
       const price = parseFloat(document.getElementById('mProdPrice').value) || 0;
+      const cashPrice = cashPriceRaw === '' ? price : Math.max(0, Number(cashPriceRaw));
+      const dealerPrice = dealerPriceRaw === '' ? price : Math.max(0, Number(dealerPriceRaw));
       const stock = parseFloat(document.getElementById('mProdStock').value) || 0;
 
       if (id) {
         const p = products.find(x => x.id === id);
         if (p) {
-          p.name = name; p.category = category; p.unit = unit;
-          p.batch = batch; p.expiry = expiry; p.gst = gst;
-          p.costPrice = costPrice; p.price = price; p.stock = stock;
+          p.name = name; p.technicalName = technicalName; p.company = company; p.category = category; p.unit = unit;
+          p.batch = batch; p.expiry = expiry; p.returnDeadline = returnDeadline; p.cashPrice = cashPrice; p.dealerPrice = dealerPrice; p.lotNumber = lotNumber; p.certificate = certificate; p.barcode = barcode; p.lowStockLimit = lowStockLimit; p.shopStock = shopStock; p.godownStock = godownStock; p.dosagePump = dosagePump; p.dosageAcre = dosageAcre; p.gst = gst;
+          p.costPrice = costPrice; p.price = price; p.stock = shopStock + godownStock;
           showToast('પ્રોડક્ટ સુધારી લેવામાં આવી', 'success');
         }
       } else {
         products.push({
           id: 'p_' + Date.now(),
-          name, category, unit, batch, expiry, gst, costPrice, price, stock
+          name, technicalName, company, category, unit, batch, expiry, returnDeadline, cashPrice, dealerPrice, lotNumber, certificate, barcode, lowStockLimit, shopStock, godownStock, dosagePump, dosageAcre, gst, costPrice, price, stock: shopStock + godownStock
         });
         showToast('નવી પ્રોડક્ટ ઉમેરાઈ ગઈ', 'success');
       }
@@ -1848,11 +2083,9 @@
       const phone = document.getElementById('supPhone').value.trim();
       const address = document.getElementById('supAddress').value.trim();
       const gstin = document.getElementById('supGstin').value.trim();
-
-      const newSup = {
-        id: 'sup_' + Date.now(),
-        name, phone, address, gstin, balance: 0
-      };
+      const formO = document.getElementById('supFormO').value.trim(), license = document.getElementById('supLicense').value.trim();
+      const defaultGstRate = Number(document.getElementById('supGstRate').value || 0), creditDays = Number(document.getElementById('supCreditDays').value || 0);
+      const newSup = { id:'sup_'+Date.now(), name, phone, address, gstin, formO, license, defaultGstRate, creditDays, balance:0 };
 
       suppliers.push(newSup);
       syncLocalStorage();
@@ -1867,6 +2100,8 @@
       if (!activeSupplierForDetails) return;
       document.getElementById('purchaseForm').reset();
       document.getElementById('pBillDate').value = new Date().toISOString().split('T')[0];
+      document.getElementById('pBillGstRate').value = Number(activeSupplierForDetails.defaultGstRate ?? 5);
+      const due = new Date(); due.setDate(due.getDate() + Number(activeSupplierForDetails.creditDays ?? 30)); document.getElementById('pBillDueDate').value = due.toISOString().split('T')[0];
       populateProductDropdowns();
       document.getElementById('purchaseModal').classList.remove('hidden');
     }
@@ -1877,51 +2112,35 @@
     function calcPurchaseTotal() {
       const q = parseFloat(document.getElementById('pBillQty').value) || 0;
       const r = parseFloat(document.getElementById('pBillCostRate').value) || 0;
-      document.getElementById('pBillTotalAmt').value = (q * r).toFixed(2);
+      const gst = parseFloat(document.getElementById('pBillGstRate').value) || 0, transport = parseFloat(document.getElementById('pBillTransport').value) || 0;
+      document.getElementById('pBillTotalAmt').value = (q * r * (1 + gst/100) + transport).toFixed(2);
     }
 
     function savePurchaseEntry(e) {
-      e.preventDefault();
-      if (!activeSupplierForDetails) return;
-
-      const billNo = document.getElementById('pBillInvoiceNo').value.trim();
-      const date = document.getElementById('pBillDate').value;
-      const prodId = document.getElementById('pBillProduct').value;
-      const batch = document.getElementById('pBillBatch').value.trim();
-      const expiry = document.getElementById('pBillExpiry').value;
-      const qty = parseFloat(document.getElementById('pBillQty').value) || 0;
-      const costRate = parseFloat(document.getElementById('pBillCostRate').value) || 0;
-      const totalPurchase = qty * costRate;
-
-      // Update Inventory Product Stock
-      const prod = products.find(p => p.id === prodId);
-      if (prod) {
-        prod.stock += qty;
-        prod.costPrice = costRate;
-        if (batch) prod.batch = batch;
-        if (expiry) prod.expiry = expiry;
-      }
-
-      // Update Supplier Balance & Ledger
-      activeSupplierForDetails.balance += totalPurchase;
-      supplierLedger.push({
-        id: 'sl_' + Date.now(),
-        supplierName: activeSupplierForDetails.name,
-        date: date,
-        billNo: billNo,
-        purchase: totalPurchase,
-        payment: 0,
-        balance: activeSupplierForDetails.balance,
-        note: `ખરીદી: ${prod ? prod.name : 'માલ'} (${qty} નંગ)`
-      });
-
-      syncLocalStorage();
-      renderInventoryTable();
-      selectSupplier(activeSupplierForDetails);
-      updateDashboardStats();
-      closePurchaseEntryModal();
-      showToast('ખરીદી સફળતાપૂર્વક નોંધાઈ & સ્ટોક વધાર્યો!', 'success');
+      e.preventDefault(); if (!activeSupplierForDetails) return;
+      const billNo=document.getElementById('pBillInvoiceNo').value.trim(), date=document.getElementById('pBillDate').value, prodId=document.getElementById('pBillProduct').value;
+      const batch=document.getElementById('pBillBatch').value.trim(), expiry=document.getElementById('pBillExpiry').value, mfg=document.getElementById('pBillMfg').value, hsn=document.getElementById('pBillHsn').value.trim();
+      const qty=Math.max(0,Number(document.getElementById('pBillQty').value)||0), freeQty=Math.max(0,Number(document.getElementById('pBillFreeQty').value)||0), costRate=Math.max(0,Number(document.getElementById('pBillCostRate').value)||0);
+      const gstRate=Math.max(0,Number(document.getElementById('pBillGstRate').value)||0), transport=Math.max(0,Number(document.getElementById('pBillTransport').value)||0), taxable=qty*costRate, gstAmount=taxable*gstRate/100, total=taxable+gstAmount+transport;
+      const dueDate=document.getElementById('pBillDueDate').value, returnDeadline=document.getElementById('pBillReturnDeadline').value;
+      if(!prodId||qty<=0){showToast('પ્રોડક્ટ અને માન્ય જથ્થો પસંદ કરો.','error');return;}
+      const prod=products.find(p=>p.id===prodId);
+      if(prod){const oldQty=Number(prod.stock||0),oldCost=Number(prod.costPrice||0),received=qty+freeQty; prod.shopStock=Number(prod.shopStock??prod.stock??0)+received;prod.stock=Number(prod.shopStock||0)+Number(prod.godownStock||0);prod.costPrice=Number((((oldQty*oldCost)+(taxable+transport))/Math.max(1,oldQty+received)).toFixed(4));if(batch)prod.batch=batch;if(expiry)prod.expiry=expiry;if(mfg)prod.manufacturingDate=mfg;if(hsn)prod.hsn=hsn;}
+      activeSupplierForDetails.balance=Number(activeSupplierForDetails.balance||0)+total;
+      purchaseRecords.push({id:'pr_'+Date.now(),supplierId:activeSupplierForDetails.id,supplierName:activeSupplierForDetails.name,supplierGstin:activeSupplierForDetails.gstin||'',billNo,date,productId:prodId,productName:prod?.name||'માલ',batch,mfg,expiry,hsn,qty,freeQty,costRate,taxable,gstRate,gstAmount,transport,total,dueDate,returnDeadline,gstr2bStatus:'બાકી'});
+      supplierLedger.push({id:'sl_'+Date.now(),supplierName:activeSupplierForDetails.name,date,billNo,purchase:total,payment:0,balance:activeSupplierForDetails.balance,dueDate,note:`ખરીદી: ${prod?.name||'માલ'} (${qty} + ${freeQty} ફ્રી) | GST ${gstRate}% | ટ્રાન્સપોર્ટ ₹${transport}`});
+      syncLocalStorage();renderInventoryTable();selectSupplier(activeSupplierForDetails);updateDashboardStats();closePurchaseEntryModal();showToast('ખરીદી, GST, બેચ અને ફ્રી જથ્થો નોંધાયો.','success');
     }
+    function saveSupplierReturnNote(){
+      if(!activeSupplierForDetails){showToast('પહેલાં સપ્લાયર પસંદ કરો.','error');return;} const billNo=document.getElementById('supReturnBillNo').value.trim(),creditNoteNo=document.getElementById('supCreditNoteNo').value.trim(),qty=Number(document.getElementById('supReturnQty').value||0),amount=Number(document.getElementById('supReturnAmount').value||0);
+      if(!billNo||!creditNoteNo||amount<=0){showToast('મૂળ બિલ, ક્રેડિટ નોટ નંબર અને રકમ દાખલ કરો.','error');return;} supplierReturns.push({id:'sr_'+Date.now(),supplierId:activeSupplierForDetails.id,supplierName:activeSupplierForDetails.name,billNo,creditNoteNo,qty,amount,date:new Date().toISOString().slice(0,10),matched:false});activeSupplierForDetails.balance=Math.max(0,Number(activeSupplierForDetails.balance||0)-amount);supplierLedger.push({id:'sl_'+Date.now(),supplierName:activeSupplierForDetails.name,date:new Date().toISOString().slice(0,10),billNo:creditNoteNo,purchase:0,payment:amount,balance:activeSupplierForDetails.balance,note:`કંપની રિટર્ન / ક્રેડિટ નોટ સામે ${billNo}`});syncLocalStorage();selectSupplier(activeSupplierForDetails);document.getElementById('supplierComplianceReport').textContent=`ક્રેડિટ નોટ ${creditNoteNo} નોંધાઈ; મૂળ બિલ ${billNo}, રકમ ₹${amount.toFixed(2)}. માલની સ્ટોક કપાત અને સત્તાવાર ક્રેડિટ નોટ અલગથી ચકાસો.`;
+    }
+    function reconcileGstr2b(){
+      if(!activeSupplierForDetails){showToast('પહેલાં સપ્લાયર પસંદ કરો.','error');return;}const invoiceNo=document.getElementById('gstr2bInvoiceNo').value.trim().toLowerCase(),taxable=Number(document.getElementById('gstr2bTaxable').value||0),tax=Number(document.getElementById('gstr2bTax').value||0);if(!invoiceNo){showToast('GSTR-2B બિલ નંબર દાખલ કરો.','error');return;}
+      const r=purchaseRecords.find(x=>x.supplierId===activeSupplierForDetails.id&&String(x.billNo).trim().toLowerCase()===invoiceNo);let status='સોફ્ટવેરમાં બિલ મળ્યું નથી';if(r){status=Math.abs(Number(r.taxable)-taxable)<1&&Math.abs(Number(r.gstAmount)-tax)<1?'મેચ':'તફાવત';r.gstr2bStatus=status;}gstr2bMatches.push({id:'gm_'+Date.now(),supplierId:activeSupplierForDetails.id,invoiceNo,taxable,tax,status,date:new Date().toISOString().slice(0,10)});syncLocalStorage();document.getElementById('supplierComplianceReport').textContent=r?`બિલ ${invoiceNo}: ${status}. ખરીદી ટેક્સેબલ ₹${Number(r.taxable).toFixed(2)} સામે 2B ₹${taxable.toFixed(2)}; GST ₹${Number(r.gstAmount).toFixed(2)} સામે 2B ₹${tax.toFixed(2)}.`:`બિલ ${invoiceNo} ખરીદી રેકોર્ડમાં મળ્યું નથી. બિલ નંબર / સપ્લાયર તપાસો.`;
+    }
+    function exportPurchaseReconciliation(){const rows=[['Supplier','Invoice','Date','Taxable','GST Rate','GST Amount','Transport','Total','Due Date','Return Deadline','GSTR-2B Status']];purchaseRecords.forEach(r=>rows.push([r.supplierName,r.billNo,r.date,r.taxable,r.gstRate,r.gstAmount,r.transport,r.total,r.dueDate,r.returnDeadline,r.gstr2bStatus]));const csv='\ufeff'+rows.map(row=>row.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='supplier_purchase_gstr2b_reconciliation.csv';a.click();URL.revokeObjectURL(url);}
+    function showSupplierDueAlerts(){const today=new Date();today.setHours(0,0,0,0);const days=r=>r?(new Date(r+'T00:00:00')-today)/86400000:9999;const due=purchaseRecords.filter(r=>days(r.dueDate)<=7&&days(r.dueDate)>=-30),ret=purchaseRecords.filter(r=>days(r.returnDeadline)<=60&&days(r.returnDeadline)>=0);if(due.length)showToast(`સપ્લાયર ચુકવણી ડ્યુ/નજીક: ${due.length} બિલ.`, 'warning');if(ret.length)showToast(`કંપની રિટર્ન ડેડલાઇન 60 દિવસમાં: ${ret.length} બિલ.`, 'warning');}
 
     // Supplier Payment
     function openSupplierPayModal() {
@@ -2170,11 +2389,28 @@
     }
 
     // --- REPORTS SYSTEM (NEW) ---
+    function renderDeadStockReport(months) {
+      const cutoff=new Date(); cutoff.setMonth(cutoff.getMonth()-months);
+      const rows=(products||[]).filter(p=>{
+        const sales=(invoices||[]).filter(i=>new Date(i.date||i.timestamp||0)>=cutoff).some(i=>(i.items||[]).some(it=>String(it.productId||'')===String(p.id)||String(it.name||'')===String(p.name)));
+        return !sales && Number(p.stock||0)>0;
+      });
+      document.getElementById('reportContainer').innerHTML=`<h3 class="font-bold text-lg mb-2">${months} મહિનાથી ન વેચાયેલો સ્ટોક</h3><p class="text-xs text-slate-600 mb-3">વર્તમાન બિલ રેકોર્ડના આધારે; જૂના/ઇમ્પોર્ટ કરેલા બિલ અધૂરા હોય તો યાદી સંપૂર્ણ ન પણ હોય.</p><div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="bg-slate-100"><th class="p-2 text-left">પ્રોડક્ટ</th><th class="p-2">બેચ</th><th class="p-2">છેલ્લી કંપની રિટર્ન તારીખ</th><th class="p-2 text-right">સ્ટોક</th><th class="p-2 text-right">સ્ટોક કિંમત</th></tr></thead><tbody>${rows.map(p=>`<tr class="border-b"><td class="p-2">${p.name}</td><td class="p-2">${p.batch||'-'}</td><td class="p-2">${p.returnDeadline||'-'}</td><td class="p-2 text-right">${Number(p.stock||0)}</td><td class="p-2 text-right">₹${(Number(p.stock||0)*Number(p.costPrice||0)).toFixed(2)}</td></tr>`).join('')||'<tr><td colspan="5" class="p-4 text-center">આ સમયગાળામાં ડેડ સ્ટોક મળ્યો નથી.</td></tr>'}</tbody></table></div>`;
+    }
+    function renderRiskReport(){const rows=(farmers||[]).map(f=>({...f,risk:getFarmerRisk(f)})).sort((a,b)=>({red:0,yellow:1,green:2}[a.risk.level]-{red:0,yellow:1,green:2}[b.risk.level]));document.getElementById('reportContainer').innerHTML=`<h3 class="font-bold text-lg mb-3">ખેડૂત ચુકવણી જોખમ રેટિંગ (આંતરિક)</h3><p class="text-xs text-amber-800 mb-3">આ સત્તાવાર CIBIL સ્કોર નથી. હાલ ઉપલબ્ધ બાકી અને સોફ્ટવેરમાં રહેલા બિલના રેકોર્ડ પરથી અંદાજ છે; ૫ સીઝનના સંપૂર્ણ ચુકવણી રેકોર્ડ ઉપલબ્ધ હોય ત્યારે જ વિશ્વસનીય ગણવો.</p><div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="bg-slate-100"><th class="p-2 text-left">ખેડૂત</th><th class="p-2">ગામ</th><th class="p-2 text-right">બાકી</th><th class="p-2">રેટિંગ</th></tr></thead><tbody>${rows.map(f=>`<tr class="border-b"><td class="p-2">${f.name}</td><td class="p-2">${f.village||'-'}</td><td class="p-2 text-right">₹${Number(f.balance||0).toFixed(2)}</td><td class="p-2">${f.risk.label}</td></tr>`).join('')}</tbody></table></div>`;}
+    function renderCompanyReturnReport(){const now=new Date(),limit=new Date(now);limit.setDate(limit.getDate()+60);const rows=(products||[]).filter(p=>p.returnDeadline).sort((a,b)=>String(a.returnDeadline).localeCompare(String(b.returnDeadline)));document.getElementById('reportContainer').innerHTML=`<h3 class="font-bold text-lg mb-2">કંપનીમાં પરત કરવાની છેલ્લી તારીખ</h3><p class="text-xs text-amber-800 mb-3">એક્સપાયરીથી અલગ તારીખ છે. દરેક બેચની કંપનીની નીતિ મુજબ તારીખ પ્રોડક્ટમાં દાખલ કરો. ૬૦ દિવસ બાકી હોય અથવા તારીખ પસાર થઈ હોય તો એલર્ટ.</p><div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="bg-slate-100"><th class="p-2 text-left">પ્રોડક્ટ</th><th class="p-2">કંપની</th><th class="p-2">રિટર્ન ડેડલાઇન</th><th class="p-2">સ્થિતિ</th></tr></thead><tbody>${rows.map(p=>{const d=new Date(p.returnDeadline+'T23:59:59');const urgent=d<=limit;return `<tr class="border-b"><td class="p-2">${p.name}</td><td class="p-2">${p.company||'-'}</td><td class="p-2">${p.returnDeadline}</td><td class="p-2 ${urgent?'text-red-700 font-bold':'text-green-700'}">${d<now?'સમય પસાર':urgent?'૬૦ દિવસની અંદર':'સમય બાકી'}</td></tr>`}).join('')||'<tr><td colspan="4" class="p-4 text-center">કોઈ રિટર્ન ડેડલાઇન દાખલ નથી.</td></tr>'}</tbody></table></div>`;}
+
     function generateSelectedReport() {
+      const special = document.getElementById('activeReportType')?.value;
+      if (special === 'deadStock6' || special === 'deadStock12') { renderDeadStockReport(special==='deadStock6'?6:12); return; }
+      if (special === 'riskFarmers') { renderRiskReport(); return; }
+      if (special === 'companyReturns') { renderCompanyReturnReport(); return; }
       const type = document.getElementById('activeReportType').value;
       const container = document.getElementById('reportContainer');
 
-      if (type === 'dailySales') {
+      if (type === 'fertilizerRegister') {
+        renderFertilizerRegisterReport(container);
+      } else if (type === 'dailySales') {
         renderDailySalesReport(container);
       } else if (type === 'stockRegister') {
         renderStockRegisterReport(container);
@@ -2183,6 +2419,12 @@
       } else if (type === 'gstSummary') {
         renderGstSummaryReport(container);
       }
+    }
+
+    function renderFertilizerRegisterReport(container) {
+      const rows=[];
+      invoices.forEach(inv => (inv.items || []).forEach(it => { if (categoryForItem(it) === 'ખાતર') rows.push({inv,it}); }));
+      container.innerHTML = `<div class="bg-white border rounded-xl p-3 space-y-3"><h3 class="font-bold">ખાતર બેગ વેચાણ રજિસ્ટર (ડ્રાફ્ટ)</h3><p class="text-xs text-amber-800 bg-amber-50 p-2 rounded">આ આંતરિક વેચાણ રજિસ્ટર છે; સરકારી/સબસિડી રજિસ્ટર તરીકે વાપરતા પહેલાં સ્થાનિક વિભાગનું ફરજિયાત ફોર્મેટ અને જરૂરી ખેડૂત/આધાર/સબસિડી વિગતો ચકાસો.</p><div class="text-xs">ખાતરના વેચાણની એન્ટ્રીઓ: ${rows.length}</div><div class="overflow-x-auto"><table class="w-full text-xs"><thead><tr class="bg-slate-100"><th class="p-2 text-left">તારીખ / બિલ</th><th class="p-2 text-left">ખેડૂત</th><th class="p-2 text-left">ખાતર / પેકિંગ</th><th class="p-2 text-right">બેગ/જથ્થો</th><th class="p-2 text-right">રકમ</th></tr></thead><tbody>${rows.map(({inv,it})=>`<tr class="border-b"><td class="p-2">${inv.date||''}<br>${inv.billNo||''}</td><td class="p-2">${inv.farmerName||''}</td><td class="p-2">${it.name||''}<br>${it.unit||''}</td><td class="p-2 text-right">${Number(it.qty||0)}</td><td class="p-2 text-right">₹${Number(it.total||0).toFixed(2)}</td></tr>`).join('')||'<tr><td colspan="5" class="p-4 text-center text-slate-500">હજુ ખાતર વેચાણ નથી.</td></tr>'}</tbody></table></div></div>`;
     }
 
     // 1. Daily Sales Report
@@ -2484,7 +2726,10 @@
       let rows = [];
       const suffix = type;
 
-      if (type === 'dailySales') {
+      if (type === 'fertilizerRegister') {
+        rows = [['બિલ નં.','તારીખ','ખેડૂત','આઇટમ','પેકિંગ','જથ્થો/બેગ','રકમ (₹)','બિલ પ્રકાર']];
+        invoices.forEach(inv => (inv.items || []).forEach(it => { if (categoryForItem(it) === 'ખાતર') rows.push([inv.billNo, inv.date, inv.farmerName, it.name, it.unit, Number(it.qty||0), Number(it.total||0).toFixed(2), inv.billType]); }));
+      } else if (type === 'dailySales') {
         rows = [['બિલ નં.', 'તારીખ', 'ખેડૂત', 'ગામ', 'પ્રકાર', 'રકમ (₹)']];
         invoices.forEach(i => rows.push([i.billNo, i.date, i.farmerName, i.village, i.billType, Number(i.grandTotal || 0).toFixed(2)]));
       } else if (type === 'stockRegister') {
@@ -2584,7 +2829,7 @@
       farmers.forEach(f => totalUdhar += (f.balance || 0));
       document.getElementById('statTotalUdhar').innerText = `₹ ${totalUdhar.toLocaleString('en-IN', { minimumFractionDigits: 2 })}`;
 
-      const lowStockCount = products.filter(p => p.stock <= 5).length;
+      const lowStockCount = products.filter(p => Number(p.stock || 0) <= Number(p.lowStockLimit ?? 5)).length;
       document.getElementById('statLowStock').innerText = `${lowStockCount} વસ્તુ`;
 
       let totalSupPayable = 0;
@@ -2685,7 +2930,7 @@
   };
   const STORE_ID = 'bahuchar-agro';
   const DOC_PATH = ['stores', STORE_ID, 'data', 'main'];
-  const KEYS = ['bahuchar_products','bahuchar_suppliers','bahuchar_sup_ledger','bahuchar_farmers','bahuchar_ledger','bahuchar_invoices'];
+  const KEYS = ['bahuchar_products','bahuchar_suppliers','bahuchar_sup_ledger','bahuchar_farmers','bahuchar_ledger','bahuchar_invoices','bahuchar_finance_entries','bahuchar_purchase_records','bahuchar_supplier_returns','bahuchar_gstr2b_matches'];
   let auth, db, user;
   const status = (s)=>{ const el=document.getElementById('bcStatus'); if(el) el.textContent=s; };
   const localSnapshot = ()=>{ const o={}; KEYS.forEach(k=>{const v=localStorage.getItem(k); if(v!==null)o[k]=v;}); return o; };
@@ -2730,26 +2975,30 @@
 let agroFollowups = JSON.parse(localStorage.getItem('bahuchar_followups') || '[]');
 function saveFollowups(){ localStorage.setItem('bahuchar_followups', JSON.stringify(agroFollowups)); }
 function escParty(v){return String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function resetPartyForm(){document.getElementById('partyForm').reset();document.getElementById('partyEditId').value='';}
+function resetPartyForm(){document.getElementById('partyForm').reset();document.getElementById('partyEditId').value='';populatePartyMainAccounts();}
 function renderPartyManager(){
  const q=(document.getElementById('partySearch')?.value||'').trim().toLowerCase();
- const list=document.getElementById('partyManagerList'); if(!list)return;
- const rows=(farmers||[]).filter(f=>[f.name,f.phone,f.village,f.address,f.type].some(v=>String(v||'').toLowerCase().includes(q)));
- list.innerHTML=rows.length?rows.map(f=>`<div class="border rounded-xl p-3 flex flex-col gap-2"><div class="font-bold">${escParty(f.name)} <span class="text-xs font-normal text-slate-500">${escParty(f.type||'ખેડૂત')}</span></div><div class="text-sm text-slate-600">${escParty(f.village||'')} ${f.phone?' • '+escParty(f.phone):''}</div><div class="flex gap-2 flex-wrap"><button class="bg-green-700 text-white rounded-lg px-3 py-1.5 text-sm" onclick="partyCall('${f.id}')">📞 ફોન</button><button class="bg-emerald-600 text-white rounded-lg px-3 py-1.5 text-sm" onclick="partyWhatsApp('${f.id}')">WhatsApp</button><button class="border rounded-lg px-3 py-1.5 text-sm" onclick="editParty('${f.id}')">એડિટ</button><button class="border rounded-lg px-3 py-1.5 text-sm" onclick="prepareFollowup('${f.id}')">Follow-up</button><button class="border border-red-300 text-red-700 rounded-lg px-3 py-1.5 text-sm" onclick="deletePartyRecord(this.dataset.pid)" data-pid="${f.id}">પાર્ટી કાઢો</button></div></div>`).join(''):'<p class="text-sm text-slate-500">પાર્ટી મળી નથી.</p>';
+ const list=document.getElementById('partyManagerList'); if(!list)return;filterPartiesByVillage();const villageFilter=document.getElementById('partyVillageFilter')?.value||'';
+ const rows=(farmers||[]).filter(f=>(!villageFilter||String(f.village||'')===villageFilter)&&[f.name,f.phone,f.village,f.address,f.type].some(v=>String(v||'').toLowerCase().includes(q)));
+ list.innerHTML=rows.length?rows.map(f=>`<div class="border rounded-xl p-3 flex flex-col gap-2"><div class="font-bold">${escParty(f.name)} <span class="text-xs font-normal text-slate-500">${escParty(f.type||'ખેડૂત')}</span></div><div class="text-sm text-slate-600">${escParty(f.village||'')} ${f.phone?' • '+escParty(f.phone):''}</div><div class="text-xs text-slate-600">જમીન: ${Number(f.landSize||0)||'-'} • બાકી: ₹${Number(f.balance||0).toFixed(2)} • લિમિટ: ₹${Number(f.creditLimit||0).toFixed(2)} • ભાવ: ${({cash:'રોકડિયા',standard:'સ્ટાન્ડર્ડ',dealer:'ડીલર'})[f.priceGroup||'standard']||'સ્ટાન્ડર્ડ'} ${f.mainAccountId?'• પરિવાર ખાતું જોડાયેલ':''}</div><div class="flex gap-2 flex-wrap"><button class="bg-green-700 text-white rounded-lg px-3 py-1.5 text-sm" onclick="partyCall('${f.id}')">📞 ફોન</button><button class="bg-emerald-600 text-white rounded-lg px-3 py-1.5 text-sm" onclick="partyWhatsApp('${f.id}')">WhatsApp</button><button class="border rounded-lg px-3 py-1.5 text-sm" onclick="editParty('${f.id}')">એડિટ</button><button class="border rounded-lg px-3 py-1.5 text-sm" onclick="prepareFollowup('${f.id}')">Follow-up</button><button class="border border-red-300 text-red-700 rounded-lg px-3 py-1.5 text-sm" onclick="deletePartyRecord(this.dataset.pid)" data-pid="${f.id}">પાર્ટી કાઢો</button></div></div>`).join(''):'<p class="text-sm text-slate-500">પાર્ટી મળી નથી.</p>';
  const sel=document.getElementById('followParty'); if(sel){const old=sel.value;sel.innerHTML='<option value="">પાર્ટી પસંદ કરો</option>'+(farmers||[]).map(f=>`<option value="${escParty(f.id)}">${escParty(f.name)}</option>`).join('');if((farmers||[]).some(f=>String(f.id)===old))sel.value=old;}
  renderFollowups();
 }
 function partyCall(id){const f=farmers.find(x=>String(x.id)===String(id));if(!f?.phone){alert('આ પાર્ટીનો મોબાઇલ નંબર દાખલ કરો.');return;}location.href='tel:'+String(f.phone).replace(/[^\d+]/g,'');}
 function partyWhatsApp(id){const f=farmers.find(x=>String(x.id)===String(id));if(!f?.phone){alert('આ પાર્ટીનો મોબાઇલ નંબર દાખલ કરો.');return;}const n=String(f.phone).replace(/\D/g,'');const intl=n.length===10?'91'+n:n;const msg=`નમસ્તે ${f.name||''}, શ્રી બહુચર એગ્રો તરફથી યાદ અપાવીએ છીએ કે આપની હાલની બાકી રકમ ₹${Number(f.balance||0).toFixed(2)} છે. કૃપા કરીને ચુકવણી કરવા સહકાર આપશો. આભાર.`;window.open('https://wa.me/'+intl+'?text='+encodeURIComponent(msg),'_blank');}
-function editParty(id){const f=farmers.find(x=>String(x.id)===String(id));if(!f)return;document.getElementById('partyEditId').value=f.id;document.getElementById('partyName').value=f.name||'';document.getElementById('partyPhone').value=f.phone||'';document.getElementById('partyVillage').value=f.village||'';document.getElementById('partyType').value=f.type||'ખેડૂત';document.getElementById('partyAddress').value=f.address||'';document.getElementById('partyName').focus();window.scrollTo({top:0,behavior:'smooth'});}
+function editParty(id){const f=farmers.find(x=>String(x.id)===String(id));if(!f)return;document.getElementById('partyEditId').value=f.id;document.getElementById('partyName').value=f.name||'';document.getElementById('partyPhone').value=f.phone||'';document.getElementById('partyVillage').value=f.village||'';document.getElementById('partyType').value=f.type||'ખેડૂત';document.getElementById('partyPriceGroup').value=f.priceGroup||((f.type==='ડીલર'||f.type==='રિટેલર')?'dealer':'standard');document.getElementById('partyAddress').value=f.address||'';document.getElementById('partyLandSize').value=f.landSize||'';document.getElementById('partyCreditLimit').value=f.creditLimit||'';document.getElementById('partyCropSeason').value=f.cropSeason||'all';document.getElementById('partyAadhaar').value=f.aadhaar||'';document.getElementById('partyLandAccount').value=f.landAccount||'';populatePartyMainAccounts();document.getElementById('partyMainAccount').value=f.mainAccountId||'';document.getElementById('partyName').focus();window.scrollTo({top:0,behavior:'smooth'});} 
+function populatePartyMainAccounts(){const el=document.getElementById('partyMainAccount');if(!el)return;const current=document.getElementById('partyEditId')?.value;el.innerHTML='<option value="">આ જ મુખ્ય ખાતું</option>'+(farmers||[]).filter(f=>String(f.id)!==String(current)).map(f=>`<option value="${escParty(f.id)}">${escParty(f.name)} — ${escParty(f.village||'')}</option>`).join('');}
+function quickPartyLookup(){const el=document.getElementById('custName');if(!el)return;const q=el.value.trim();if(q.length<4)return;let found=farmers.find(f=>String(f.name||'').toLowerCase()===q.toLowerCase());if(!found && /^\d{4}$/.test(q))found=farmers.find(f=>String(f.phone||'').replace(/\D/g,'').slice(-4)===q);if(!found && q.length>=4)found=farmers.find(f=>String(f.phone||'').replace(/\D/g,'').endsWith(q));if(found && found.name!==q){el.value=found.name;checkFarmerHistory();}}
+function filterPartiesByVillage(){const el=document.getElementById('partyVillageFilter');if(!el)return;const old=el.value;const villages=[...new Set((farmers||[]).map(f=>String(f.village||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));el.innerHTML='<option value="">બધાં ગામ</option>'+villages.map(v=>`<option value="${escParty(v)}">${escParty(v)}</option>`).join('');if(villages.includes(old))el.value=old;}
+
 function prepareFollowup(id){document.getElementById('followParty').value=String(id);const d=new Date(Date.now()+86400000);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());document.getElementById('followWhen').value=d.toISOString().slice(0,16);document.getElementById('followNote').focus();document.getElementById('followForm').scrollIntoView({behavior:'smooth',block:'center'});}
-document.getElementById('partyForm').addEventListener('submit',e=>{e.preventDefault();const id=document.getElementById('partyEditId').value;const name=document.getElementById('partyName').value.trim();const phone=document.getElementById('partyPhone').value.trim();const village=document.getElementById('partyVillage').value.trim();const type=document.getElementById('partyType').value;const address=document.getElementById('partyAddress').value.trim();if(!name)return;const duplicate=farmers.find(f=>f.name.trim().toLowerCase()===name.toLowerCase()&&String(f.id)!==String(id));if(duplicate&&!confirm('આ નામની પાર્ટી પહેલેથી છે. તેમ છતાં સેવ કરવું છે?'))return;if(id){const f=farmers.find(x=>String(x.id)===String(id));if(f)Object.assign(f,{name,phone,village,type,address});}else farmers.push({id:'f_'+Date.now(),name,phone,village,type,address,balance:0});syncLocalStorage();resetPartyForm();renderPartyManager();renderFarmerSuggestions?.();renderFarmerKhataList?.();alert('પાર્ટીની માહિતી સેવ થઈ.');});
+document.getElementById('partyForm').addEventListener('submit',e=>{e.preventDefault();const id=document.getElementById('partyEditId').value;const name=document.getElementById('partyName').value.trim();const phone=document.getElementById('partyPhone').value.trim();const village=document.getElementById('partyVillage').value.trim();const type=document.getElementById('partyType').value;const priceGroup=document.getElementById('partyPriceGroup').value;const address=document.getElementById('partyAddress').value.trim();const landSize=Number(document.getElementById('partyLandSize').value||0);const creditLimit=Number(document.getElementById('partyCreditLimit').value||0);const cropSeason=document.getElementById('partyCropSeason').value;const mainAccountId=document.getElementById('partyMainAccount').value;const aadhaar=document.getElementById('partyAadhaar').value.replace(/\D/g,'');const landAccount=document.getElementById('partyLandAccount').value.trim();if(!name)return;if(aadhaar&&aadhaar.length!==12){alert('આધાર નંબર 12 આંકડાનો હોવો જોઈએ.');return;}if(creditLimit<0||landSize<0){alert('જમીન અને ક્રેડિટ લિમિટ શૂન્યથી ઓછી ન હોઈ શકે.');return;}const duplicate=farmers.find(f=>f.name.trim().toLowerCase()===name.toLowerCase()&&String(f.id)!==String(id));if(duplicate&&!confirm('આ નામની પાર્ટી પહેલેથી છે. તેમ છતાં સેવ કરવું છે?'))return;const data={name,phone,village,type,address,priceGroup,landSize,creditLimit,cropSeason,mainAccountId,aadhaar,landAccount};if(id){const f=farmers.find(x=>String(x.id)===String(id));if(f)Object.assign(f,data);}else farmers.push({id:'f_'+Date.now(),...data,balance:0});syncLocalStorage();resetPartyForm();renderPartyManager();renderFarmerSuggestions?.();renderFarmerKhataList?.();alert('પાર્ટીની માહિતી સેવ થઈ.');});
 document.getElementById('followForm').addEventListener('submit',e=>{e.preventDefault();const partyId=document.getElementById('followParty').value;const f=farmers.find(x=>String(x.id)===String(partyId));if(!f){alert('પાર્ટી પસંદ કરો.');return;}agroFollowups.push({id:'fu_'+Date.now(),partyId:String(f.id),partyName:f.name,phone:f.phone||'',when:document.getElementById('followWhen').value,note:document.getElementById('followNote').value.trim(),done:false,createdAt:new Date().toISOString()});saveFollowups();document.getElementById('followNote').value='';renderPartyManager();alert('Follow-up સેવ થયો. એપમાં Follow-up યાદી તપાસતા રહો.');});
 function completeFollowup(id){const f=agroFollowups.find(x=>x.id===id);if(f)f.done=!f.done;saveFollowups();renderFollowups();}
 function deleteFollowup(id){if(!confirm('આ Follow-up કાઢી નાખવો છે?'))return;agroFollowups=agroFollowups.filter(x=>x.id!==id);saveFollowups();renderFollowups();}
 function renderFollowups(){const box=document.getElementById('followList');if(!box)return;const now=new Date();const active=agroFollowups.filter(x=>!x.done).sort((a,b)=>String(a.when).localeCompare(String(b.when)));const due=active.filter(x=>new Date(x.when)<=now).length;document.getElementById('followSummary').innerHTML=`બાકી Follow-up: <b>${active.length}</b> • સમય થઈ ગયો: <b class="${due?'text-red-600':'text-green-700'}">${due}</b>`;box.innerHTML=agroFollowups.length?agroFollowups.slice().sort((a,b)=>String(a.when).localeCompare(String(b.when))).map(x=>`<div class="border rounded-lg p-3 ${x.done?'opacity-60 bg-slate-50':new Date(x.when)<=now?'border-red-300 bg-red-50':''}"><div class="font-bold">${escParty(x.partyName)} ${x.done?'<span class="text-green-700">(પૂર્ણ)</span>':''}</div><div class="text-sm">${escParty(new Date(x.when).toLocaleString('gu-IN'))}</div><div class="text-sm text-slate-600">${escParty(x.note)}</div><div class="flex gap-2 mt-2"><button class="border rounded px-2 py-1 text-xs" onclick="completeFollowup('${x.id}')">${x.done?'ફરી બાકી કરો':'પૂર્ણ થયું'}</button><button class="border rounded px-2 py-1 text-xs" onclick="deleteFollowup('${x.id}')">કાઢી નાખો</button>${x.phone?`<button class="border rounded px-2 py-1 text-xs" onclick="partyCall('${x.partyId}')">ફોન</button>`:''}</div></div>`).join(''):'<p class="text-sm text-slate-500">હજુ કોઈ Follow-up નથી.</p>';}
 const originalSyncLocalStorage=syncLocalStorage;syncLocalStorage=function(){originalSyncLocalStorage();saveFollowups();};
-window.addEventListener('DOMContentLoaded',()=>{renderPartyManager();});
+window.addEventListener('DOMContentLoaded',()=>{populatePartyMainAccounts();renderPartyManager();});
 </script>
 
 <script>
@@ -2788,7 +3037,7 @@ async function importExcelRows(){
    }else{
     if(products.some(x=>String(x.name).trim().toLowerCase()===name.toLowerCase())){skipped++;return;}
     const category=String(getExcelVal(r,['category','કેટેગરી','પ્રકાર'])).trim()||'અન્ય';
-    products.push({id:'p_'+Date.now()+'_'+added,name,category,batch:String(getExcelVal(r,['batch','batch no','બેચ'])).trim(),expiry:String(getExcelVal(r,['expiry','expiry date','એક્સપાયરી'])).trim(),gst:Number(getExcelVal(r,['gst','tax','જીએસટી']))||0,stock:Number(getExcelVal(r,['stock','qty','quantity','જથ્થો','સ્ટોક']))||0,costPrice:Number(getExcelVal(r,['costprice','cost price','purchase price','ખરીદ ભાવ']))||0,price:Number(getExcelVal(r,['price','selling price','વેચાણ ભાવ','ભાવ']))||0,unit:String(getExcelVal(r,['unit','એકમ'])).trim()||'નંગ'});added++;
+    products.push({id:'p_'+Date.now()+'_'+added,name,technicalName:String(getExcelVal(r,['technicalname','technical name','active ingredient','ટેકનિકલ નામ'])).trim(),company:String(getExcelVal(r,['company','manufacturer','કંપની'])).trim(),category,batch:String(getExcelVal(r,['batch','batch no','બેચ'])).trim(),expiry:String(getExcelVal(r,['expiry','expiry date','એક્સપાયરી'])).trim(),gst:Number(getExcelVal(r,['gst','tax','જીએસટી']))||0,stock:Number(getExcelVal(r,['stock','qty','quantity','જથ્થો','સ્ટોક']))||0,costPrice:Number(getExcelVal(r,['costprice','cost price','purchase price','ખરીદ ભાવ']))||0,price:Number(getExcelVal(r,['price','selling price','વેચાણ ભાવ','ભાવ']))||0,unit:String(getExcelVal(r,['unit','એકમ'])).trim()||'નંગ'});added++;
    }
   });
   syncLocalStorage();renderPartyManager?.();renderFarmerSuggestions?.();renderFarmerKhataList?.();renderInventoryTable?.();populateProductDropdowns?.();updateDashboardStats?.();
@@ -2968,15 +3217,24 @@ function parseCSVImport(text){const lines=text.replace(/^\uFEFF/,'').split(/\r?\
 #financeDesk .fd-card{background:white;color:#0f172a;width:min(900px,100%);border-radius:16px;padding:16px;margin:auto;max-height:95vh;overflow:auto}
 #financeDesk input,#financeDesk select{width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:9px;margin:4px 0 10px;box-sizing:border-box}
 #financeDesk button{border-radius:8px;padding:9px 12px;font-weight:700}
+#financeDesk .fd-panel{display:none}
+#financeDesk .fd-panel.active{display:block}
+#financeDesk .fd-action{min-height:48px;white-space:normal}
 .fd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
 </style>
 <button onclick="openFinanceDesk()" style="position:fixed;right:12px;bottom:18px;z-index:9000;background:#7c3aed;color:white;border-radius:999px;padding:12px 16px;font-weight:800;box-shadow:0 4px 15px #0003">₹ પેમેન્ટ / C-N-D-N</button>
 <div id="financeDesk"><div class="fd-card">
 <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="font-size:20px;font-weight:800">પેમેન્ટ અને નાણાકીય નોંધ</h2><button style="background:#e2e8f0" onclick="closeFinanceDesk()">બંધ ✕</button></div>
+<div class="fd-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));margin:12px 0">
+<button class="fd-action" style="background:#15803d;color:white" onclick="fdChoose('in')">＋ Payment In / જમા</button>
+<button class="fd-action" style="background:#b91c1c;color:white" onclick="fdChoose('out')">− Payment Out / ચૂકવણી</button>
+<button class="fd-action" style="background:#6d28d9;color:white" onclick="fdChoose('CN')">↩ Credit Note / માલ પરત</button>
+<button class="fd-action" style="background:#c2410c;color:white" onclick="fdChoose('DN')">↪ Debit Note / માલ પરત</button>
+</div>
 <div class="fd-grid">
-<section style="border:1px solid #ddd;border-radius:12px;padding:12px"><h3 style="font-weight:800">જમા / Payment In</h3><label>પાર્ટી</label><select id="fdInParty"></select><label>કયા બિલનું પેમેન્ટ?</label><select id="fdInInvoice"></select><label>રકમ (₹)</label><input id="fdInAmount" type="number" min="0.01" step="0.01"><label>માધ્યમ</label><select id="fdInMode"><option>રોકડ</option><option>બેંક</option><option>UPI</option><option>ચેક</option></select><label>તારીખ</label><input id="fdInDate" type="date"><label>નોંધ</label><input id="fdInNote" placeholder="પેમેન્ટની વિગત"><button style="background:#15803d;color:white;width:100%" onclick="fdSaveIn()">જમા નોંધો</button></section>
-<section style="border:1px solid #ddd;border-radius:12px;padding:12px"><h3 style="font-weight:800">ચૂકવણી / Payment Out</h3><label>સપ્લાયર</label><select id="fdOutParty"></select><label>રકમ (₹)</label><input id="fdOutAmount" type="number" min="0.01" step="0.01"><label>માધ્યમ</label><select id="fdOutMode"><option>રોકડ</option><option>બેંક</option><option>UPI</option><option>ચેક</option></select><label>તારીખ</label><input id="fdOutDate" type="date"><label>નોંધ</label><input id="fdOutNote" placeholder="સપ્લાયર બિલ/ચૂકવણી વિગત"><button style="background:#b91c1c;color:white;width:100%" onclick="fdSaveOut()">ચૂકવણી નોંધો</button></section>
-<section style="border:1px solid #ddd;border-radius:12px;padding:12px"><h3 style="font-weight:800">Credit Note / Debit Note</h3><label>પાર્ટી</label><select id="fdNoteParty"></select><label>પ્રકાર</label><select id="fdNoteType"><option value="CN">Credit Note (પાર્ટીની બાકી ઘટાડે)</option><option value="DN">Debit Note (પાર્ટીની બાકી વધારે)</option></select><label>રકમ (₹)</label><input id="fdNoteAmount" type="number" min="0.01" step="0.01"><label>તારીખ</label><input id="fdNoteDate" type="date"><label>કારણ / નોંધ</label><input id="fdNoteReason" placeholder="વળતર, ભાવફેર વગેરે"><button style="background:#6d28d9;color:white;width:100%" onclick="fdSaveNote()">CN / DN નોંધો</button></section>
+<section id="fdPanelIn" class="fd-panel active" style="border:1px solid #ddd;border-radius:12px;padding:12px"><h3 style="font-weight:800">જમા / Payment In</h3><label>પાર્ટી</label><select id="fdInParty"></select><label>કયા બિલનું પેમેન્ટ?</label><select id="fdInInvoice"></select><label>રકમ (₹)</label><input id="fdInAmount" type="number" min="0.01" step="0.01"><label>માધ્યમ</label><select id="fdInMode"><option>રોકડ</option><option>બેંક</option><option>UPI</option><option>ચેક</option></select><label>તારીખ</label><input id="fdInDate" type="date"><label>નોંધ</label><input id="fdInNote" placeholder="પેમેન્ટની વિગત"><button style="background:#15803d;color:white;width:100%" onclick="fdSaveIn()">જમા નોંધો</button></section>
+<section id="fdPanelOut" class="fd-panel" style="border:1px solid #ddd;border-radius:12px;padding:12px"><h3 style="font-weight:800">ચૂકવણી / Payment Out</h3><label>સપ્લાયર</label><select id="fdOutParty"></select><label>રકમ (₹)</label><input id="fdOutAmount" type="number" min="0.01" step="0.01"><label>માધ્યમ</label><select id="fdOutMode"><option>રોકડ</option><option>બેંક</option><option>UPI</option><option>ચેક</option></select><label>તારીખ</label><input id="fdOutDate" type="date"><label>નોંધ</label><input id="fdOutNote" placeholder="સપ્લાયર બિલ/ચૂકવણી વિગત"><button style="background:#b91c1c;color:white;width:100%" onclick="fdSaveOut()">ચૂકવણી નોંધો</button></section>
+<section id="fdPanelNote" class="fd-panel" style="border:1px solid #ddd;border-radius:12px;padding:12px;grid-column:1/-1"><h3 id="fdNoteHeading" style="font-weight:800">Credit Note / માલ પરત</h3><label>પાર્ટી / ગ્રાહક</label><select id="fdNoteParty"></select><select id="fdNoteType" style="display:none"><option value="CN">CN</option><option value="DN">DN</option></select><label>પરત આવતી / પરત આપવાની આઇટમ (વૈકલ્પિક)</label><select id="fdReturnProduct"></select><div class="fd-grid"><div><label>જથ્થો</label><input id="fdReturnQty" type="number" min="0.01" step="0.01" placeholder="જેમ કે 1"></div><div><label>આઇટમનો ભાવ (₹ પ્રતિ નંગ)</label><input id="fdReturnRate" type="number" min="0" step="0.01" placeholder="ભાવ"></div></div><p style="font-size:12px;color:#475569;margin:0 0 8px">Credit Note: ગ્રાહકનો માલ પાછો આવે તો સ્ટોક વધશે. Debit Note: સપ્લાયરને માલ પરત આપો તો સ્ટોક ઘટશે. આઇટમ પસંદ ન કરો તો માત્ર હિસાબી નોંધ થશે.</p><label>નોટની કુલ રકમ (₹)</label><input id="fdNoteAmount" type="number" min="0.01" step="0.01"><label>તારીખ</label><input id="fdNoteDate" type="date"><label>કારણ / નોંધ</label><input id="fdNoteReason" placeholder="માલ પરત, નુકસાન, ભાવફેર વગેરે"><button id="fdSaveNoteBtn" style="background:#6d28d9;color:white;width:100%" onclick="fdSaveNote()">Credit Note નોંધો</button></section>
 </div>
 <section style="border:1px solid #ddd;border-radius:12px;padding:12px;margin-top:12px"><h3 style="font-weight:800">પેમેન્ટ અને CN/DN રિપોર્ટ</h3><div class="fd-grid"><div><label>શરૂઆતની તારીખ</label><input id="fdFrom" type="date"></div><div><label>અંતિમ તારીખ</label><input id="fdTo" type="date"></div><div><label>રિપોર્ટ</label><select id="fdReportType"><option value="all">બધા વ્યવહાર</option><option value="in">Payment In</option><option value="out">Payment Out</option><option value="CN">Credit Note</option><option value="DN">Debit Note</option></select></div></div><button style="background:#334155;color:white" onclick="fdRenderReport()">રિપોર્ટ બતાવો</button> <button style="background:#0f766e;color:white" onclick="fdExportReport()">CSV ડાઉનલોડ</button><div id="fdReportSummary" style="margin:10px 0;font-weight:800"></div><div id="fdReportRows" style="overflow:auto"></div></section>
 <p style="font-size:12px;color:#64748b;margin-top:12px">બિલ પસંદગી પેમેન્ટની નોંધ સાથે જોડાય છે. જૂના બિલની ચુકવણી ફાળવણી પાછળથી આપમેળે બનતી નથી.</p>
@@ -2991,14 +3249,16 @@ const money=n=>'₹'+(Number(n)||0).toLocaleString('en-IN',{minimumFractionDigit
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 window.openFinanceDesk=function(){if(typeof activeStaff!=='undefined'&&activeStaff&&activeStaff.role!=='owner'){alert('આ સુવિધા માત્ર માલિક માટે છે.');return}$('financeDesk').style.display='flex';fdInit()};
 window.closeFinanceDesk=()=>$('financeDesk').style.display='none';
+window.fdChoose=function(which){['In','Out','Note'].forEach(n=>$('fdPanel'+n).classList.remove('active'));if(which==='in')$('fdPanelIn').classList.add('active');else if(which==='out')$('fdPanelOut').classList.add('active');else{$('fdPanelNote').classList.add('active');$('fdNoteType').value=which;$('fdNoteHeading').textContent=which==='CN'?'Credit Note / ગ્રાહકનો માલ પરત':'Debit Note / સપ્લાયરને માલ પરત';$('fdSaveNoteBtn').textContent=which==='CN'?'Credit Note નોંધો':'Debit Note નોંધો';$('fdSaveNoteBtn').style.background=which==='CN'?'#6d28d9':'#c2410c';fill('fdNoteParty',(which==='CN'?(farmers||[]).map(x=>({value:x.id,label:x.name+' — બાકી '+money(x.balance)})):(suppliers||[]).map(x=>({value:x.id,label:x.name+' — બાકી '+money(x.balance)}))))}};
+$('fdReturnProduct').addEventListener('change',function(){const p=(products||[]).find(x=>String(x.id)===this.value);if(p){$('fdReturnRate').value=Number(p.price||p.costPrice||0);const q=Number($('fdReturnQty').value)||0;if(q>0)$('fdNoteAmount').value=(q*Number($('fdReturnRate').value||0)).toFixed(2)}});['fdReturnQty','fdReturnRate'].forEach(id=>$(id).addEventListener('input',function(){const q=Number($('fdReturnQty').value)||0,r=Number($('fdReturnRate').value)||0;if(q>0&&r>0)$('fdNoteAmount').value=(q*r).toFixed(2)}));
 function fill(id,items){$(id).innerHTML='<option value="">પસંદ કરો</option>'+items.map(x=>`<option value="${esc(x.value)}">${esc(x.label)}</option>`).join('')}
-function fdInit(){const d=today();['fdInDate','fdOutDate','fdNoteDate','fdFrom','fdTo'].forEach(id=>{if(!$(id).value)$(id).value=d});fill('fdInParty',(farmers||[]).map(f=>({value:f.id,label:f.name+' — બાકી '+money(f.balance)})));fill('fdOutParty',(suppliers||[]).map(f=>({value:f.id,label:f.name+' — બાકી '+money(f.balance)})));fill('fdNoteParty',(farmers||[]).map(f=>({value:f.id,label:f.name+' — બાકી '+money(f.balance)})));fdInvoices();fdRenderReport()}
+function fdInit(){const d=today();['fdInDate','fdOutDate','fdNoteDate','fdFrom','fdTo'].forEach(id=>{if(!$(id).value)$(id).value=d});fill('fdReturnProduct',(products||[]).map(p=>({value:p.id,label:p.name+' • સ્ટોક '+(Number(p.stock)||0)})));fill('fdInParty',(farmers||[]).map(f=>({value:f.id,label:f.name+' — બાકી '+money(f.balance)})));fill('fdOutParty',(suppliers||[]).map(f=>({value:f.id,label:f.name+' — બાકી '+money(f.balance)})));fill('fdNoteParty',(farmers||[]).map(f=>({value:f.id,label:f.name+' — બાકી '+money(f.balance)})));fdInvoices();fdRenderReport()}
 function fdInvoices(){const f=(farmers||[]).find(x=>String(x.id)===$('fdInParty').value);const inv=(invoices||[]).filter(x=>x.farmerName===(f&&f.name)&&x.billType==='ઉધાર');fill('fdInInvoice',inv.map(x=>({value:x.billNo,label:(x.billNo||'બિલ')+' • '+(x.date||'')+' • '+money(x.grandTotal)})))}
 $('fdInParty').addEventListener('change',fdInvoices);
 function fdInvoiceOutstanding(inv){const paid=entries().filter(e=>e.kind==='in'&&String(e.billNo||'')===String(inv.billNo||'')&&String(e.partyName||'')===String(inv.farmerName||'')).reduce((s,e)=>s+(Number(e.amount)||0),0);return Math.max(0,(Number(inv.grandTotal)||0)-paid)}
 window.fdSaveIn=function(){const f=(farmers||[]).find(x=>String(x.id)===$('fdInParty').value),amt=Number($('fdInAmount').value),bill=$('fdInInvoice').value;if(!f||!(amt>0)){alert('પાર્ટી અને શૂન્યથી વધુ માન્ય રકમ દાખલ કરો.');return}if(amt>Number(f.balance||0)){alert('પેમેન્ટ પાર્ટીની હાલની બાકી રકમ કરતાં વધુ છે. બાકી રકમ તપાસો.');return}let inv=null;if(bill){inv=(invoices||[]).find(x=>String(x.billNo)===String(bill)&&x.farmerName===f.name);if(!inv){alert('પસંદ કરેલું બિલ મળ્યું નથી.');return}const due=fdInvoiceOutstanding(inv);if(amt>due+0.009){alert('આ બિલની બાકી રકમ માત્ર ₹'+due.toFixed(2)+' છે. કૃપા કરીને ઓછી અથવા યોગ્ય રકમ દાખલ કરો.');return}}const date=$('fdInDate').value||today(),mode=$('fdInMode').value,note=$('fdInNote').value.trim();f.balance=Number(f.balance||0)-amt;const e={id:'fin_'+Date.now(),kind:'in',type:'Payment In',partyId:f.id,partyName:f.name,amount:amt,mode,date,billNo:bill,note};const a=entries();a.push(e);save(a);khataLedger.push({id:'l_'+Date.now(),farmerName:f.name,date,type:'જમા પાવતી (Payment In)',debit:0,credit:amt,balance:f.balance,note:`${mode}${bill?' • બિલ '+bill:''}${note?' • '+note:''}`,paymentMode:mode,billNo:bill||''});syncLocalStorage();$('fdInAmount').value='';$('fdInNote').value='';fdInit();renderFarmerKhataList();updateDashboardStats();alert('જમા પેમેન્ટ નોંધાયું. '+(bill?'આ પેમેન્ટ બિલ '+bill+' સાથે જોડાયું.':''))};
 window.fdSaveOut=function(){const s=(suppliers||[]).find(x=>String(x.id)===$('fdOutParty').value),amt=Number($('fdOutAmount').value);if(!s||!(amt>0)){alert('સપ્લાયર અને શૂન્યથી વધુ માન્ય રકમ પસંદ કરો.');return}if(amt>Number(s.balance||0)){alert('ચૂકવણી સપ્લાયરની હાલની બાકી રકમ કરતાં વધુ છે.');return}const e={id:'fin_'+Date.now(),kind:'out',type:'Payment Out',partyId:s.id,partyName:s.name,amount:amt,mode:$('fdOutMode').value,date:$('fdOutDate').value||today(),note:$('fdOutNote').value.trim()};s.balance=Number(s.balance||0)-amt;const a=entries();a.push(e);save(a);supplierLedger.push({id:'sl_'+Date.now(),supplierName:s.name,date:e.date,billNo:'PAYMENT OUT',purchase:0,payment:amt,balance:s.balance,note:e.mode+(e.note?' • '+e.note:'')});syncLocalStorage();$('fdOutAmount').value='';$('fdOutNote').value='';fdInit();renderSuppliersList();updateDashboardStats();alert('ચૂકવણી નોંધાઈ.')};
-window.fdSaveNote=function(){const f=(farmers||[]).find(x=>String(x.id)===$('fdNoteParty').value),amt=Number($('fdNoteAmount').value),type=$('fdNoteType').value;if(!f||!(amt>0)){alert('પાર્ટી અને માન્ય રકમ પસંદ કરો.');return}if(type==='CN'&&amt>Number(f.balance||0)){alert('Credit Note બાકી રકમ કરતાં વધારે છે.');return}f.balance=Number(f.balance||0)+(type==='DN'?amt:-amt);const e={id:'fin_'+Date.now(),kind:type,type:type==='CN'?'Credit Note':'Debit Note',partyId:f.id,partyName:f.name,amount:amt,mode:'',date:$('fdNoteDate').value||today(),note:$('fdNoteReason').value.trim()};const a=entries();a.push(e);save(a);khataLedger.push({id:'l_'+Date.now(),farmerName:f.name,date:e.date,type:e.type,debit:type==='DN'?amt:0,credit:type==='CN'?amt:0,balance:f.balance,note:e.note||e.type});syncLocalStorage();$('fdNoteAmount').value='';$('fdNoteReason').value='';fdInit();renderFarmerKhataList();updateDashboardStats();alert(e.type+' નોંધાયું.')};
+window.fdSaveNote=function(){const amt=Number($('fdNoteAmount').value),type=$('fdNoteType').value,prodId=$('fdReturnProduct').value,qty=Number($('fdReturnQty').value)||0,rate=Number($('fdReturnRate').value)||0;const prod=prodId?(products||[]).find(x=>String(x.id)===String(prodId)):null;const party=type==='CN'?(farmers||[]).find(x=>String(x.id)===$('fdNoteParty').value):(suppliers||[]).find(x=>String(x.id)===$('fdNoteParty').value);if(!party||!(amt>0)){alert('પાર્ટી અને માન્ય રકમ પસંદ કરો.');return}if(amt>Number(party.balance||0)){alert((type==='CN'?'Credit Note':'Debit Note')+' રકમ હાલની બાકી કરતાં વધારે છે.');return}if(prodId&&(!prod||!(qty>0)||!(rate>=0))){alert('પરત આઇટમ, જથ્થો અને ભાવ તપાસો.');return}if(type==='DN'&&prod&&qty>Number(prod.stock||0)){alert('સ્ટોકમાં માત્ર '+(Number(prod.stock)||0)+' જથ્થો છે; એટલો જ પરત આપી શકાય.');return}if(prod){if(type==='CN'){prod.shopStock=Number(prod.shopStock??prod.stock??0)+qty;prod.stock=Number(prod.shopStock||0)+Number(prod.godownStock||0);}else{let rem=qty,shop=Math.min(Number(prod.shopStock??prod.stock??0),rem);prod.shopStock=Math.max(0,Number(prod.shopStock??prod.stock??0)-shop);rem-=shop;prod.godownStock=Math.max(0,Number(prod.godownStock||0)-rem);prod.stock=Number(prod.shopStock||0)+Number(prod.godownStock||0);}}party.balance=Number(party.balance||0)-amt;const itemInfo=prod?`આઇટમ: ${prod.name}, જથ્થો: ${qty}, ભાવ: ${money(rate)}; `:'';const reason=$('fdNoteReason').value.trim();const e={id:'fin_'+Date.now(),kind:type,type:type==='CN'?'Credit Note':'Debit Note',partyId:party.id,partyName:party.name,partyType:type==='CN'?'customer':'supplier',amount:amt,mode:'',date:$('fdNoteDate').value||today(),note:itemInfo+reason,returnItems:prod?[{productId:prod.id,name:prod.name,qty,rate,stockEffect:type==='CN'?'in':'out'}]:[]};const a=entries();a.push(e);save(a);if(type==='CN'){khataLedger.push({id:'l_'+Date.now(),farmerName:party.name,date:e.date,type:e.type,debit:0,credit:amt,balance:party.balance,note:e.note||e.type});renderFarmerKhataList()}else{supplierLedger.push({id:'sl_'+Date.now(),supplierName:party.name,date:e.date,billNo:'DEBIT NOTE',purchase:-amt,payment:0,balance:party.balance,note:e.note||e.type});renderSuppliersList()}syncLocalStorage();$('fdNoteAmount').value='';$('fdNoteReason').value='';$('fdReturnProduct').value='';$('fdReturnQty').value='';$('fdReturnRate').value='';fdInit();updateDashboardStats();alert(e.type+' નોંધાયું.'+(prod?' સ્ટોક પણ એડજસ્ટ થયો.':''))};
 window.fdRenderReport=function(){const from=$('fdFrom').value,to=$('fdTo').value,type=$('fdReportType').value;const rows=entries().filter(e=>(!from||e.date>=from)&&(!to||e.date<=to)&&(type==='all'||e.kind===type));const ins=rows.filter(e=>e.kind==='in').reduce((s,e)=>s+e.amount,0),outs=rows.filter(e=>e.kind==='out').reduce((s,e)=>s+e.amount,0);const modeSum=m=>rows.filter(e=>e.mode===m&&(e.kind==='in'||e.kind==='out')).reduce((s,e)=>s+(e.kind==='in'?1:-1)*(Number(e.amount)||0),0);$('fdReportSummary').textContent=`જમા: ${money(ins)} | ચૂકવણી: ${money(outs)} | નેટ: ${money(ins-outs)} | રોકડ નેટ: ${money(modeSum('રોકડ'))} | બેંક નેટ: ${money(modeSum('બેંક'))} | UPI નેટ: ${money(modeSum('UPI'))} | ચેક નેટ: ${money(modeSum('ચેક'))} | નોંધો: ${rows.length}`;$('fdReportRows').innerHTML=rows.length?'<table style="width:100%;border-collapse:collapse;font-size:13px"><tr><th>તારીખ</th><th>પ્રકાર</th><th>પાર્ટી</th><th>બિલ/નોંધ</th><th>માધ્યમ</th><th>રકમ</th></tr>'+rows.map(e=>`<tr><td style="border-bottom:1px solid #ddd;padding:6px">${esc(e.date)}</td><td style="border-bottom:1px solid #ddd;padding:6px">${esc(e.type)}</td><td style="border-bottom:1px solid #ddd;padding:6px">${esc(e.partyName)}</td><td style="border-bottom:1px solid #ddd;padding:6px">${esc(e.billNo||e.note||'')}</td><td style="border-bottom:1px solid #ddd;padding:6px">${esc(e.mode||'-')}</td><td style="border-bottom:1px solid #ddd;padding:6px;text-align:right">${money(e.amount)}</td></tr>`).join('')+'</table>':'કોઈ વ્યવહાર નથી.'};
 window.fdExportReport=function(){const from=$('fdFrom').value,to=$('fdTo').value,type=$('fdReportType').value;const rows=[['Date','Type','Party','Bill/Note','Mode','Amount'],...entries().filter(e=>(!from||e.date>=from)&&(!to||e.date<=to)&&(type==='all'||e.kind===type)).map(e=>[e.date,e.type,e.partyName,e.billNo||e.note||'',e.mode||'',e.amount])];const csv=rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const a=document.createElement('a');a.href=URL.createObjectURL(new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8'}));a.download='Bahuchar_Agro_Payment_Report.csv';a.click();URL.revokeObjectURL(a.href)};
 window.deletePartyRecord=function(id){const f=(farmers||[]).find(x=>String(x.id)===String(id));if(!f)return;const hasLedger=(khataLedger||[]).some(x=>x.farmerName===f.name)||(invoices||[]).some(x=>x.farmerName===f.name);if(Number(f.balance||0)!==0||hasLedger){alert('આ પાર્ટીની બાકી રકમ અથવા જૂના બિલ/ખાતાવહી છે. હિસાબની સુરક્ષા માટે ડિલીટ ન કરી શકાય.');return}if(!confirm(f.name+' પાર્ટી કાઢી નાખવી છે? પહેલાં બેકઅપ રાખો.'))return;farmers=farmers.filter(x=>String(x.id)!==String(id));syncLocalStorage();renderPartyManager();renderFarmerSuggestions();renderFarmerKhataList();alert('પાર્ટી કાઢી નાખી.')};
