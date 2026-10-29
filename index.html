@@ -56,6 +56,8 @@
     body.thermal-80 #printArea { width: 80mm !important; max-width: 80mm !important; padding: 3mm !important; font-size: 10px !important; }
     @media print {
       @page { margin: 2mm; }
+      #invoiceModal { display: block !important; position: static !important; background: white !important; padding: 0 !important; }
+      #invoiceModal > div { display: block !important; position: static !important; max-height: none !important; overflow: visible !important; box-shadow: none !important; border: 0 !important; }
       body * {
         visibility: hidden;
       }
@@ -63,6 +65,7 @@
         visibility: visible;
       }
       #printArea {
+        display: block !important;
         position: absolute;
         left: 0;
         top: 0;
@@ -598,6 +601,7 @@
               </table>
             </div>
           </div>
+          <div class="border rounded-xl p-3 space-y-2"><h4 class="font-bold text-xs">ખરીદી બિલ ઇતિહાસ — Edit / Delete</h4><div id="purchaseHistoryList" class="space-y-2 text-xs"></div></div>
           <div class="border rounded-xl p-3 space-y-3 bg-slate-50"><h4 class="font-bold text-xs">ક્રેડિટ નોટ / GSTR-2B મેળવણી</h4><div class="grid grid-cols-2 md:grid-cols-5 gap-2"><input id="supReturnBillNo" class="border rounded p-2 text-xs" placeholder="મૂળ બિલ નં."><input id="supCreditNoteNo" class="border rounded p-2 text-xs" placeholder="ક્રેડિટ નોટ નં."><input id="supReturnQty" type="number" min="0" step="any" class="border rounded p-2 text-xs" placeholder="પરત Qty"><input id="supReturnAmount" type="number" min="0" step="any" class="border rounded p-2 text-xs" placeholder="રકમ ₹"><button onclick="saveSupplierReturnNote()" type="button" class="bg-rose-600 text-white rounded p-2 text-xs">રિટર્ન નોંધો</button></div><div class="grid grid-cols-2 md:grid-cols-3 gap-2"><input id="gstr2bInvoiceNo" class="border rounded p-2 text-xs" placeholder="GSTR-2B બિલ નં."><input id="gstr2bTaxable" type="number" min="0" step="any" class="border rounded p-2 text-xs" placeholder="ટેક્સેબલ ₹"><input id="gstr2bTax" type="number" min="0" step="any" class="border rounded p-2 text-xs" placeholder="GST ₹"><button onclick="reconcileGstr2b()" type="button" class="bg-indigo-600 text-white rounded p-2 text-xs">2B સાથે મેળવો</button><button onclick="exportPurchaseReconciliation()" type="button" class="bg-slate-700 text-white rounded p-2 text-xs">રિપોર્ટ CSV</button></div><div id="supplierComplianceReport" class="text-xs text-slate-600">GSTR-2B સાથે મેન્યુઅલ મેળવણી. સરકારી પોર્ટલ સાથે આપમેળે કનેક્શન નથી.</div></div>
         </div>
       </div>
@@ -611,7 +615,7 @@
           <h3 class="font-bold text-slate-800 text-xs md:text-sm mb-3 flex items-center gap-2">
             <i class="fa-solid fa-users text-agro-700"></i> ખેડૂત ખાતાઓની યાદી
           </h3>
-          <button onclick="shareOverdueWhatsAppList()" class="w-full mb-3 bg-emerald-600 text-white rounded-lg px-3 py-2 text-xs font-bold"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp બાકી યાદી મોકલો</button>
+          <button onclick="downloadFarmerLedgerCSV()" class="w-full mb-2 bg-slate-700 text-white rounded-lg px-3 py-2 text-xs font-bold">ખેડૂત ખાતાવહી CSV ડાઉનલોડ</button><button onclick="shareOverdueWhatsAppList()" class="w-full mb-3 bg-emerald-600 text-white rounded-lg px-3 py-2 text-xs font-bold"><i class="fa-brands fa-whatsapp mr-1"></i> WhatsApp બાકી યાદી મોકલો</button>
           <div class="relative mb-3">
             <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
             <input type="text" id="khataFarmerSearch" placeholder="ખેડૂત અથવા ગામ શોધો..." class="w-full pl-8 pr-3 py-1.5 border rounded-lg text-xs focus:outline-none" oninput="renderFarmerKhataList()">
@@ -750,6 +754,7 @@
           <label class="text-sm">ગામ<input id="partyVillage" class="block w-full border rounded-lg p-2 mt-1" placeholder="ગામનું નામ"></label>
           <label class="text-sm">પ્રકાર<select id="partyType" class="block w-full border rounded-lg p-2 mt-1"><option>ખેડૂત</option><option>ડીલર</option><option>રિટેલર</option><option>અન્ય</option></select></label>
           <label class="text-sm">જમીન / વીઘા<input id="partyLandSize" type="number" min="0" step="0.01" class="block w-full border rounded-lg p-2 mt-1" placeholder="જમીનનું માપ"></label>
+          <label class="text-sm">જૂની / શરૂઆતની બાકી (₹)<input id="partyOpeningBalance" type="number" step="0.01" class="block w-full border rounded-lg p-2 mt-1" placeholder="જૂની બાકી રકમ"></label>
           <label class="text-sm">ક્રેડિટ લિમિટ (₹)<input id="partyCreditLimit" type="number" min="0" step="1" class="block w-full border rounded-lg p-2 mt-1" placeholder="ઉદા. 20000"></label>
           <label class="text-sm">સીઝન / પાક ચક્ર<select id="partyCropSeason" class="block w-full border rounded-lg p-2 mt-1"><option value="all">બધા સીઝન</option><option value="monsoon">ચોમાસુ</option><option value="winter">શિયાળુ</option><option value="summer">ઉનાળુ</option></select></label>
           <label class="text-sm">પરિવાર / મુખ્ય ખાતું<select id="partyMainAccount" class="block w-full border rounded-lg p-2 mt-1"><option value="">આ જ મુખ્ય ખાતું</option></select></label>
@@ -2039,9 +2044,7 @@
               <p class="text-[11px] text-slate-500">${s.address || 'ગુજરાત'} | મો: ${s.phone}</p>
             </div>
             <div class="text-right">
-              <span class="text-xs font-bold ${s.balance > 0 ? 'text-rose-600' : 'text-slate-500'}">
-                ₹ ${s.balance.toFixed(2)}
-              </span>
+              <span class="text-xs font-bold ${s.balance > 0 ? 'text-rose-600' : 'text-slate-500'}">₹ ${Number(s.balance||0).toFixed(2)}</span><div class="flex gap-1 mt-1"><button type="button" class="text-[10px] px-2 py-1 border rounded" onclick="event.stopPropagation();editSupplier('${s.id}')">Edit</button><button type="button" class="text-[10px] px-2 py-1 border border-red-300 text-red-600 rounded" onclick="event.stopPropagation();deleteSupplier('${s.id}')">Delete</button></div>
             </div>
           </div>
         `;
@@ -2056,7 +2059,7 @@
       document.getElementById('supDetailBalance').innerText = `₹ ${s.balance.toFixed(2)}`;
       document.getElementById('supplierActionsContainer').classList.remove('hidden');
 
-      renderSupplierLedger(s.name);
+      renderSupplierLedger(s.name);renderPurchaseHistory(s.id);
       renderSuppliersList();
     }
 
@@ -2089,8 +2092,11 @@
       });
     }
 
+    let editingSupplierId = null;
+    function editSupplier(id){const s=suppliers.find(x=>String(x.id)===String(id));if(!s)return;editingSupplierId=s.id;document.getElementById('supName').value=s.name||'';document.getElementById('supPhone').value=s.phone||'';document.getElementById('supAddress').value=s.address||'';document.getElementById('supGstin').value=s.gstin||'';document.getElementById('supFormO').value=s.formO||'';document.getElementById('supLicense').value=s.license||'';document.getElementById('supGstRate').value=s.defaultGstRate??5;document.getElementById('supCreditDays').value=s.creditDays??30;document.getElementById('supplierModal').classList.remove('hidden');}
+    function deleteSupplier(id){const s=suppliers.find(x=>String(x.id)===String(id));if(!s)return;const has=purchaseRecords.some(r=>String(r.supplierId)===String(id))||supplierLedger.some(r=>r.supplierName===s.name);if(has&&!confirm('આ સપ્લાયર સાથે ખરીદી/ચુકવણી ઇતિહાસ જોડાયેલ છે. પ્રોફાઇલ જ કાઢવી છે? ઇતિહાસ રહેશે.'))return;if(!has&&!confirm('આ સપ્લાયર કાઢી નાખવો છે?'))return;suppliers=suppliers.filter(x=>String(x.id)!==String(id));if(activeSupplierForDetails&&String(activeSupplierForDetails.id)===String(id)){activeSupplierForDetails=null;document.getElementById('supplierActionsContainer').classList.add('hidden');document.getElementById('supDetailName').innerText='સપ્લાયર પસંદ કરો';document.getElementById('supplierLedgerBody').innerHTML='';}syncLocalStorage();renderSuppliersList();updateDashboardStats();showToast('સપ્લાયર પ્રોફાઇલ કાઢી નાખી. ઇતિહાસ જાળવ્યો છે.','info');}
     function openSupplierModal() {
-      document.getElementById('supplierForm').reset();
+      editingSupplierId=null;document.getElementById('supplierForm').reset();
       document.getElementById('supplierModal').classList.remove('hidden');
     }
     function closeSupplierModal() {
@@ -2105,12 +2111,12 @@
       const gstin = document.getElementById('supGstin').value.trim();
       const formO = document.getElementById('supFormO').value.trim(), license = document.getElementById('supLicense').value.trim();
       const defaultGstRate = Number(document.getElementById('supGstRate').value || 0), creditDays = Number(document.getElementById('supCreditDays').value || 0);
-      const newSup = { id:'sup_'+Date.now(), name, phone, address, gstin, formO, license, defaultGstRate, creditDays, balance:0 };
-
-      suppliers.push(newSup);
+      const newSup = editingSupplierId ? suppliers.find(x=>String(x.id)===String(editingSupplierId)) : null;
+      if(newSup) Object.assign(newSup,{name,phone,address,gstin,formO,license,defaultGstRate,creditDays}); else { const created={id:'sup_'+Date.now(),name,phone,address,gstin,formO,license,defaultGstRate,creditDays,balance:0};suppliers.push(created); }
+      const saved = newSup || suppliers[suppliers.length-1]; editingSupplierId=null;
       syncLocalStorage();
       renderSuppliersList();
-      selectSupplier(newSup);
+      selectSupplier(saved);
       closeSupplierModal();
       showToast('નવો સપ્લાયર ઉમેરાઈ ગયો!', 'success');
     }
@@ -2151,6 +2157,9 @@
       supplierLedger.push({id:'sl_'+Date.now(),supplierName:activeSupplierForDetails.name,date,billNo,purchase:total,payment:0,balance:activeSupplierForDetails.balance,dueDate,note:`ખરીદી: ${prod?.name||'માલ'} (${qty} + ${freeQty} ફ્રી) | GST ${gstRate}% | ટ્રાન્સપોર્ટ ₹${transport}`});
       syncLocalStorage();renderInventoryTable();selectSupplier(activeSupplierForDetails);updateDashboardStats();closePurchaseEntryModal();showToast('ખરીદી, GST, બેચ અને ફ્રી જથ્થો નોંધાયો.','success');
     }
+    function renderPurchaseHistory(supplierId){const el=document.getElementById('purchaseHistoryList');if(!el)return;const rows=purchaseRecords.filter(r=>String(r.supplierId)===String(supplierId));if(!rows.length){el.innerHTML='<p class="text-slate-400">ખરીદી બિલ ઉપલબ્ધ નથી.</p>';return;}el.innerHTML=rows.slice().reverse().map(r=>`<div class="border rounded p-2 flex flex-wrap items-center justify-between gap-2"><div><b>${r.billNo||'બિલ નં. નથી'}</b> · ${r.date||''}<br>${r.productName||'માલ'} · Qty ${Number(r.qty||0)} + Free ${Number(r.freeQty||0)} · ₹${Number(r.total||0).toFixed(2)}</div><div class="flex gap-1"><button type="button" class="border rounded px-2 py-1" onclick="editPurchaseRecord('${r.id}')">Edit</button><button type="button" class="border border-red-300 text-red-600 rounded px-2 py-1" onclick="deletePurchaseRecord('${r.id}')">Delete</button></div></div>`).join('');}
+    function editPurchaseRecord(id){const r=purchaseRecords.find(x=>String(x.id)===String(id));if(!r)return;const qty=prompt('ખરીદી જથ્થો (જૂનો: '+r.qty+')',r.qty);if(qty===null)return;const q=Number(qty);const rate=prompt('એકમ ખરીદ કિંમત (જૂની: '+r.costRate+')',r.costRate);if(rate===null)return;const c=Number(rate);if(!(q>0)||!(c>=0)){alert('જથ્થો/ભાવ માન્ય નથી.');return;}const oldTotal=Number(r.total||0),oldQty=Number(r.qty||0)+Number(r.freeQty||0);const gst=Number(r.gstRate||0),transport=Number(r.transport||0),taxable=q*c,gstAmount=taxable*gst/100,total=taxable+gstAmount+transport;const prod=products.find(p=>String(p.id)===String(r.productId));if(prod){const stock=Number(prod.stock||0);prod.stock=Math.max(0,stock-oldQty+q+Number(r.freeQty||0));prod.shopStock=Math.max(0,Number(prod.shopStock??stock)-oldQty+q+Number(r.freeQty||0));}const sup=suppliers.find(x=>String(x.id)===String(r.supplierId));if(sup)sup.balance=Number(sup.balance||0)-oldTotal+total;r.qty=q;r.costRate=c;r.taxable=taxable;r.gstAmount=gstAmount;r.total=total;const led=supplierLedger.find(x=>x.billNo===r.billNo&&x.supplierName===r.supplierName&&Number(x.purchase||0)===oldTotal);if(led){led.purchase=total;led.balance=Number(led.balance||0)-oldTotal+total;led.note=(led.note||'').replace(/ખરીદી:.*$/,'ખરીદી સુધારી: '+r.productName);}syncLocalStorage();renderInventoryTable();if(sup)selectSupplier(sup);updateDashboardStats();showToast('ખરીદી બિલ સુધાર્યું. જથ્થો અને બાકી તપાસી લો.','success');}
+    function deletePurchaseRecord(id){const r=purchaseRecords.find(x=>String(x.id)===String(id));if(!r)return;if(!confirm('ખરીદી બિલ કાઢી નાખશો? સ્ટોક અને સપ્લાયર બાકી પાછા ગોઠવાશે.'))return;const prod=products.find(p=>String(p.id)===String(r.productId));const qty=Number(r.qty||0)+Number(r.freeQty||0);if(prod){prod.stock=Math.max(0,Number(prod.stock||0)-qty);prod.shopStock=Math.max(0,Number(prod.shopStock??prod.stock)-qty);}const sup=suppliers.find(x=>String(x.id)===String(r.supplierId));if(sup)sup.balance=Math.max(0,Number(sup.balance||0)-Number(r.total||0));purchaseRecords=purchaseRecords.filter(x=>String(x.id)!==String(id));supplierLedger=supplierLedger.filter(x=>!(x.supplierName===r.supplierName&&x.billNo===r.billNo&&Number(x.purchase||0)===Number(r.total||0)));syncLocalStorage();renderInventoryTable();if(sup)selectSupplier(sup);updateDashboardStats();showToast('ખરીદી બિલ કાઢી નાખ્યું. સ્ટોક/બાકી ચકાસો.','info');}
     function saveSupplierReturnNote(){
       if(!activeSupplierForDetails){showToast('પહેલાં સપ્લાયર પસંદ કરો.','error');return;} const billNo=document.getElementById('supReturnBillNo').value.trim(),creditNoteNo=document.getElementById('supCreditNoteNo').value.trim(),qty=Number(document.getElementById('supReturnQty').value||0),amount=Number(document.getElementById('supReturnAmount').value||0);
       if(!billNo||!creditNoteNo||amount<=0){showToast('મૂળ બિલ, ક્રેડિટ નોટ નંબર અને રકમ દાખલ કરો.','error');return;} supplierReturns.push({id:'sr_'+Date.now(),supplierId:activeSupplierForDetails.id,supplierName:activeSupplierForDetails.name,billNo,creditNoteNo,qty,amount,date:new Date().toISOString().slice(0,10),matched:false});activeSupplierForDetails.balance=Math.max(0,Number(activeSupplierForDetails.balance||0)-amount);supplierLedger.push({id:'sl_'+Date.now(),supplierName:activeSupplierForDetails.name,date:new Date().toISOString().slice(0,10),billNo:creditNoteNo,purchase:0,payment:amount,balance:activeSupplierForDetails.balance,note:`કંપની રિટર્ન / ક્રેડિટ નોટ સામે ${billNo}`});syncLocalStorage();selectSupplier(activeSupplierForDetails);document.getElementById('supplierComplianceReport').textContent=`ક્રેડિટ નોટ ${creditNoteNo} નોંધાઈ; મૂળ બિલ ${billNo}, રકમ ₹${amount.toFixed(2)}. માલની સ્ટોક કપાત અને સત્તાવાર ક્રેડિટ નોટ અલગથી ચકાસો.`;
@@ -2359,6 +2368,7 @@
       return { amount, days: 0, rate: 0, principal, asOf: asOf.toISOString().slice(0,10), details };
     }
 
+    function downloadFarmerLedgerCSV(){if(!activeFarmerForKhata){showToast('પહેલાં ખેડૂત પસંદ કરો.','error');return;}const tx=khataLedger.filter(l=>l.farmerName===activeFarmerForKhata.name);const rows=[['તારીખ','પ્રકાર','વિગત','ઉધાર','જમા','બાકી']];tx.forEach(t=>rows.push([t.date||'',t.type||'',t.note||'',Number(t.debit||0),Number(t.credit||0),Number(t.balance||0)]));rows.push(['','','હાલની બાકી','','',Number(activeFarmerForKhata.balance||0)]);const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='ખેડૂત_ખાતાવહી_'+String(activeFarmerForKhata.name||'party').replace(/[^\w\u0A80-\u0AFF-]/g,'_')+'.csv';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
     function shareFarmerLedgerPDF() {
       if (!activeFarmerForKhata) { showToast('પહેલાં પાર્ટી પસંદ કરો.', 'error'); return; }
       const tx=khataLedger.filter(l=>l.farmerName===activeFarmerForKhata.name);
@@ -2951,7 +2961,7 @@
     }
   </script>
 
-<!-- Firebase Cloud Sync (single-document snapshot; manual push/pull) -->
+<!-- Firebase Cloud Sync (automatic debounced cloud sync) -->
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
@@ -2975,12 +2985,8 @@
   </div>
   <div id="bcSyncArea" style="display:none">
     <div id="bcUser" style="font-size:12px;margin-top:6px"></div>
-    <p style="font-size:12px;margin-top:7px">પહેલા ડિવાઇસમાં <b>ક્લાઉડમાં મોકલો</b>. બીજા ડિવાઇસમાં <b>ક્લાઉડમાંથી લાવો</b>. ખેંચતી વખતે આ ડિવાઇસનો હાલનો ડેટા બદલાઈ જશે.</p>
-    <div class="bc-row">
-      <button class="bc-primary" type="button" onclick="bcPush()">ક્લાઉડમાં મોકલો</button>
-      <button class="bc-secondary" type="button" onclick="bcPull()">ક્લાઉડમાંથી લાવો</button>
-      <button class="bc-secondary" type="button" onclick="bcLogout()">લોગઆઉટ</button>
-    </div>
+    <p style="font-size:12px;margin-top:7px">ઓટો-સિંક ચાલુ છે. ડેટામાં ફેરફાર થાય ત્યારે ઇન્ટરનેટ ઉપલબ્ધ હોય તો આપમેળે ક્લાઉડમાં સાચવાશે.</p>
+    <div class="bc-row"><button class="bc-secondary" type="button" onclick="bcLogout()">લોગઆઉટ</button></div>
   </div>
   <div id="bcStatus" class="bc-status" role="status">Firebase તૈયાર થઈ રહ્યું છે…</div>
 </div>
@@ -2995,44 +3001,51 @@
     appId: "1:630215271153:web:a2cd2cd32f86dcf33d7f50",
     measurementId: "G-YGKJSCH65B"
   };
-  const STORE_ID = 'bahuchar-agro';
-  const DOC_PATH = ['stores', STORE_ID, 'data', 'main'];
-  const KEYS = ['bahuchar_products','bahuchar_suppliers','bahuchar_sup_ledger','bahuchar_farmers','bahuchar_ledger','bahuchar_invoices','bahuchar_finance_entries','bahuchar_purchase_records','bahuchar_supplier_returns','bahuchar_gstr2b_matches'];
-  let auth, db, user;
-  const status = (s)=>{ const el=document.getElementById('bcStatus'); if(el) el.textContent=s; };
-  const localSnapshot = ()=>{ const o={}; KEYS.forEach(k=>{const v=localStorage.getItem(k); if(v!==null)o[k]=v;}); return o; };
-  const setArea = (loggedIn)=>{ document.getElementById('bcLoginArea').style.display=loggedIn?'none':'block'; document.getElementById('bcSyncArea').style.display=loggedIn?'block':'none'; if(loggedIn) document.getElementById('bcUser').textContent='લોગિન: '+(user.email||'Firebase વપરાશકર્તા'); };
-  window.bcLogin = async function(){
-    const email=document.getElementById('bcEmail').value.trim(), password=document.getElementById('bcPassword').value;
-    if(!email||!password){status('ઈમેલ અને પાસવર્ડ ભરો.');return;}
-    status('લોગિન થઈ રહ્યું છે…');
-    try{await auth.signInWithEmailAndPassword(email,password); document.getElementById('bcPassword').value='';}
-    catch(e){status('લોગિન ન થયું: '+(e.code||e.message)+'\nFirebase Authentication માં Email/Password ચાલુ છે અને આ ઈમેલનો account બનાવેલો છે તે તપાસો.');}
-  };
-  window.bcLogout = async function(){try{await auth.signOut();status('લોગઆઉટ થયું.');}catch(e){status('લોગઆઉટ સમસ્યા: '+e.message);}};
-  window.bcPush = async function(){
-    if(!user){status('પહેલા લોગિન કરો.');return;}
-    if(!confirm('આ ડિવાઇસનો હાલનો ડેટા ક્લાઉડમાં મોકલવો? ક્લાઉડનો જૂનો ડેટા બદલાઈ શકે છે.'))return;
-    status('ક્લાઉડમાં ડેટા મોકલાઈ રહ્યો છે…');
-    try{const data=localSnapshot(); await db.doc(DOC_PATH.join('/')).set({data,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:user.uid},{merge:false}); status('સફળતા: ડેટા ક્લાઉડમાં મોકલાયો. બીજા ડિવાઇસમાં “ક્લાઉડમાંથી લાવો” દબાવો.');}
-    catch(e){status('ક્લાઉડમાં મોકલી શકાયો નહીં: '+(e.code||e.message)+'\nFirestore Security Rules અને ઇન્ટરનેટ તપાસો.');}
-  };
-  window.bcPull = async function(){
-    if(!user){status('પહેલા લોગિન કરો.');return;}
-    if(!confirm('ચેતવણી: ક્લાઉડમાંથી ડેટા લાવવાથી આ ડિવાઇસના હાલના શ્રી બહુચર એગ્રો ડેટાની જગ્યાએ ક્લાઉડનો ડેટા આવશે. પહેલાં બેકઅપ રાખ્યો છે?'))return;
-    status('ક્લાઉડનો ડેટા વાંચાઈ રહ્યો છે…');
-    try{const snap=await db.doc(DOC_PATH.join('/')).get(); if(!snap.exists||!snap.data().data){status('ક્લાઉડમાં હજી ડેટા નથી. પહેલા મૂળ ડિવાઇસ પર “ક્લાઉડમાં મોકલો” દબાવો.');return;}
-      const data=snap.data().data; if(!data||typeof data!=='object')throw new Error('ડેટા ફોર્મેટ ખોટું છે.');
-      if(!confirm('ક્લાઉડમાં ડેટા મળ્યો. આ ડિવાઇસનો હાલનો ડેટા બદલીને ક્લાઉડનો ડેટા લાવવો છે?'))return;
-      KEYS.forEach(k=>localStorage.removeItem(k)); Object.entries(data).forEach(([k,v])=>{if(KEYS.includes(k)&&typeof v==='string')localStorage.setItem(k,v);});
-      status('ડેટા લાવવામાં આવ્યો. એપ ફરીથી ખૂલશે…'); setTimeout(()=>location.reload(),700);
-    }catch(e){status('ક્લાઉડમાંથી ડેટા ન આવ્યો: '+(e.code||e.message)+'\nFirestore Security Rules અને ઇન્ટરનેટ તપાસો.');}
-  };
+  const STORE_ID='bahuchar-agro', DOC_PATH=['stores',STORE_ID,'data','main'];
+  const KEYS=['bahuchar_products','bahuchar_suppliers','bahuchar_sup_ledger','bahuchar_farmers','bahuchar_ledger','bahuchar_invoices','bahuchar_finance_entries','bahuchar_purchase_records','bahuchar_supplier_returns','bahuchar_gstr2b_matches','bahuchar_followups'];
+  let auth,db,user, timer=null, applyingCloud=false, ready=false, lastLocalSignature='';
+  const status=s=>{const el=document.getElementById('bcStatus');if(el)el.textContent=s};
+  const localSnapshot=()=>{const o={};KEYS.forEach(k=>{const v=localStorage.getItem(k);if(v!==null)o[k]=v});return o};
+  const signature=o=>JSON.stringify(o);
+  const setArea=loggedIn=>{document.getElementById('bcLoginArea').style.display=loggedIn?'none':'block';document.getElementById('bcSyncArea').style.display=loggedIn?'block':'none';if(loggedIn)document.getElementById('bcUser').textContent='લોગિન: '+(user.email||'Firebase વપરાશકર્તા')};
+  async function pushNow(){
+    if(!user||!db||!ready||applyingCloud)return;
+    const data=localSnapshot(), sig=signature(data); if(sig===lastLocalSignature)return;
+    status('ઓટો-સિંક: ક્લાઉડમાં સાચવી રહ્યું છે…');
+    try{await db.doc(DOC_PATH.join('/')).set({data,updatedAt:firebase.firestore.FieldValue.serverTimestamp(),updatedBy:user.uid},{merge:false});lastLocalSignature=sig;status('ઓટો-સિંક ચાલુ ✓ છેલ્લે સાચવ્યું: '+new Date().toLocaleTimeString());}
+    catch(e){status('ઓટો-સિંક નિષ્ફળ: '+(e.code||e.message)+' — ઇન્ટરનેટ અને Firestore Rules તપાસો.');}
+  }
+  function schedulePush(){if(!user||applyingCloud||!ready)return;clearTimeout(timer);timer=setTimeout(pushNow,900)}
+  window.bcLogin=async function(){const email=document.getElementById('bcEmail').value.trim(),password=document.getElementById('bcPassword').value;if(!email||!password){status('ઈમેલ અને પાસવર્ડ ભરો.');return}status('લોગિન થઈ રહ્યું છે…');try{await auth.signInWithEmailAndPassword(email,password);document.getElementById('bcPassword').value=''}catch(e){status('લોગિન ન થયું: '+(e.code||e.message)+' — Firebase Email/Password અને account તપાસો.')}};
+  window.bcLogout=async function(){ready=false;try{await auth.signOut();status('લોગઆઉટ થયું.')}catch(e){status('લોગઆઉટ સમસ્યા: '+e.message)}};
+  window.bcPush=()=>schedulePush();
+  window.bcPull=async function(){if(!user)return;status('ક્લાઉડ તપાસી રહ્યું છે…');try{const snap=await db.doc(DOC_PATH.join('/')).get();if(!snap.exists||!snap.data().data){status('ક્લાઉડમાં ડેટા નથી. આ ડિવાઇસનો ડેટા ઓટો-સિંક થશે.');schedulePush();return}if(!confirm('ક્લાઉડનો ડેટા આ ડિવાઇસના ડેટાને બદલી દેશે. ચાલુ રાખવું? પહેલાં બેકઅપ લો.'))return;applyData(snap.data().data);status('ક્લાઉડનો ડેટા લાવવામાં આવ્યો.');location.reload()}catch(e){status('ક્લાઉડમાંથી ડેટા ન આવ્યો: '+(e.code||e.message))}};
+  function applyData(data){applyingCloud=true;try{KEYS.forEach(k=>localStorage.removeItem(k));Object.entries(data||{}).forEach(([k,v])=>{if(KEYS.includes(k)&&typeof v==='string')localStorage.setItem(k,v)});lastLocalSignature=signature(localSnapshot())}finally{applyingCloud=false}}
   try{
-    if(!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    auth=firebase.auth(); db=firebase.firestore();
-    auth.onAuthStateChanged(u=>{user=u;setArea(!!u);status(u?'લોગિન સફળ. જરૂર મુજબ ક્લાઉડમાં મોકલો અથવા ક્લાઉડમાંથી લાવો.':'Firebase લોગિન માટે ઈમેલ અને પાસવર્ડ ભરો.');});
-  }catch(e){status('Firebase શરૂ ન થયું: '+e.message);}
+    if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);auth=firebase.auth();db=firebase.firestore();
+    // Track data keys so all existing save flows automatically sync without editing every form.
+    const originalSet=Storage.prototype.setItem;Storage.prototype.setItem=function(k,v){originalSet.call(this,k,v);if(this===localStorage&&KEYS.includes(String(k)))schedulePush()};
+    const originalRemove=Storage.prototype.removeItem;Storage.prototype.removeItem=function(k){originalRemove.call(this,k);if(this===localStorage&&KEYS.includes(String(k)))schedulePush()};
+    auth.onAuthStateChanged(async u=>{
+      user=u;setArea(!!u);ready=false;
+      if(!u){status('Firebase ઓટો-સિંક માટે લોગિન કરો.');return}
+      status('ક્લાઉડ ડેટા તપાસી રહ્યું છે…');
+      try{
+        const ref=db.doc(DOC_PATH.join('/')), snap=await ref.get();
+        if(snap.exists&&snap.data().data){
+          const cloud=snap.data().data, local=localSnapshot();
+          const localHas=Object.values(local).some(v=>v&&v!=='[]'&&v!=='{}');
+          const cloudHas=Object.values(cloud).some(v=>v&&v!=='[]'&&v!=='{}');
+          if(cloudHas&&!localHas){applyData(cloud);}
+          else if(!snap.data().data||!cloudHas){lastLocalSignature='';}
+          else { // keep current device as source on login; auto-upload after login
+            lastLocalSignature='';
+          }
+        } else {lastLocalSignature='';}
+        ready=true;status('ઓટો-સિંક ચાલુ ✓');schedulePush();
+      }catch(e){ready=true;status('ક્લાઉડ શરૂ ન થયું: '+(e.code||e.message)+' — Firestore Rules / ઇન્ટરનેટ તપાસો.');}
+    });
+  }catch(e){status('Firebase શરૂ ન થયું: '+e.message)}
 })();
 </script>
 
@@ -3053,13 +3066,13 @@ function renderPartyManager(){
 }
 function partyCall(id){const f=farmers.find(x=>String(x.id)===String(id));if(!f?.phone){alert('આ પાર્ટીનો મોબાઇલ નંબર દાખલ કરો.');return;}location.href='tel:'+String(f.phone).replace(/[^\d+]/g,'');}
 function partyWhatsApp(id){const f=farmers.find(x=>String(x.id)===String(id));if(!f?.phone){alert('આ પાર્ટીનો મોબાઇલ નંબર દાખલ કરો.');return;}const n=String(f.phone).replace(/\D/g,'');const intl=n.length===10?'91'+n:n;const msg=`નમસ્તે ${f.name||''}, શ્રી બહુચર એગ્રો તરફથી યાદ અપાવીએ છીએ કે આપની હાલની બાકી રકમ ₹${Number(f.balance||0).toFixed(2)} છે. કૃપા કરીને ચુકવણી કરવા સહકાર આપશો. આભાર.`;window.open('https://wa.me/'+intl+'?text='+encodeURIComponent(msg),'_blank');}
-function editParty(id){const f=farmers.find(x=>String(x.id)===String(id));if(!f)return;document.getElementById('partyEditId').value=f.id;document.getElementById('partyName').value=f.name||'';document.getElementById('partyPhone').value=f.phone||'';document.getElementById('partyVillage').value=f.village||'';document.getElementById('partyType').value=f.type||'ખેડૂત';document.getElementById('partyPriceGroup').value=f.priceGroup||((f.type==='ડીલર'||f.type==='રિટેલર')?'dealer':'standard');document.getElementById('partyAddress').value=f.address||'';document.getElementById('partyLandSize').value=f.landSize||'';document.getElementById('partyCreditLimit').value=f.creditLimit||'';document.getElementById('partyCropSeason').value=f.cropSeason||'all';document.getElementById('partyAadhaar').value=f.aadhaar||'';document.getElementById('partyLandAccount').value=f.landAccount||'';populatePartyMainAccounts();document.getElementById('partyMainAccount').value=f.mainAccountId||'';document.getElementById('partyName').focus();window.scrollTo({top:0,behavior:'smooth'});} 
+function editParty(id){const f=farmers.find(x=>String(x.id)===String(id));if(!f)return;document.getElementById('partyEditId').value=f.id;document.getElementById('partyName').value=f.name||'';document.getElementById('partyPhone').value=f.phone||'';document.getElementById('partyVillage').value=f.village||'';document.getElementById('partyType').value=f.type||'ખેડૂત';document.getElementById('partyPriceGroup').value=f.priceGroup||((f.type==='ડીલર'||f.type==='રિટેલર')?'dealer':'standard');document.getElementById('partyAddress').value=f.address||'';document.getElementById('partyLandSize').value=f.landSize||'';document.getElementById('partyCreditLimit').value=f.creditLimit||'';document.getElementById('partyOpeningBalance').value=f.openingBalance??(f._openingBalance??0);document.getElementById('partyCropSeason').value=f.cropSeason||'all';document.getElementById('partyAadhaar').value=f.aadhaar||'';document.getElementById('partyLandAccount').value=f.landAccount||'';populatePartyMainAccounts();document.getElementById('partyMainAccount').value=f.mainAccountId||'';document.getElementById('partyName').focus();window.scrollTo({top:0,behavior:'smooth'});} 
 function populatePartyMainAccounts(){const el=document.getElementById('partyMainAccount');if(!el)return;const current=document.getElementById('partyEditId')?.value;el.innerHTML='<option value="">આ જ મુખ્ય ખાતું</option>'+(farmers||[]).filter(f=>String(f.id)!==String(current)).map(f=>`<option value="${escParty(f.id)}">${escParty(f.name)} — ${escParty(f.village||'')}</option>`).join('');}
 function quickPartyLookup(){const el=document.getElementById('custName');if(!el)return;const q=el.value.trim();if(q.length<4)return;let found=farmers.find(f=>String(f.name||'').toLowerCase()===q.toLowerCase());if(!found && /^\d{4}$/.test(q))found=farmers.find(f=>String(f.phone||'').replace(/\D/g,'').slice(-4)===q);if(!found && q.length>=4)found=farmers.find(f=>String(f.phone||'').replace(/\D/g,'').endsWith(q));if(found && found.name!==q){el.value=found.name;checkFarmerHistory();}}
 function filterPartiesByVillage(){const el=document.getElementById('partyVillageFilter');if(!el)return;const old=el.value;const villages=[...new Set((farmers||[]).map(f=>String(f.village||'').trim()).filter(Boolean))].sort((a,b)=>a.localeCompare(b));el.innerHTML='<option value="">બધાં ગામ</option>'+villages.map(v=>`<option value="${escParty(v)}">${escParty(v)}</option>`).join('');if(villages.includes(old))el.value=old;}
 
 function prepareFollowup(id){document.getElementById('followParty').value=String(id);const d=new Date(Date.now()+86400000);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());document.getElementById('followWhen').value=d.toISOString().slice(0,16);document.getElementById('followNote').focus();document.getElementById('followForm').scrollIntoView({behavior:'smooth',block:'center'});}
-document.getElementById('partyForm').addEventListener('submit',e=>{e.preventDefault();const id=document.getElementById('partyEditId').value;const name=document.getElementById('partyName').value.trim();const phone=document.getElementById('partyPhone').value.trim();const village=document.getElementById('partyVillage').value.trim();const type=document.getElementById('partyType').value;const priceGroup=document.getElementById('partyPriceGroup').value;const address=document.getElementById('partyAddress').value.trim();const landSize=Number(document.getElementById('partyLandSize').value||0);const creditLimit=Number(document.getElementById('partyCreditLimit').value||0);const cropSeason=document.getElementById('partyCropSeason').value;const mainAccountId=document.getElementById('partyMainAccount').value;const aadhaar=document.getElementById('partyAadhaar').value.replace(/\D/g,'');const landAccount=document.getElementById('partyLandAccount').value.trim();if(!name)return;if(aadhaar&&aadhaar.length!==12){alert('આધાર નંબર 12 આંકડાનો હોવો જોઈએ.');return;}if(creditLimit<0||landSize<0){alert('જમીન અને ક્રેડિટ લિમિટ શૂન્યથી ઓછી ન હોઈ શકે.');return;}const duplicate=farmers.find(f=>f.name.trim().toLowerCase()===name.toLowerCase()&&String(f.id)!==String(id));if(duplicate&&!confirm('આ નામની પાર્ટી પહેલેથી છે. તેમ છતાં સેવ કરવું છે?'))return;const data={name,phone,village,type,address,priceGroup,landSize,creditLimit,cropSeason,mainAccountId,aadhaar,landAccount};if(id){const f=farmers.find(x=>String(x.id)===String(id));if(f)Object.assign(f,data);}else farmers.push({id:'f_'+Date.now(),...data,balance:0});syncLocalStorage();resetPartyForm();renderPartyManager();renderFarmerSuggestions?.();renderFarmerKhataList?.();alert('પાર્ટીની માહિતી સેવ થઈ.');});
+document.getElementById('partyForm').addEventListener('submit',e=>{e.preventDefault();const id=document.getElementById('partyEditId').value;const name=document.getElementById('partyName').value.trim();const phone=document.getElementById('partyPhone').value.trim();const village=document.getElementById('partyVillage').value.trim();const type=document.getElementById('partyType').value;const priceGroup=document.getElementById('partyPriceGroup').value;const address=document.getElementById('partyAddress').value.trim();const landSize=Number(document.getElementById('partyLandSize').value||0);const creditLimit=Number(document.getElementById('partyCreditLimit').value||0);const openingBalance=Number(document.getElementById('partyOpeningBalance').value||0);const cropSeason=document.getElementById('partyCropSeason').value;const mainAccountId=document.getElementById('partyMainAccount').value;const aadhaar=document.getElementById('partyAadhaar').value.replace(/\D/g,'');const landAccount=document.getElementById('partyLandAccount').value.trim();if(!name)return;if(aadhaar&&aadhaar.length!==12){alert('આધાર નંબર 12 આંકડાનો હોવો જોઈએ.');return;}if(creditLimit<0||landSize<0||openingBalance<0){alert('જમીન, શરૂઆતની બાકી અને ક્રેડિટ લિમિટ શૂન્યથી ઓછી ન હોઈ શકે.');return;}const duplicate=farmers.find(f=>f.name.trim().toLowerCase()===name.toLowerCase()&&String(f.id)!==String(id));if(duplicate&&!confirm('આ નામની પાર્ટી પહેલેથી છે. તેમ છતાં સેવ કરવું છે?'))return;const data={name,phone,village,type,address,priceGroup,landSize,creditLimit,cropSeason,mainAccountId,aadhaar,landAccount};if(id){const f=farmers.find(x=>String(x.id)===String(id));if(f){const previousOpening=Number(f.openingBalance||0);f.balance=Number(f.balance||0)+(openingBalance-previousOpening);f.openingBalance=openingBalance;Object.assign(f,data);}}else farmers.push({id:'f_'+Date.now(),...data,openingBalance,balance:openingBalance});syncLocalStorage();resetPartyForm();renderPartyManager();renderFarmerSuggestions?.();renderFarmerKhataList?.();alert('પાર્ટીની માહિતી સેવ થઈ.');});
 document.getElementById('followForm').addEventListener('submit',e=>{e.preventDefault();const partyId=document.getElementById('followParty').value;const f=farmers.find(x=>String(x.id)===String(partyId));if(!f){alert('પાર્ટી પસંદ કરો.');return;}agroFollowups.push({id:'fu_'+Date.now(),partyId:String(f.id),partyName:f.name,phone:f.phone||'',when:document.getElementById('followWhen').value,note:document.getElementById('followNote').value.trim(),done:false,createdAt:new Date().toISOString()});saveFollowups();document.getElementById('followNote').value='';renderPartyManager();alert('Follow-up સેવ થયો. એપમાં Follow-up યાદી તપાસતા રહો.');});
 function completeFollowup(id){const f=agroFollowups.find(x=>x.id===id);if(f)f.done=!f.done;saveFollowups();renderFollowups();}
 function deleteFollowup(id){if(!confirm('આ Follow-up કાઢી નાખવો છે?'))return;agroFollowups=agroFollowups.filter(x=>x.id!==id);saveFollowups();renderFollowups();}
@@ -3289,7 +3302,7 @@ function parseCSVImport(text){const lines=text.replace(/^\uFEFF/,'').split(/\r?\
 #financeDesk .fd-action{min-height:48px;white-space:normal}
 .fd-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px}
 </style>
-<button onclick="openFinanceDesk()" style="position:fixed;right:12px;bottom:18px;z-index:9000;background:#7c3aed;color:white;border-radius:999px;padding:12px 16px;font-weight:800;box-shadow:0 4px 15px #0003">₹ પેમેન્ટ / C-N-D-N</button>
+<button onclick="openFinanceDesk()" style="position:fixed;left:12px;bottom:18px;z-index:9000;background:#7c3aed;color:white;border-radius:999px;padding:12px 16px;font-weight:800;box-shadow:0 4px 15px #0003">₹ પેમેન્ટ / C-N-D-N</button>
 <div id="financeDesk"><div class="fd-card">
 <div style="display:flex;justify-content:space-between;align-items:center;gap:8px"><h2 style="font-size:20px;font-weight:800">પેમેન્ટ અને નાણાકીય નોંધ</h2><button style="background:#e2e8f0" onclick="closeFinanceDesk()">બંધ ✕</button></div>
 <div class="fd-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));margin:12px 0">
