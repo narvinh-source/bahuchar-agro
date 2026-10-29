@@ -528,7 +528,7 @@
             <h3 class="font-bold text-slate-800 text-xs md:text-sm flex items-center gap-2">
               <i class="fa-solid fa-building text-agro-700"></i> સપ્લાયર / કંપની યાદી
             </h3>
-            <button onclick="openSupplierModal()" class="bg-agro-700 hover:bg-agro-800 text-white px-2.5 py-1 rounded text-xs font-semibold">
+            <button type="button" onclick="(function(){var f=document.getElementById('supplierForm');var m=document.getElementById('supplierModal');if(f)f.reset();if(m)m.classList.remove('hidden');if(typeof editingSupplierId!=='undefined')editingSupplierId=null;})()" class="bg-agro-700 hover:bg-agro-800 text-white px-2.5 py-1 rounded text-xs font-semibold">
               + નવો સપ્લાયર
             </button>
           </div>
