@@ -1,4 +1,4 @@
-const CACHE_NAME = 'bahuchar-agro-shell-v25-default-login';
+const CACHE_NAME = 'bahuchar-agro-shell-v25-8-login-firebase';
 const APP_SHELL = ['./', './index.html', './manifest.json', './icons/icon-192.png', './icons/icon-512.png', './icons/icon-512-maskable.png'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_SHELL)).then(() => self.skipWaiting()));

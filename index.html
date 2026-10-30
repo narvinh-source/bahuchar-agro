@@ -168,7 +168,6 @@
             <button onclick="document.getElementById('agroRestoreFile').click();closeHeaderSettings()" class="w-full text-left flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-slate-100 text-sm font-semibold"><i class="fa-solid fa-upload w-5 text-slate-600"></i> રીસ્ટોર</button>
             <button id="companySettingsBtn" onclick="openCompanySettings();closeHeaderSettings()" class="w-full text-left flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-blue-50 text-sm font-semibold"><span class="w-5">🏢</span> કંપની વિગતો</button>
             <button id="staffAccountBtn" onclick="openStaffPanel();closeHeaderSettings()" class="w-full text-left flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-purple-50 text-sm font-semibold"><span class="w-5">👤</span> સ્ટાફ</button>
-            <button id="staffLogoutBtn" onclick="staffLogout();closeHeaderSettings()" class="w-full text-left flex items-center gap-3 px-3 py-3 rounded-lg hover:bg-slate-100 text-sm font-semibold"><i class="fa-solid fa-right-from-bracket w-5 text-slate-600"></i> લૉગઆઉટ</button>
             <div class="border-t border-slate-200 my-1"></div>
             <button onclick="switchTab('newBillTab');closeHeaderSettings()" class="w-full text-left flex items-center gap-3 px-3 py-3 rounded-lg bg-green-50 hover:bg-green-100 text-sm font-bold text-green-800"><i class="fa-solid fa-file-invoice w-5"></i> નવું બિલ</button>
           </div>
@@ -659,6 +658,7 @@
               <input type="date" id="khataDateFrom" class="border rounded-lg px-2 py-1.5 text-xs" aria-label="શરૂઆતની તારીખ" onchange="applyKhataCustomDates()">
               <input type="date" id="khataDateTo" class="border rounded-lg px-2 py-1.5 text-xs" aria-label="છેલ્લી તારીખ" onchange="applyKhataCustomDates()">
               <button onclick="downloadFarmerLedgerCSV()" class="bg-slate-700 text-white rounded-lg px-3 py-1.5 text-xs">ફિલ્ટર કરેલી ખાતાવહી CSV</button>
+              <button onclick="shareFarmerLedgerPDF()" class="bg-violet-700 text-white rounded-lg px-3 py-1.5 text-xs">ખાતાવહી PDF / પ્રિન્ટ</button>
               <button onclick="shareSelectedFarmerLedgerWhatsApp()" class="bg-emerald-600 text-white rounded-lg px-3 py-1.5 text-xs"><i class="fa-brands fa-whatsapp"></i> ખાતાવહી WhatsApp</button>
             </div>
             <table class="w-full text-xs text-left">
@@ -1067,7 +1067,7 @@
             <div class="text-right">
               <p class="text-slate-500">બિલ નંબર:</p>
               <p id="pBillNo" class="font-bold text-slate-900 text-sm">BA-001</p>
-              <p class="text-slate-600">તારીખ: <span id="pBillDate" class="font-medium">-</span></p>
+              <p class="text-slate-600">તારીખ: <span id="pBillDateText" class="font-medium">-</span></p>
               <p class="text-slate-600">પ્રકાર: <span id="pBillType" class="font-bold text-agro-800">રોકડ</span></p>
             </div>
           </div>
@@ -1427,7 +1427,7 @@
 
       if (currentBillItems.length === 0) {
         tbody.innerHTML = `
-          <tr id="emptyBillRow">
+          <tr>
             <td colspan="5" class="text-center py-6 text-slate-400">
               <i class="fa-solid fa-basket-shopping text-2xl mb-1 text-slate-300 block"></i>
               હજુ સુધી કોઈ આઇટમ ઉમેરેલ નથી.
@@ -1754,7 +1754,7 @@
       document.getElementById('pCustVillage').innerText = inv.village;
       document.getElementById('pCustPhone').innerText = inv.phone;
       document.getElementById('pBillNo').innerText = inv.billNo;
-      document.getElementById('pBillDate').innerText = inv.date;
+      document.getElementById('pBillDateText').innerText = inv.date;
       document.getElementById('pBillType').innerText = (inv.billType + (inv.paidAmount>0 ? ` | મળેલ ₹${Number(inv.paidAmount).toFixed(2)} (${(inv.paymentDetails||[]).map(x=>({cash:'રોકડ',bank:'બેંક',upi:'UPI',cheque:'ચેક'}[x.method]||x.method).concat(' ₹'+Number(x.amount).toFixed(2))).join(', ')}) | બાકી ₹${Number(inv.dueAmount||0).toFixed(2)}` : '') ) + (inv.billType === 'ઉધાર' ? ` | મુદત ${inv.dueDays || 30} દિવસ | છેલ્લી તારીખ ${inv.dueDate || '-'}` + (inv.interestEnabled ? ` | વ્યાજ ${inv.interestRate}% વાર્ષિક` : '') : '');
       document.getElementById('previewBillTag').innerText = `${inv.billType} બિલ`;
 
@@ -2493,9 +2493,9 @@
       let grandTotal = 0;
 
       invoices.forEach(inv => {
-        if (inv.billType === 'રોકડ') cashTotal += inv.grandTotal;
-        if (inv.billType === 'ઉધાર') creditTotal += inv.grandTotal;
-        grandTotal += inv.grandTotal;
+        if (inv.billType === 'રોકડ') cashTotal += Number(inv.grandTotal || 0);
+        if (inv.billType === 'ઉધાર') creditTotal += Number(inv.grandTotal || 0);
+        grandTotal += Number(inv.grandTotal || 0);
       });
 
       container.innerHTML = `
@@ -2542,7 +2542,7 @@
                   <td class="p-2 font-medium">${i.farmerName}</td>
                   <td class="p-2">${i.village}</td>
                   <td class="p-2"><span class="px-2 py-0.5 rounded text-[10px] ${i.billType === 'રોકડ' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'} font-semibold">${i.billType}</span></td>
-                  <td class="p-2 text-right font-bold">₹ ${i.grandTotal.toFixed(2)}</td>
+                  <td class="p-2 text-right font-bold">₹ ${Number(i.grandTotal || 0).toFixed(2)}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -2608,9 +2608,9 @@
       let totalProfit = 0;
 
       invoices.forEach(inv => {
-        totalSales += inv.grandTotal;
-        totalCost += (inv.totalCost || 0);
-        totalProfit += (inv.profit || (inv.grandTotal - (inv.totalCost || 0)));
+        totalSales += Number(inv.grandTotal || 0);
+        totalCost += Number(inv.totalCost || 0);
+        totalProfit += Number(inv.profit ?? (Number(inv.grandTotal || 0) - Number(inv.totalCost || 0)));
       });
 
       const marginPct = totalSales > 0 ? ((totalProfit / totalSales) * 100).toFixed(1) : 0;
@@ -2658,9 +2658,9 @@
                   <td class="p-2 font-bold">${i.billNo}</td>
                   <td class="p-2">${i.date}</td>
                   <td class="p-2">${i.farmerName}</td>
-                  <td class="p-2 text-right font-medium">₹ ${i.grandTotal.toFixed(2)}</td>
-                  <td class="p-2 text-right text-slate-500">₹ ${(i.totalCost || 0).toFixed(2)}</td>
-                  <td class="p-2 text-right font-bold text-green-700">₹ ${(i.profit || 0).toFixed(2)}</td>
+                  <td class="p-2 text-right font-medium">₹ ${Number(i.grandTotal || 0).toFixed(2)}</td>
+                  <td class="p-2 text-right text-slate-500">₹ ${Number(i.totalCost || 0).toFixed(2)}</td>
+                  <td class="p-2 text-right font-bold text-green-700">₹ ${Number(i.profit ?? (Number(i.grandTotal || 0) - Number(i.totalCost || 0))).toFixed(2)}</td>
                 </tr>
               `).join('')}
             </tbody>
@@ -2675,12 +2675,12 @@
       let tax0 = 0, tax5 = 0, tax12 = 0, tax18 = 0;
 
       invoices.forEach(inv => {
-        inv.items.forEach(it => {
-          const rate = it.gstPercent || 0;
-          if (rate === 0) { slab0 += it.total; }
-          else if (rate === 5) { slab5 += it.total; tax5 += it.gstAmount; }
-          else if (rate === 12) { slab12 += it.total; tax12 += it.gstAmount; }
-          else if (rate === 18) { slab18 += it.total; tax18 += it.gstAmount; }
+        (inv.items || []).forEach(it => {
+          const rate = Number(it.gstPercent || 0), lineTotal = Number(it.total || 0), lineTax = Number(it.gstAmount || 0);
+          if (rate === 0) { slab0 += lineTotal; }
+          else if (rate === 5) { slab5 += lineTotal; tax5 += lineTax; }
+          else if (rate === 12) { slab12 += lineTotal; tax12 += lineTax; }
+          else if (rate === 18) { slab18 += lineTotal; tax18 += lineTax; }
         });
       });
 
@@ -2960,7 +2960,7 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a'); a.href = url;
         a.download = 'Shree-Bahuchar-Agro-Backup-' + new Date().toISOString().slice(0,10) + '.json';
-        document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(url);
+        document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1500);
         showToast('બેકઅપ ફાઇલ ડાઉનલોડ થઈ.', 'success');
       } catch (e) { showToast('બેકઅપ નિષ્ફળ: ' + e.message, 'error'); }
     }
@@ -2968,17 +2968,30 @@
       const file = event.target.files && event.target.files[0]; if (!file) return;
       const reader = new FileReader();
       reader.onload = () => {
+        let before = null;
         try {
           const backup = JSON.parse(reader.result);
-          if (!backup || backup.app !== 'Shree Bahuchar Agro' || !backup.data || !backup.data.localStorage) throw new Error('આ માન્ય શ્રી બહુચર એગ્રો બેકઅપ નથી.');
-          if (!confirm('ચેતવણી: હાલના આ ડિવાઇસનો ડેટા બેકઅપથી બદલાઈ શકે છે. પહેલાં હાલનો બેકઅપ લો. આગળ વધવું છે?')) return;
-          Object.keys(localStorage).filter(k => k.startsWith('bahuchar_')).forEach(k => localStorage.removeItem(k));
-          Object.entries(backup.data.localStorage).forEach(([k,v]) => { if (k.startsWith('bahuchar_') && typeof v === 'string') localStorage.setItem(k,v); });
+          const incoming = backup && backup.data && backup.data.localStorage;
+          if (!backup || backup.app !== 'Shree Bahuchar Agro' || !incoming || typeof incoming !== 'object' || Array.isArray(incoming)) throw new Error('આ માન્ય શ્રી બહુચર એગ્રો બેકઅપ નથી.');
+          const entries = Object.entries(incoming);
+          if (!entries.length || entries.some(([k,v]) => !/^bahuchar_[a-zA-Z0-9_]+$/.test(k) || typeof v !== 'string')) throw new Error('બેકઅપમાં ડેટાની કી અથવા મૂલ્ય ખોટું છે.');
+          // Parse JSON values before touching current data; this catches damaged backup files.
+          entries.forEach(([k,v]) => { try { JSON.parse(v); } catch (_) { throw new Error('બેકઅપમાં '+k+' નો ડેટા બગડેલો છે.'); } });
+          if (!confirm('ચેતવણી: હાલના આ ડિવાઇસનો ડેટા બેકઅપથી બદલાશે. આગળ વધતાં પહેલાં હાલનો બેકઅપ રાખ્યો છે તેની ખાતરી કરો. આગળ વધવું છે?')) return;
+          before = Object.fromEntries(Object.keys(localStorage).filter(k => k.startsWith('bahuchar_')).map(k => [k, localStorage.getItem(k)]));
+          try {
+            Object.keys(localStorage).filter(k => k.startsWith('bahuchar_')).forEach(k => localStorage.removeItem(k));
+            entries.forEach(([k,v]) => localStorage.setItem(k,v));
+          } catch (writeError) {
+            Object.keys(localStorage).filter(k => k.startsWith('bahuchar_')).forEach(k => localStorage.removeItem(k));
+            Object.entries(before).forEach(([k,v]) => { if (v !== null) localStorage.setItem(k,v); });
+            throw new Error('સ્ટોરેજમાં જગ્યા/પરવાનગીની સમસ્યા. જૂનો ડેટા પાછો મૂકવાનો પ્રયાસ થયો. '+writeError.message);
+          }
           alert('બેકઅપ રિસ્ટોર થયો. એપ ફરી લોડ થશે.'); location.reload();
         } catch (e) { alert('રીસ્ટોર થઈ શક્યો નહીં: ' + e.message); }
         finally { event.target.value = ''; }
       };
-      reader.onerror = () => alert('ફાઇલ વાંચી શકાઈ નથી.');
+      reader.onerror = () => { alert('ફાઇલ વાંચી શકાઈ નથી.'); event.target.value = ''; };
       reader.readAsText(file);
     }
 
@@ -3118,7 +3131,7 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 
-<div id="excelImportPanel" class="fixed inset-0 z-[9999] hidden bg-black/50 p-3 overflow-y-auto"><div class="max-w-lg mx-auto mt-8 bg-white rounded-2xl p-4 shadow-xl"><div class="flex justify-between items-center mb-3"><h2 class="text-lg font-bold">Excel / CSV માંથી ડેટા ઉમેરો</h2><button onclick="closeExcelImport()" class="border rounded-lg px-3 py-1">બંધ</button></div><p class="text-sm text-slate-600 mb-3">Excel ફાઇલ (.xlsx/.xls) અથવા CSV પસંદ કરો. પહેલા ફાઇલનો બેકઅપ લો. હેડરનું નામ હોય તો ઓળખવાનો પ્રયાસ થશે.</p><label class="block text-sm font-semibold mb-1">કયો ડેટા ઉમેરવો છે?</label><select id="excelImportType" class="w-full border rounded-lg p-2 mb-3"><option value="party">પાર્ટી / ખેડૂત</option><option value="supplier">સપ્લાયર</option><option value="item">આઇટમ / પ્રોડક્ટ</option></select><input id="excelImportFile" type="file" accept=".xlsx,.xls,.csv,text/csv" class="w-full border rounded-lg p-2 mb-3"><button onclick="importExcelRows()" class="w-full bg-green-700 text-white rounded-lg p-3 font-bold">ફાઇલ વાંચીને ડેટા ઉમેરો</button><p id="excelImportStatus" class="text-sm mt-3"></p></div></div>
+<div id="excelImportPanel" class="fixed inset-0 z-[9999] hidden bg-black/50 p-3 overflow-y-auto"><div class="max-w-lg mx-auto mt-8 bg-white rounded-2xl p-4 shadow-xl"><div class="flex justify-between items-center mb-3"><h2 class="text-lg font-bold">Excel / CSV માંથી ડેટા ઉમેરો</h2><button onclick="closeExcelImport()" class="border rounded-lg px-3 py-1">બંધ</button></div><p class="text-sm text-slate-600 mb-3">Excel ફાઇલ (.xlsx/.xls) અથવા CSV પસંદ કરો. પહેલા ફાઇલનો બેકઅપ લો. હેડરનું નામ હોય તો ઓળખવાનો પ્રયાસ થશે.</p><label class="block text-sm font-semibold mb-1">કયો ડેટા ઉમેરવો છે?</label><select id="excelImportType" class="w-full border rounded-lg p-2 mb-3"><option value="party">પાર્ટી / ખેડૂત</option><option value="supplier">સપ્લાયર</option><option value="item">આઇટમ / પ્રોડક્ટ</option></select><div class="grid grid-cols-1 sm:grid-cols-3 gap-2 mb-3"><button type="button" onclick="downloadPartySampleCSV()" class="bg-blue-100 text-blue-800 rounded-lg p-2 text-xs font-bold">પાર્ટી નમૂનો ડાઉનલોડ</button><button type="button" onclick="downloadSupplierSampleCSV()" class="bg-blue-100 text-blue-800 rounded-lg p-2 text-xs font-bold">સપ્લાયર નમૂનો ડાઉનલોડ</button><button type="button" onclick="downloadItemSampleCSV()" class="bg-blue-100 text-blue-800 rounded-lg p-2 text-xs font-bold">આઇટમ નમૂનો ડાઉનલોડ</button></div><input id="excelImportFile" type="file" accept=".xlsx,.xls,.csv,text/csv" class="w-full border rounded-lg p-2 mb-3"><button onclick="importExcelRows()" class="w-full bg-green-700 text-white rounded-lg p-3 font-bold">ફાઇલ વાંચીને ડેટા ઉમેરો</button><p id="excelImportStatus" class="text-sm mt-3"></p></div></div>
 <button onclick="openExcelImport()" class="fixed bottom-4 right-4 z-40 bg-blue-700 text-white rounded-full shadow-lg px-4 py-3 font-bold">📥 Excel Import</button>
 <script>
 function openExcelImport(){document.getElementById('excelImportPanel').classList.remove('hidden');}
@@ -3153,6 +3166,9 @@ async function importExcelRows(){
   status.textContent=`પૂર્ણ: ${added} ઉમેરાયા, ${skipped} સ્કિપ થયા. ડેટા આ મોબાઇલમાં સેવ થયો.`;
  }catch(e){status.textContent='ઇમ્પોર્ટ નિષ્ફળ: '+e.message;}
 }
+function downloadImportSample(filename,rows){const csv='\ufeff'+rows.map(r=>r.map(v=>'"'+String(v??'').replace(/"/g,'""')+'"').join(',')).join('\r\n');const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function downloadSupplierSampleCSV(){downloadImportSample('શ્રી_બહુચર_એગ્રો_સપ્લાયર_નમૂનો.csv',[['name','phone','address','openingBalance'],['ABC Agro Agency','9876543210','Halvad',5000]]);}
+function downloadItemSampleCSV(){downloadImportSample('શ્રી_બહુચર_એગ્રો_આઇટમ_નમૂનો.csv',[['name','technicalName','company','category','batch','expiry','gst','stock','costPrice','price','unit'],['ઉદાહરણ પ્રોડક્ટ','Active Ingredient','ABC Company','જંતુનાશક','BATCH001','2027-12-31',18,100,250,320,'નંગ']]);}
 function parseCSVImport(text){const lines=text.replace(/^\uFEFF/,'').split(/\r?\n/).filter(x=>x.trim());if(lines.length<2)return [];function parse(line){const a=[];let v='',q=false;for(let i=0;i<line.length;i++){const c=line[i];if(c==='"'&&line[i+1]==='"'&&q){v+='"';i++;}else if(c==='"')q=!q;else if(c===','&&!q){a.push(v.trim());v='';}else v+=c;}a.push(v.trim());return a;}const headers=parse(lines[0]);return lines.slice(1).map(l=>{const vals=parse(l),o={};headers.forEach((h,i)=>o[h]=vals[i]||'');return o;});}
 </script>
 
@@ -3432,12 +3448,3 @@ window.downloadFarmerLedgerCSV=function(){if(!activeFarmerForKhata){showToast('�
 const _selectFarmerForKhata_v23=window.selectFarmerForKhata||selectFarmerForKhata;
 window.selectFarmerForKhata=function(f){_selectFarmerForKhata_v23(f);const preset=document.getElementById('khataDatePreset');if(preset)preset.value='all';const a=document.getElementById('khataDateFrom'),b=document.getElementById('khataDateTo');if(a)a.value='';if(b)b.value='';renderKhataLedgerWithDateFilter();};
 </script>
-
-<script>
-function toggleHeaderSettings(event){if(event)event.stopPropagation();const menu=document.getElementById('headerSettingsMenu');const btn=document.getElementById('headerSettingsBtn');if(!menu)return;const opening=menu.classList.contains('hidden');menu.classList.toggle('hidden',!opening);menu.classList.toggle('flex',opening);if(btn)btn.setAttribute('aria-expanded',opening?'true':'false');}
-function closeHeaderSettings(){const menu=document.getElementById('headerSettingsMenu');const btn=document.getElementById('headerSettingsBtn');if(menu){menu.classList.add('hidden');menu.classList.remove('flex');}if(btn)btn.setAttribute('aria-expanded','false');}
-document.addEventListener('click',function(event){const wrap=document.getElementById('headerSettingsWrap');if(wrap&&!wrap.contains(event.target))closeHeaderSettings();});
-document.addEventListener('keydown',function(event){if(event.key==='Escape')closeHeaderSettings();});
-</script>
-</body>
-</html>
